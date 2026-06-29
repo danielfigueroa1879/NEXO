@@ -398,6 +398,47 @@
     0%, 100% { opacity: 1; }
     50%       { opacity: 0.4; }
   }
+  /* ===== BACK TO TOP CHEVRON ===== */
+  .btt {
+    position: fixed; bottom: 24px; right: 16px;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--ink); color: #fff;
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    opacity: 0; visibility: hidden;
+    transform: translateY(12px);
+    transition: opacity .3s, visibility .3s, transform .3s, background .2s;
+    z-index: 200;
+  }
+  .btt.show { opacity: 1; visibility: visible; transform: translateY(0); }
+  .btt:hover { background: var(--red); }
+  .btt svg { width: 20px; height: 20px; }
+
+  /* ===== MOBILE SMALL (≤ 375px) ===== */
+  @media (max-width: 375px) {
+    .header { padding: 10px 12px; }
+    .header-name { font-size: 14px; }
+    .page { padding: 14px 10px 70px; }
+    .verify-banner { padding: 10px 12px; gap: 8px; }
+    .verify-text h3 { font-size: 13px; }
+    .verify-text p { font-size: 11px; }
+    .verify-icon { width: 30px; height: 30px; }
+    .profile-tab { padding: 7px 12px; font-size: 12px; }
+    .card-header { padding: 14px; gap: 10px; }
+    .avatar { width: 50px; height: 50px; font-size: 20px; }
+    .card-identity h2 { font-size: 16px; }
+    .info-grid { grid-template-columns: 1fr; gap: 8px; }
+    .info-item value { font-size: 13px; }
+    .doc-item { padding: 8px 10px; gap: 8px; }
+    .doc-icon { width: 28px; height: 28px; font-size: 12px; }
+    .doc-name { font-size: 12px; }
+    .cedula-preview { padding: 10px; gap: 10px; }
+    .cedula-foto { width: 46px; height: 58px; }
+    .actions { gap: 8px; }
+    .btn { padding: 12px; font-size: 12px; border-radius: 10px; }
+    .btt { bottom: 16px; right: 10px; width: 38px; height: 38px; }
+  }
 </style>
 </head>
 <body>
@@ -405,7 +446,7 @@
 <!-- HEADER -->
 <div class="header">
   <div style="display:flex;align-items:center;gap:10px;">
-    <a href="nfc_nexo_landing.html" style="width:34px;height:34px;border:1.5px solid var(--line);border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;color:var(--ink);flex-shrink:0;" title="Volver al inicio">
+    <a href="index.html" style="width:34px;height:34px;border:1.5px solid var(--line);border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;color:var(--ink);flex-shrink:0;" title="Volver al inicio">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
     </a>
     <div class="header-brand">
@@ -762,6 +803,19 @@
   function reportarProblema() {
     alert('Función disponible próximamente. Contacte a NFC NEXO en soporte@nfcnexo.cl');
   }
+</script>
+
+<!-- CHEVRON VOLVER ARRIBA -->
+<button class="btt" id="btt" title="Volver arriba" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="18 15 12 9 6 15"></polyline>
+  </svg>
+</button>
+<script>
+  const _btt = document.getElementById('btt');
+  window.addEventListener('scroll', () => {
+    _btt.classList.toggle('show', window.scrollY > 120);
+  });
 </script>
 </body>
 </html>

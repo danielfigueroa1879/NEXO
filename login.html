@@ -264,19 +264,60 @@
     to   { opacity:1; transform:translateY(0); }
   }
   .fade-in { animation: fadeUp 0.3s ease; }
+
+  /* ===== BACK TO TOP CHEVRON ===== */
+  .btt {
+    position: fixed; bottom: 24px; right: 16px;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--ink); color: #fff;
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    opacity: 0; visibility: hidden;
+    transform: translateY(12px);
+    transition: opacity .3s, visibility .3s, transform .3s, background .2s;
+    z-index: 200;
+  }
+  .btt.show { opacity: 1; visibility: visible; transform: translateY(0); }
+  .btt:hover { background: var(--red); }
+  .btt svg { width: 20px; height: 20px; }
+
+  /* ===== MOBILE SMALL (≤ 375px) ===== */
+  @media (max-width: 375px) {
+    .header { padding: 10px 12px; }
+    .brand-name { font-size: 14px; }
+    .back-link { font-size: 11px; }
+    .main { padding: 12px 10px 40px; align-items: flex-start; padding-top: 8px; }
+    .card { border-radius: 14px; }
+    .form-body { padding: 18px 16px 22px; }
+    .form-title { font-size: 18px; }
+    .form-sub { font-size: 12px; margin-bottom: 16px; }
+    .tipo-grid { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    .tipo-btn { padding: 10px 6px; }
+    .tipo-btn .tipo-icon { font-size: 18px; margin-bottom: 4px; }
+    .tipo-btn .tipo-name { font-size: 11px; }
+    .field { margin-bottom: 12px; }
+    .field input, .field select { padding: 10px 12px 10px 36px; font-size: 13px; }
+    .btn-main { padding: 13px; font-size: 14px; }
+    .btn-social { padding: 11px; font-size: 13px; }
+    .steps { margin-bottom: 16px; }
+    .success-screen { padding: 28px 16px; }
+    .success-icon { width: 58px; height: 58px; font-size: 26px; }
+    .success-screen h3 { font-size: 18px; }
+  }
 </style>
 </head>
 <body>
 
 <!-- HEADER -->
 <div class="header">
-  <a href="nfc_nexo_landing.html" class="brand">
+  <a href="index.html" class="brand">
     <div class="brand-logo">
       <svg viewBox="0 0 24 24"><path d="M6 2C4.9 2 4 2.9 4 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 3h8v1.5H8V16zm0-6h3v1.5H8V10z"/></svg>
     </div>
     <div class="brand-name">NFC <span>NEXO</span></div>
   </a>
-  <a href="nfc_nexo_landing.html" class="back-link">
+  <a href="index.html" class="back-link">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
     Volver
   </a>
@@ -626,6 +667,18 @@
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2500);
   }
+
+  // Chevron volver arriba
+  const _btt = document.getElementById('btt');
+  window.addEventListener('scroll', () => {
+    _btt.classList.toggle('show', window.scrollY > 120);
+  });
 </script>
+
+<button class="btt" id="btt" title="Volver arriba" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="18 15 12 9 6 15"></polyline>
+  </svg>
+</button>
 </body>
 </html>
