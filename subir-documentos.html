@@ -92,13 +92,16 @@
     background: rgba(232,33,39,0.12); border-radius: 50%;
   }
   /* bandera chilena mini */
+  /* Bandera chilena: azul+blanco arriba / rojo abajo */
   .chile-strip {
-    position: absolute; bottom: 0; left: 0; right: 0; height: 4px;
-    display: flex;
+    position: absolute; bottom: 0; left: 0; right: 0; height: 6px;
+    display: grid;
+    grid-template-columns: 25% 75%;
+    grid-template-rows: 3px 3px;
   }
-  .chile-strip .seg-blue { background: var(--blue); width: 20%; }
-  .chile-strip .seg-white { background: #fff; width: 30%; }
-  .chile-strip .seg-red { background: var(--red); flex: 1; }
+  .chile-strip .seg-blue  { background: var(--blue); grid-column:1; grid-row:1; display:flex; align-items:center; justify-content:center; font-size:4px; color:#fff; }
+  .chile-strip .seg-white { background: #fff;        grid-column:2; grid-row:1; }
+  .chile-strip .seg-red   { background: var(--red);  grid-column:1 / span 2; grid-row:2; }
   .avatar-lg {
     width: 58px; height: 58px; border-radius: 50%;
     background: linear-gradient(135deg, #3A3A3C, #2C2C2E);
@@ -333,7 +336,7 @@
       </div>
     </div>
     <div class="chile-strip">
-      <div class="seg-blue"></div>
+      <div class="seg-blue">★</div>
       <div class="seg-white"></div>
       <div class="seg-red"></div>
     </div>

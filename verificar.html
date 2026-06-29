@@ -195,17 +195,17 @@
   .card-type-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); }
   .card-type-badge span { font-size: 11px; color: #FF6B6E; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
 
-  /* Bandera chilena: rojo arriba / blanco abajo / cuadrado azul con ★ izq */
+  /* Bandera chilena: azul+blanco arriba / rojo abajo */
   .flag-strip {
     height: 8px;
     display: grid;
     grid-template-columns: 28px 1fr;
     grid-template-rows: 4px 4px;
   }
-  .flag-strip .fl-blue  { background: var(--blue); grid-column:1; grid-row:1; display:flex; align-items:center; justify-content:center; font-size:6px; color:#fff; line-height:1; }
-  .flag-strip .fl-white { background: #fff; grid-column:1; grid-row:2; }
-  .flag-strip .fl-red   { background: var(--red); grid-column:2; grid-row:1; }
-  .flag-strip .fl-white2 { background: #fff; grid-column:2; grid-row:2; }
+  .flag-strip .fl-blue   { background: var(--blue); grid-column:1; grid-row:1; display:flex; align-items:center; justify-content:center; font-size:5px; color:#fff; line-height:1; }
+  .flag-strip .fl-white  { background: #fff;        grid-column:2; grid-row:1; }
+  .flag-strip .fl-red    { background: var(--red);  grid-column:1 / span 2; grid-row:2; }
+  .flag-strip .fl-white2 { display:none; }
 
   /* ===== INFO ROWS ===== */
   .card-body { padding: 0; }
