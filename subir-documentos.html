@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFC NEXO — Mis Documentos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F5F7;
+    --ink: #0A0A0A;
+    --ink-soft: #2C2C2E;
+    --ink-mute: #6E6E73;
+    --line: #E5E5EA;
+    --surface: #FFFFFF;
+    --red: #E82127;
+    --blue: #0033A0;
+    --green: #34C759;
+    --green-light: #E8F9ED;
+    --orange: #FF9500;
+    --orange-light: #FFF4E0;
+    --radius: 16px;
+    --shadow: 0 2px 20px rgba(0,0,0,0.07);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+    padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .back-btn {
+    width: 36px; height: 36px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; text-decoration: none; color: var(--ink);
+    transition: background 0.15s;
+  }
+  .back-btn:hover { background: var(--bg); }
+  .header-brand { display: flex; align-items: center; gap: 8px; }
+  .header-logo {
+    width: 30px; height: 30px; background: var(--ink);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  }
+  .header-logo svg { width: 16px; height: 16px; fill: #fff; }
+  .header-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 16px; letter-spacing: -0.02em;
+  }
+  .header-name span { color: var(--red); }
+  .preview-btn {
+    background: var(--ink); color: #fff;
+    border: none; border-radius: 10px;
+    padding: 8px 16px; font-size: 13px; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    display: flex; align-items: center; gap: 6px;
+    transition: opacity 0.15s;
+    font-family: 'Outfit', sans-serif;
+  }
+  .preview-btn:hover { opacity: 0.85; }
+
+  /* ===== PAGE ===== */
+  .page { max-width: 480px; margin: 0 auto; padding: 20px 16px 80px; }
+
+  /* ===== PERFIL CARD ===== */
+  .perfil-card {
+    background: linear-gradient(135deg, #0A0A0A, #1C1C1E);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 20px;
+    position: relative; overflow: hidden;
+  }
+  .perfil-card::before {
+    content: '';
+    position: absolute; top: -30px; right: -30px;
+    width: 100px; height: 100px;
+    background: rgba(232,33,39,0.12); border-radius: 50%;
+  }
+  /* bandera chilena mini */
+  .chile-strip {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 4px;
+    display: flex;
+  }
+  .chile-strip .seg-blue { background: var(--blue); width: 20%; }
+  .chile-strip .seg-white { background: #fff; width: 30%; }
+  .chile-strip .seg-red { background: var(--red); flex: 1; }
+  .avatar-lg {
+    width: 58px; height: 58px; border-radius: 50%;
+    background: linear-gradient(135deg, #3A3A3C, #2C2C2E);
+    border: 2.5px solid rgba(255,255,255,0.12);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 700; color: #fff;
+    flex-shrink: 0; position: relative; z-index: 1;
+  }
+  .perfil-info { flex: 1; position: relative; z-index: 1; }
+  .perfil-info h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -0.02em;
+  }
+  .perfil-info .rut { font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+  .perfil-info .completado {
+    display: inline-flex; align-items: center; gap: 5px;
+    margin-top: 8px; padding: 4px 10px;
+    background: rgba(52,199,89,0.15); border: 1px solid rgba(52,199,89,0.3);
+    border-radius: 20px; font-size: 11px; font-weight: 700; color: #34C759;
+  }
+
+  /* ===== PROGRESS ===== */
+  .progress-wrap { margin-bottom: 20px; }
+  .progress-label {
+    display: flex; justify-content: space-between;
+    font-size: 12px; font-weight: 600; color: var(--ink-mute);
+    margin-bottom: 6px;
+  }
+  .progress-bar {
+    height: 6px; background: var(--line); border-radius: 10px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 10px;
+    background: linear-gradient(90deg, var(--blue), var(--red));
+    width: 60%; transition: width 0.6s ease;
+  }
+
+  /* ===== SECTION TITLE ===== */
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px; font-weight: 700;
+    margin-bottom: 12px; margin-top: 24px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title:first-of-type { margin-top: 0; }
+  .section-count {
+    background: var(--ink); color: #fff;
+    font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 20px;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  /* ===== DOC UPLOAD CARD ===== */
+  .doc-card {
+    background: var(--surface);
+    border-radius: 14px;
+    border: 1.5px solid var(--line);
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .doc-card.uploaded { border-color: rgba(52,199,89,0.4); }
+  .doc-card.warning { border-color: rgba(255,149,0,0.4); }
+  .doc-card.missing { border-color: rgba(232,33,39,0.3); }
+
+  .doc-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; cursor: pointer;
+  }
+  .doc-icon-wrap {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+    background: var(--bg);
+  }
+  .doc-info { flex: 1; min-width: 0; }
+  .doc-info h4 { font-size: 14px; font-weight: 600; }
+  .doc-info p { font-size: 11px; color: var(--ink-mute); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .doc-badge {
+    font-size: 11px; font-weight: 700; padding: 4px 10px;
+    border-radius: 20px; flex-shrink: 0;
+  }
+  .doc-badge.ok { background: var(--green-light); color: #1A7A34; }
+  .doc-badge.warn { background: var(--orange-light); color: #B85C00; }
+  .doc-badge.miss { background: #FFEEEE; color: #CC0000; }
+  .doc-badge.pending { background: #F0F0F5; color: var(--ink-mute); }
+  .doc-chevron { color: var(--ink-mute); font-size: 16px; flex-shrink: 0; }
+
+  /* ===== UPLOAD PANEL (expandible) ===== */
+  .upload-panel {
+    display: none; padding: 0 16px 16px;
+    border-top: 1px solid var(--line);
+    background: #FAFAFA;
+  }
+  .upload-panel.open { display: block; animation: fadeIn 0.2s ease; }
+  .upload-zone {
+    border: 2px dashed var(--line);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    margin-top: 12px;
+  }
+  .upload-zone:hover { border-color: var(--ink); background: #fff; }
+  .upload-zone.dragover { border-color: var(--blue); background: #EEF3FF; }
+  .upload-zone .icon { font-size: 28px; margin-bottom: 8px; }
+  .upload-zone h5 { font-size: 13px; font-weight: 700; }
+  .upload-zone p { font-size: 11px; color: var(--ink-mute); margin-top: 3px; }
+  .upload-input { display: none; }
+  .upload-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .btn-upload {
+    flex: 1; padding: 10px;
+    border-radius: 10px; border: none;
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-upload.primary { background: var(--ink); color: #fff; }
+  .btn-upload.secondary { background: #fff; color: var(--ink); border: 1.5px solid var(--line); }
+  .btn-upload:active { transform: scale(0.97); }
+  .file-preview {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; background: #fff;
+    border-radius: 10px; border: 1px solid var(--line);
+    margin-top: 8px; font-size: 12px;
+  }
+  .file-preview .fname { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-preview .fsize { color: var(--ink-mute); flex-shrink: 0; }
+  .file-preview .fdel { background: none; border: none; cursor: pointer; color: #CC0000; font-size: 16px; line-height: 1; }
+
+  /* ===== VENCE DATE ===== */
+  .vence-row {
+    display: flex; align-items: center; gap: 8px; margin-top: 10px;
+  }
+  .vence-row label { font-size: 12px; font-weight: 600; color: var(--ink-mute); flex-shrink: 0; }
+  .vence-row input {
+    flex: 1; padding: 8px 12px; border-radius: 8px;
+    border: 1.5px solid var(--line); font-family: 'Outfit', sans-serif;
+    font-size: 13px; font-weight: 500; background: #fff; color: var(--ink);
+    outline: none;
+  }
+  .vence-row input:focus { border-color: var(--blue); }
+
+  /* ===== PERFIL TABS ===== */
+  .perfil-tabs {
+    display: flex; gap: 8px; margin-bottom: 20px;
+    background: #fff; border-radius: 12px; padding: 4px;
+    border: 1.5px solid var(--line);
+  }
+  .ptab {
+    flex: 1; padding: 9px;
+    border-radius: 9px; border: none;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s; background: none; color: var(--ink-mute);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .ptab.active { background: var(--ink); color: #fff; }
+
+  /* ===== GUARDAR BTN ===== */
+  .save-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(250,250,250,0.9);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--line);
+    padding: 14px 16px;
+    display: flex; gap: 10px;
+  }
+  .btn-save {
+    flex: 1; padding: 14px;
+    border-radius: 12px; border: none;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-save.primary { background: var(--ink); color: #fff; }
+  .btn-save.secondary { background: #fff; color: var(--ink); border: 1.5px solid var(--line); flex: 0 0 auto; padding: 14px 20px; }
+  .btn-save:active { transform: scale(0.98); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: #fff;
+    padding: 12px 20px; border-radius: 30px;
+    font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+    z-index: 200; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <a href="nfc_nexo_landing.html" class="back-btn" title="Volver al inicio">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    </a>
+    <div class="header-brand">
+      <div class="header-logo">
+        <svg viewBox="0 0 24 24"><path d="M6 2C4.9 2 4 2.9 4 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 3h8v1.5H8V16zm0-6h3v1.5H8V10z"/></svg>
+      </div>
+      <div class="header-name">NFC <span>NEXO</span></div>
+    </div>
+  </div>
+  <a href="verificar.html" class="preview-btn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+    Ver mi tarjeta
+  </a>
+</div>
+
+<div class="page">
+
+  <!-- PERFIL USUARIO -->
+  <div class="perfil-card">
+    <div class="avatar-lg">EF</div>
+    <div class="perfil-info">
+      <h2>Elias Figueroa M.</h2>
+      <div class="rut">RUT: 12.345.678-9</div>
+      <div class="completado">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        60% completado
+      </div>
+    </div>
+    <div class="chile-strip">
+      <div class="seg-blue"></div>
+      <div class="seg-white"></div>
+      <div class="seg-red"></div>
+    </div>
+  </div>
+
+  <!-- BARRA DE PROGRESO -->
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>Documentos cargados</span>
+      <span id="prog-text">3 de 5</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="prog-fill"></div>
+    </div>
+  </div>
+
+  <!-- TABS PERFIL -->
+  <div class="perfil-tabs">
+    <button class="ptab active" onclick="switchTab('guardia', this)">🛡️ Guardia OS10</button>
+    <button class="ptab" onclick="switchTab('conductor', this)">🚗 Conductor</button>
+  </div>
+
+  <!-- ===== DOCUMENTOS GUARDIA ===== -->
+  <div id="tab-guardia">
+
+    <div class="section-title">Documentos personales <span class="section-count">2 / 2</span></div>
+
+    <!-- Cédula -->
+    <div class="doc-card uploaded" id="card-cedula">
+      <div class="doc-row" onclick="togglePanel('cedula')">
+        <div class="doc-icon-wrap">🪪</div>
+        <div class="doc-info">
+          <h4>Cédula de identidad</h4>
+          <p>cedula_frente_verso.pdf · Subido hoy</p>
+        </div>
+        <span class="doc-badge ok">✓ Cargado</span>
+        <span class="doc-chevron" id="chev-cedula">›</span>
+      </div>
+      <div class="upload-panel" id="panel-cedula">
+        <div class="vence-row">
+          <label>Vencimiento</label>
+          <input type="date" value="2028-08-14">
+        </div>
+        <div class="file-preview">
+          <span>📄</span>
+          <span class="fname">cedula_frente_verso.pdf</span>
+          <span class="fsize">1.2 MB</span>
+          <button class="fdel" onclick="eliminarDoc('cedula')">✕</button>
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload secondary" onclick="triggerUpload('cedula-input')">↑ Reemplazar</button>
+          <input type="file" class="upload-input" id="cedula-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'cedula')">
+        </div>
+      </div>
+    </div>
+
+    <!-- Foto carnet -->
+    <div class="doc-card uploaded" id="card-foto">
+      <div class="doc-row" onclick="togglePanel('foto')">
+        <div class="doc-icon-wrap">📸</div>
+        <div class="doc-info">
+          <h4>Fotografía reciente</h4>
+          <p>foto_perfil.jpg · Subido hace 3 días</p>
+        </div>
+        <span class="doc-badge ok">✓ Cargado</span>
+        <span class="doc-chevron" id="chev-foto">›</span>
+      </div>
+      <div class="upload-panel" id="panel-foto">
+        <div class="file-preview">
+          <span>🖼️</span>
+          <span class="fname">foto_perfil.jpg</span>
+          <span class="fsize">340 KB</span>
+          <button class="fdel" onclick="eliminarDoc('foto')">✕</button>
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload secondary" onclick="triggerUpload('foto-input')">↑ Reemplazar</button>
+          <input type="file" class="upload-input" id="foto-input" accept=".jpg,.jpeg,.png" onchange="fileSelected(this,'foto')">
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Documentos OS10 <span class="section-count">1 / 3</span></div>
+
+    <!-- Curso OS10 -->
+    <div class="doc-card uploaded" id="card-curso">
+      <div class="doc-row" onclick="togglePanel('curso')">
+        <div class="doc-icon-wrap">📋</div>
+        <div class="doc-info">
+          <h4>Certificado Curso OS10</h4>
+          <p>curso_os10_nivel_basico.pdf · Vence: 10 Ene 2026</p>
+        </div>
+        <span class="doc-badge ok">✓ Vigente</span>
+        <span class="doc-chevron" id="chev-curso">›</span>
+      </div>
+      <div class="upload-panel" id="panel-curso">
+        <div class="vence-row">
+          <label>Vencimiento del curso</label>
+          <input type="date" value="2026-01-10">
+        </div>
+        <div class="file-preview">
+          <span>📄</span>
+          <span class="fname">curso_os10_nivel_basico.pdf</span>
+          <span class="fsize">2.1 MB</span>
+          <button class="fdel" onclick="eliminarDoc('curso')">✕</button>
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload secondary" onclick="triggerUpload('curso-input')">↑ Reemplazar</button>
+          <input type="file" class="upload-input" id="curso-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'curso')">
+        </div>
+      </div>
+    </div>
+
+    <!-- Credencial OS10 -->
+    <div class="doc-card missing" id="card-credencial">
+      <div class="doc-row" onclick="togglePanel('credencial')">
+        <div class="doc-icon-wrap">🪪</div>
+        <div class="doc-info">
+          <h4>Credencial OS10</h4>
+          <p>Requerido para fiscalización · No subido</p>
+        </div>
+        <span class="doc-badge miss">Pendiente</span>
+        <span class="doc-chevron" id="chev-credencial">›</span>
+      </div>
+      <div class="upload-panel" id="panel-credencial">
+        <div class="vence-row">
+          <label>Vencimiento</label>
+          <input type="date" placeholder="dd-mm-aaaa">
+        </div>
+        <div class="upload-zone" onclick="triggerUpload('credencial-input')"
+             ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="dropFile(event,'credencial')">
+          <div class="icon">📁</div>
+          <h5>Arrastra aquí o toca para subir</h5>
+          <p>PDF, JPG o PNG · Máximo 10 MB</p>
+          <input type="file" class="upload-input" id="credencial-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'credencial')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('credencial-input')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+            Subir archivo
+          </button>
+          <button class="btn-upload secondary">📷 Cámara</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contrato -->
+    <div class="doc-card warning" id="card-contrato">
+      <div class="doc-row" onclick="togglePanel('contrato')">
+        <div class="doc-icon-wrap">📄</div>
+        <div class="doc-info">
+          <h4>Contrato de trabajo</h4>
+          <p>contrato_2024.pdf · Verificación pendiente</p>
+        </div>
+        <span class="doc-badge warn">⚠ Revisar</span>
+        <span class="doc-chevron" id="chev-contrato">›</span>
+      </div>
+      <div class="upload-panel" id="panel-contrato">
+        <div class="vence-row">
+          <label>Vigente desde</label>
+          <input type="date" value="2024-03-01">
+        </div>
+        <div class="file-preview">
+          <span>📄</span>
+          <span class="fname">contrato_2024.pdf</span>
+          <span class="fsize">890 KB</span>
+          <button class="fdel" onclick="eliminarDoc('contrato')">✕</button>
+        </div>
+        <div style="margin-top:8px; padding:10px 12px; background:#FFF4E0; border-radius:10px; font-size:12px; color:#B85C00; font-weight:600;">
+          ⚠ El documento está ilegible en la página 2. Por favor reemplaza con una mejor calidad.
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('contrato-input')">↑ Reemplazar</button>
+          <input type="file" class="upload-input" id="contrato-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'contrato')">
+        </div>
+      </div>
+    </div>
+
+    <!-- Examen preocupacional -->
+    <div class="doc-card missing" id="card-examen">
+      <div class="doc-row" onclick="togglePanel('examen')">
+        <div class="doc-icon-wrap">⛑️</div>
+        <div class="doc-info">
+          <h4>Examen preocupacional</h4>
+          <p>Requerido · No subido</p>
+        </div>
+        <span class="doc-badge miss">Pendiente</span>
+        <span class="doc-chevron" id="chev-examen">›</span>
+      </div>
+      <div class="upload-panel" id="panel-examen">
+        <div class="vence-row">
+          <label>Vencimiento</label>
+          <input type="date" placeholder="dd-mm-aaaa">
+        </div>
+        <div class="upload-zone" onclick="triggerUpload('examen-input')"
+             ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="dropFile(event,'examen')">
+          <div class="icon">📁</div>
+          <h5>Arrastra aquí o toca para subir</h5>
+          <p>PDF, JPG o PNG · Máximo 10 MB</p>
+          <input type="file" class="upload-input" id="examen-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'examen')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('examen-input')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+            Subir archivo
+          </button>
+          <button class="btn-upload secondary">📷 Cámara</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-guardia -->
+
+  <!-- ===== DOCUMENTOS CONDUCTOR ===== -->
+  <div id="tab-conductor" style="display:none">
+
+    <div class="section-title">Licencia y datos <span class="section-count">0 / 3</span></div>
+
+    <!-- Licencia -->
+    <div class="doc-card missing" id="card-licencia">
+      <div class="doc-row" onclick="togglePanel('licencia')">
+        <div class="doc-icon-wrap">🚗</div>
+        <div class="doc-info">
+          <h4>Licencia de conducir</h4>
+          <p>Frente y reverso · No subido</p>
+        </div>
+        <span class="doc-badge miss">Pendiente</span>
+        <span class="doc-chevron" id="chev-licencia">›</span>
+      </div>
+      <div class="upload-panel" id="panel-licencia">
+        <div class="vence-row">
+          <label>Vencimiento</label>
+          <input type="date">
+        </div>
+        <div class="upload-zone" onclick="triggerUpload('licencia-input')">
+          <div class="icon">📁</div>
+          <h5>Arrastra aquí o toca para subir</h5>
+          <p>PDF, JPG o PNG · Máximo 10 MB</p>
+          <input type="file" class="upload-input" id="licencia-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'licencia')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('licencia-input')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+            Subir archivo
+          </button>
+          <button class="btn-upload secondary">📷 Cámara</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Permiso circulación -->
+    <div class="doc-card missing" id="card-permiso">
+      <div class="doc-row" onclick="togglePanel('permiso')">
+        <div class="doc-icon-wrap">📝</div>
+        <div class="doc-info">
+          <h4>Permiso de circulación</h4>
+          <p>Año en curso · No subido</p>
+        </div>
+        <span class="doc-badge miss">Pendiente</span>
+        <span class="doc-chevron" id="chev-permiso">›</span>
+      </div>
+      <div class="upload-panel" id="panel-permiso">
+        <div class="vence-row">
+          <label>Válido hasta</label>
+          <input type="date">
+        </div>
+        <div class="upload-zone" onclick="triggerUpload('permiso-input')">
+          <div class="icon">📁</div>
+          <h5>Arrastra aquí o toca para subir</h5>
+          <p>PDF, JPG o PNG · Máximo 10 MB</p>
+          <input type="file" class="upload-input" id="permiso-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'permiso')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('permiso-input')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+            Subir archivo
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOAP -->
+    <div class="doc-card missing" id="card-soap">
+      <div class="doc-row" onclick="togglePanel('soap')">
+        <div class="doc-icon-wrap">🛡️</div>
+        <div class="doc-info">
+          <h4>SOAP vigente</h4>
+          <p>Seguro obligatorio · No subido</p>
+        </div>
+        <span class="doc-badge miss">Pendiente</span>
+        <span class="doc-chevron" id="chev-soap">›</span>
+      </div>
+      <div class="upload-panel" id="panel-soap">
+        <div class="vence-row">
+          <label>Vencimiento SOAP</label>
+          <input type="date">
+        </div>
+        <div class="upload-zone" onclick="triggerUpload('soap-input')">
+          <div class="icon">📁</div>
+          <h5>Arrastra aquí o toca para subir</h5>
+          <p>PDF, JPG o PNG · Máximo 10 MB</p>
+          <input type="file" class="upload-input" id="soap-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'soap')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('soap-input')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+            Subir archivo
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-conductor -->
+
+</div><!-- /page -->
+
+<!-- SAVE BAR -->
+<div class="save-bar">
+  <button class="btn-save secondary" onclick="window.location.href='verificar.html'">
+    👁 Ver tarjeta
+  </button>
+  <button class="btn-save primary" onclick="guardar()">Guardar cambios</button>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+  <span id="toast-msg">Guardado con éxito</span>
+</div>
+
+<script>
+  // Toggle panel expandible
+  function togglePanel(id) {
+    const panel = document.getElementById('panel-' + id);
+    const chev  = document.getElementById('chev-' + id);
+    const isOpen = panel.classList.contains('open');
+    // Cierra todos
+    document.querySelectorAll('.upload-panel').forEach(p => p.classList.remove('open'));
+    document.querySelectorAll('.doc-chevron').forEach(c => c.style.transform = '');
+    if (!isOpen) {
+      panel.classList.add('open');
+      chev.style.transform = 'rotate(90deg)';
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  // Trigger input file
+  function triggerUpload(inputId) {
+    document.getElementById(inputId).click();
+  }
+
+  // Archivo seleccionado
+  function fileSelected(input, docId) {
+    if (!input.files.length) return;
+    const file = input.files[0];
+    const card = document.getElementById('card-' + docId);
+    const panel = document.getElementById('panel-' + docId);
+    // Cambia estado de la card
+    card.classList.remove('missing', 'warning');
+    card.classList.add('uploaded');
+    card.querySelector('.doc-badge').className = 'doc-badge ok';
+    card.querySelector('.doc-badge').textContent = '✓ Cargado';
+    card.querySelector('.doc-info p').textContent = file.name + ' · Subido ahora';
+    // Reemplaza zona de upload con preview
+    const zone = panel.querySelector('.upload-zone');
+    if (zone) {
+      const preview = document.createElement('div');
+      preview.className = 'file-preview';
+      preview.innerHTML = `<span>📄</span><span class="fname">${file.name}</span><span class="fsize">${(file.size/1024).toFixed(0)} KB</span><button class="fdel" onclick="eliminarDoc('${docId}')">✕</button>`;
+      zone.replaceWith(preview);
+    }
+    updateProgress();
+    showToast('Archivo cargado: ' + file.name);
+  }
+
+  // Eliminar doc
+  function eliminarDoc(docId) {
+    const card = document.getElementById('card-' + docId);
+    card.classList.remove('uploaded', 'warning');
+    card.classList.add('missing');
+    card.querySelector('.doc-badge').className = 'doc-badge miss';
+    card.querySelector('.doc-badge').textContent = 'Pendiente';
+    updateProgress();
+    showToast('Documento eliminado');
+  }
+
+  // Drag & drop
+  function dragOver(e, zone) { e.preventDefault(); zone.classList.add('dragover'); }
+  function dragLeave(zone) { zone.classList.remove('dragover'); }
+  function dropFile(e, docId) {
+    e.preventDefault();
+    const zone = e.currentTarget;
+    zone.classList.remove('dragover');
+    const input = zone.querySelector('.upload-input');
+    if (e.dataTransfer.files.length) {
+      const dt = new DataTransfer();
+      dt.items.add(e.dataTransfer.files[0]);
+      input.files = dt.files;
+      fileSelected(input, docId);
+    }
+  }
+
+  // Switch tab
+  function switchTab(tab, btn) {
+    document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-guardia').style.display = tab === 'guardia' ? 'block' : 'none';
+    document.getElementById('tab-conductor').style.display = tab === 'conductor' ? 'block' : 'none';
+  }
+
+  // Progreso
+  function updateProgress() {
+    const total   = document.querySelectorAll('.doc-card').length;
+    const cargados = document.querySelectorAll('.doc-card.uploaded').length;
+    const pct = Math.round((cargados / total) * 100);
+    document.getElementById('prog-fill').style.width = pct + '%';
+    document.getElementById('prog-text').textContent = cargados + ' de ' + total;
+  }
+
+  // Guardar
+  function guardar() {
+    showToast('¡Cambios guardados exitosamente!');
+  }
+
+  // Toast
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  updateProgress();
+</script>
+</body>
+</html>

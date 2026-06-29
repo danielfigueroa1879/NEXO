@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFC NEXO — Ingresa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F5F7;
+    --ink: #0A0A0A;
+    --ink-soft: #2C2C2E;
+    --ink-mute: #6E6E73;
+    --line: #E5E5EA;
+    --surface: #FFFFFF;
+    --red: #E82127;
+    --blue: #0033A0;
+    --green: #34C759;
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    padding: 16px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none;
+  }
+  .brand-logo {
+    width: 34px; height: 34px; background: var(--ink);
+    border-radius: 9px; display: flex; align-items: center; justify-content: center;
+  }
+  .brand-logo svg { width: 18px; height: 18px; fill: #fff; }
+  .brand-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 17px; letter-spacing: -0.02em; color: var(--ink);
+  }
+  .brand-name span { color: var(--red); }
+  .back-link {
+    font-size: 13px; font-weight: 600; color: var(--ink-mute);
+    text-decoration: none; display: flex; align-items: center; gap: 5px;
+    transition: color 0.15s;
+  }
+  .back-link:hover { color: var(--ink); }
+
+  /* ===== MAIN WRAPPER ===== */
+  .main {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 20px 16px 60px;
+  }
+  .card {
+    width: 100%; max-width: 420px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 40px rgba(0,0,0,0.10);
+    overflow: hidden;
+  }
+
+  /* ===== TABS ===== */
+  .tabs {
+    display: grid; grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid var(--line);
+  }
+  .tab {
+    padding: 16px;
+    text-align: center;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer; border: none; background: none;
+    color: var(--ink-mute);
+    font-family: 'Outfit', sans-serif;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    margin-bottom: -1px;
+  }
+  .tab.active { color: var(--ink); border-bottom-color: var(--ink); }
+
+  /* ===== FORM ===== */
+  .form-body { padding: 28px 28px 32px; }
+
+  .form-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px; font-weight: 700; letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  .form-sub { font-size: 13px; color: var(--ink-mute); margin-bottom: 24px; }
+
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block; font-size: 12px; font-weight: 700;
+    color: var(--ink-mute); text-transform: uppercase;
+    letter-spacing: 0.07em; margin-bottom: 6px;
+  }
+  .input-wrap { position: relative; }
+  .input-wrap .ico {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    font-size: 16px; pointer-events: none; line-height: 1;
+  }
+  .field input, .field select {
+    width: 100%; padding: 12px 14px 12px 40px;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px; font-weight: 500;
+    color: var(--ink); background: #fff;
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--ink);
+    box-shadow: 0 0 0 3px rgba(10,10,10,0.06);
+  }
+  .field input.error { border-color: var(--red); }
+  .field .err-msg {
+    font-size: 11px; color: var(--red); font-weight: 600;
+    margin-top: 5px; display: none;
+  }
+  .field .err-msg.show { display: block; }
+
+  /* password toggle */
+  .pwd-toggle {
+    position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer;
+    font-size: 16px; color: var(--ink-mute); padding: 4px;
+    line-height: 1;
+  }
+  .field input[type="password"] { padding-right: 42px; }
+
+  /* Tipo de usuario selector */
+  .tipo-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 20px;
+  }
+  .tipo-btn {
+    padding: 14px 10px;
+    border: 1.5px solid var(--line);
+    border-radius: 12px; background: #fff;
+    cursor: pointer; text-align: center;
+    transition: all 0.2s; font-family: 'Outfit', sans-serif;
+  }
+  .tipo-btn:hover { border-color: var(--ink-mute); }
+  .tipo-btn.selected { border-color: var(--ink); background: #F5F5F7; box-shadow: 0 0 0 2px var(--ink); }
+  .tipo-btn .tipo-icon { font-size: 22px; margin-bottom: 6px; }
+  .tipo-btn .tipo-name { font-size: 12px; font-weight: 700; display: block; }
+  .tipo-btn .tipo-desc { font-size: 10px; color: var(--ink-mute); display: block; margin-top: 2px; }
+
+  /* Divider */
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 20px 0; color: var(--ink-mute); font-size: 12px; font-weight: 600;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--line);
+  }
+
+  /* Botón principal */
+  .btn-main {
+    width: 100%; padding: 15px;
+    background: var(--ink); color: #fff;
+    border: none; border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 8px;
+  }
+  .btn-main:hover { background: #1C1C1E; }
+  .btn-main:active { transform: scale(0.98); }
+  .btn-main.loading { opacity: 0.7; pointer-events: none; }
+
+  /* Social login */
+  .btn-social {
+    width: 100%; padding: 13px;
+    background: #fff; color: var(--ink);
+    border: 1.5px solid var(--line); border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    margin-bottom: 10px;
+  }
+  .btn-social:hover { border-color: var(--ink-mute); background: var(--bg); }
+  .btn-social img { width: 18px; height: 18px; }
+
+  /* Olvidé contraseña */
+  .forgot {
+    text-align: right; margin-top: -8px; margin-bottom: 16px;
+  }
+  .forgot a { font-size: 12px; color: var(--ink-mute); font-weight: 600; text-decoration: none; }
+  .forgot a:hover { color: var(--ink); }
+
+  /* Términos */
+  .terms {
+    font-size: 11px; color: var(--ink-mute);
+    text-align: center; margin-top: 16px; line-height: 1.6;
+  }
+  .terms a { color: var(--ink); font-weight: 600; text-decoration: none; }
+
+  /* ===== BANDERA CHILE FOOTER ===== */
+  .chile-bar {
+    height: 5px; display: grid;
+    grid-template-columns: 22% 78%;
+    grid-template-rows: 2.5px 2.5px;
+  }
+  .cb-blue  { background: var(--blue); grid-column:1; grid-row:1; display:flex; align-items:center; justify-content:center; font-size:4px; color:#fff; }
+  .cb-red   { background: var(--red);  grid-column:2; grid-row:1; }
+  .cb-white { background: #fff;        grid-column:1; grid-row:2; border-top: 1px solid var(--line); }
+  .cb-wred  { background: #fff;        grid-column:2; grid-row:2; }
+
+  /* ===== STEP INDICATOR (solo registro) ===== */
+  .steps {
+    display: flex; gap: 6px; justify-content: center;
+    margin-bottom: 22px;
+  }
+  .step-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--line); transition: all 0.3s;
+  }
+  .step-dot.active { background: var(--ink); width: 20px; border-radius: 4px; }
+  .step-dot.done { background: var(--green); }
+
+  /* ===== SUCCESS ===== */
+  .success-screen {
+    display: none; text-align: center; padding: 40px 28px;
+  }
+  .success-screen.show { display: block; }
+  .success-icon {
+    width: 72px; height: 72px; background: #E8F9ED;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px; font-size: 32px;
+  }
+  .success-screen h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px; font-weight: 700; margin-bottom: 8px;
+  }
+  .success-screen p { font-size: 14px; color: var(--ink-mute); line-height: 1.6; }
+  .success-screen .btn-main { margin-top: 28px; }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: #fff;
+    padding: 12px 22px; border-radius: 30px;
+    font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s; z-index: 200; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(10px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  .fade-in { animation: fadeUp 0.3s ease; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <a href="nfc_nexo_landing.html" class="brand">
+    <div class="brand-logo">
+      <svg viewBox="0 0 24 24"><path d="M6 2C4.9 2 4 2.9 4 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 3h8v1.5H8V16zm0-6h3v1.5H8V10z"/></svg>
+    </div>
+    <div class="brand-name">NFC <span>NEXO</span></div>
+  </a>
+  <a href="nfc_nexo_landing.html" class="back-link">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    Volver
+  </a>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="card">
+
+    <!-- Franja bandera -->
+    <div class="chile-bar">
+      <div class="cb-blue">★</div>
+      <div class="cb-red"></div>
+      <div class="cb-white"></div>
+      <div class="cb-wred"></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('login', this)">Iniciar sesión</button>
+      <button class="tab" onclick="showTab('registro', this)">Crear cuenta</button>
+    </div>
+
+    <!-- ===== LOGIN ===== -->
+    <div id="panel-login" class="form-body fade-in">
+      <h2 class="form-title">Bienvenido de vuelta</h2>
+      <p class="form-sub">Ingresa tus datos para acceder a tu perfil NFC NEXO.</p>
+
+      <!-- Google -->
+      <button class="btn-social" onclick="loginGoogle()">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.29-8.16 2.29-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+        Continuar con Google
+      </button>
+
+      <div class="divider">o ingresa con tu RUT</div>
+
+      <div class="field">
+        <label>RUT</label>
+        <div class="input-wrap">
+          <span class="ico">🪪</span>
+          <input type="text" id="login-rut" placeholder="12.345.678-9" maxlength="12" oninput="formatRut(this)" autocomplete="username">
+          <span class="err-msg" id="err-login-rut">RUT inválido</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Contraseña</label>
+        <div class="input-wrap">
+          <span class="ico">🔒</span>
+          <input type="password" id="login-pwd" placeholder="Tu contraseña" autocomplete="current-password">
+          <button class="pwd-toggle" onclick="togglePwd('login-pwd', this)" type="button">👁</button>
+        </div>
+      </div>
+
+      <div class="forgot"><a href="#">¿Olvidaste tu contraseña?</a></div>
+
+      <button class="btn-main" onclick="doLogin()">
+        Ingresar
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+      </button>
+
+      <p class="terms">¿No tienes cuenta? <a href="#" onclick="showTab('registro', document.querySelectorAll('.tab')[1])">Créala gratis →</a></p>
+    </div>
+
+    <!-- ===== REGISTRO ===== -->
+    <div id="panel-registro" class="form-body fade-in" style="display:none;">
+
+      <!-- Step indicator -->
+      <div class="steps">
+        <div class="step-dot active" id="dot-1"></div>
+        <div class="step-dot" id="dot-2"></div>
+        <div class="step-dot" id="dot-3"></div>
+      </div>
+
+      <!-- PASO 1: Tipo de usuario -->
+      <div id="step-1">
+        <h2 class="form-title">¿Quién eres?</h2>
+        <p class="form-sub">Selecciona tu tipo de cuenta. Puedes agregar más perfiles después.</p>
+
+        <div class="tipo-grid">
+          <div class="tipo-btn selected" id="tipo-guardia" onclick="selectTipo('guardia')">
+            <div class="tipo-icon">🛡️</div>
+            <span class="tipo-name">Guardia</span>
+            <span class="tipo-desc">Seguridad OS10</span>
+          </div>
+          <div class="tipo-btn" id="tipo-conductor" onclick="selectTipo('conductor')">
+            <div class="tipo-icon">🚗</div>
+            <span class="tipo-name">Conductor</span>
+            <span class="tipo-desc">Vehículo particular</span>
+          </div>
+          <div class="tipo-btn" id="tipo-empresa" onclick="selectTipo('empresa')">
+            <div class="tipo-icon">🏢</div>
+            <span class="tipo-name">Empresa</span>
+            <span class="tipo-desc">Seguridad privada</span>
+          </div>
+          <div class="tipo-btn" id="tipo-comercio" onclick="selectTipo('comercio')">
+            <div class="tipo-icon">🏪</div>
+            <span class="tipo-name">Comercio</span>
+            <span class="tipo-desc">Local / negocio</span>
+          </div>
+        </div>
+
+        <button class="btn-main" onclick="nextStep(2)">
+          Continuar
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+        </button>
+      </div>
+
+      <!-- PASO 2: Datos personales -->
+      <div id="step-2" style="display:none;">
+        <h2 class="form-title">Tus datos</h2>
+        <p class="form-sub">Ingresa tus datos para crear tu cuenta.</p>
+
+        <div class="field">
+          <label>Nombre completo</label>
+          <div class="input-wrap">
+            <span class="ico">👤</span>
+            <input type="text" id="reg-nombre" placeholder="Ej: Juan Pérez Soto">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>RUT</label>
+          <div class="input-wrap">
+            <span class="ico">🪪</span>
+            <input type="text" id="reg-rut" placeholder="12.345.678-9" maxlength="12" oninput="formatRut(this)">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Teléfono</label>
+          <div class="input-wrap">
+            <span class="ico">📱</span>
+            <input type="tel" id="reg-tel" placeholder="+56 9 1234 5678">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Correo electrónico</label>
+          <div class="input-wrap">
+            <span class="ico">✉️</span>
+            <input type="email" id="reg-email" placeholder="correo@ejemplo.cl">
+          </div>
+        </div>
+
+        <div class="field" id="empresa-field" style="display:none;">
+          <label>Empresa empleadora</label>
+          <div class="input-wrap">
+            <span class="ico">🏢</span>
+            <input type="text" id="reg-empresa" placeholder="Nombre de la empresa">
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:8px;">
+          <button class="btn-main" style="background:#fff;color:var(--ink);border:1.5px solid var(--line);flex:0 0 auto;padding:15px 20px;" onclick="nextStep(1)">
+            ← Volver
+          </button>
+          <button class="btn-main" style="flex:1;" onclick="nextStep(3)">
+            Continuar →
+          </button>
+        </div>
+      </div>
+
+      <!-- PASO 3: Contraseña -->
+      <div id="step-3" style="display:none;">
+        <h2 class="form-title">Crea tu contraseña</h2>
+        <p class="form-sub">Mínimo 8 caracteres. Usa letras y números para mayor seguridad.</p>
+
+        <div class="field">
+          <label>Contraseña</label>
+          <div class="input-wrap">
+            <span class="ico">🔒</span>
+            <input type="password" id="reg-pwd" placeholder="Mínimo 8 caracteres" oninput="checkPwd()" autocomplete="new-password">
+            <button class="pwd-toggle" onclick="togglePwd('reg-pwd', this)" type="button">👁</button>
+          </div>
+          <!-- Barra de fortaleza -->
+          <div style="margin-top:8px;">
+            <div style="height:4px;background:var(--line);border-radius:4px;overflow:hidden;">
+              <div id="pwd-bar" style="height:100%;width:0%;border-radius:4px;background:var(--red);transition:all 0.3s;"></div>
+            </div>
+            <div style="font-size:11px;color:var(--ink-mute);margin-top:4px;" id="pwd-label"></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Confirmar contraseña</label>
+          <div class="input-wrap">
+            <span class="ico">🔒</span>
+            <input type="password" id="reg-pwd2" placeholder="Repite tu contraseña" autocomplete="new-password">
+            <button class="pwd-toggle" onclick="togglePwd('reg-pwd2', this)" type="button">👁</button>
+          </div>
+          <div class="err-msg" id="err-pwd2">Las contraseñas no coinciden</div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:8px;">
+          <button class="btn-main" style="background:#fff;color:var(--ink);border:1.5px solid var(--line);flex:0 0 auto;padding:15px 20px;" onclick="nextStep(2)">
+            ← Volver
+          </button>
+          <button class="btn-main" style="flex:1;" onclick="crearCuenta()">
+            Crear cuenta ✓
+          </button>
+        </div>
+
+        <p class="terms" style="margin-top:16px;">Al crear tu cuenta aceptas los <a href="#">Términos de uso</a> y la <a href="#">Política de privacidad</a> de NFC NEXO.</p>
+      </div>
+
+    </div>
+    <!-- /registro -->
+
+    <!-- SUCCESS -->
+    <div id="success-screen" class="success-screen">
+      <div class="success-icon">✅</div>
+      <h3>¡Cuenta creada!</h3>
+      <p>Tu perfil NFC NEXO está listo.<br>Ahora sube tus documentos para activar tu tarjeta.</p>
+      <a href="subir-documentos.html" class="btn-main" style="text-decoration:none;margin-top:28px;display:flex;">
+        Subir mis documentos →
+      </a>
+      <a href="verificar.html" style="display:block;margin-top:12px;font-size:13px;color:var(--ink-mute);text-align:center;text-decoration:none;font-weight:600;">
+        Ver mi tarjeta primero
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+  <span id="toast-msg">Listo</span>
+</div>
+
+<script>
+  let tipoSeleccionado = 'guardia';
+  let pasoActual = 1;
+
+  // TABS login / registro
+  function showTab(tab, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-login').style.display    = tab === 'login'    ? 'block' : 'none';
+    document.getElementById('panel-registro').style.display = tab === 'registro' ? 'block' : 'none';
+    document.getElementById('success-screen').classList.remove('show');
+    if (tab === 'registro') nextStep(1);
+  }
+
+  // PASOS registro
+  function nextStep(n) {
+    [1,2,3].forEach(i => {
+      const el = document.getElementById('step-' + i);
+      if (el) el.style.display = i === n ? 'block' : 'none';
+      const dot = document.getElementById('dot-' + i);
+      dot.classList.remove('active','done');
+      if (i < n) dot.classList.add('done');
+      if (i === n) dot.classList.add('active');
+    });
+    pasoActual = n;
+
+    // Mostrar campo empresa si es guardia
+    const ef = document.getElementById('empresa-field');
+    if (ef) ef.style.display = (tipoSeleccionado === 'guardia') ? 'block' : 'none';
+  }
+
+  // Tipo de usuario
+  function selectTipo(tipo) {
+    tipoSeleccionado = tipo;
+    document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById('tipo-' + tipo).classList.add('selected');
+  }
+
+  // Formato RUT chileno
+  function formatRut(input) {
+    let v = input.value.replace(/[^0-9kK]/g, '').toUpperCase();
+    if (v.length > 1) v = v.slice(0,-1).replace(/\B(?=(\d{3})+(?!\d))/g,'.') + '-' + v.slice(-1);
+    input.value = v;
+  }
+
+  // Toggle contraseña
+  function togglePwd(id, btn) {
+    const inp = document.getElementById(id);
+    if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+    else { inp.type = 'password'; btn.textContent = '👁'; }
+  }
+
+  // Fortaleza contraseña
+  function checkPwd() {
+    const v = document.getElementById('reg-pwd').value;
+    const bar = document.getElementById('pwd-bar');
+    const lbl = document.getElementById('pwd-label');
+    let score = 0;
+    if (v.length >= 8) score++;
+    if (/[A-Z]/.test(v)) score++;
+    if (/[0-9]/.test(v)) score++;
+    if (/[^A-Za-z0-9]/.test(v)) score++;
+    const pcts = ['0%','25%','50%','75%','100%'];
+    const cols = ['#E82127','#FF9500','#FFCC00','#34C759','#34C759'];
+    const lbls = ['','Débil','Regular','Buena','Fuerte'];
+    bar.style.width = pcts[score];
+    bar.style.background = cols[score];
+    lbl.textContent = lbls[score];
+    lbl.style.color = cols[score];
+  }
+
+  // Login
+  function doLogin() {
+    const rut = document.getElementById('login-rut').value.trim();
+    const pwd = document.getElementById('login-pwd').value;
+    if (!rut || !pwd) { showToast('Completa todos los campos'); return; }
+    const btn = event.currentTarget;
+    btn.classList.add('loading');
+    btn.textContent = 'Ingresando…';
+    setTimeout(() => {
+      btn.classList.remove('loading');
+      btn.innerHTML = 'Ingresar <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>';
+      window.location.href = 'subir-documentos.html';
+    }, 1400);
+  }
+
+  // Crear cuenta
+  function crearCuenta() {
+    const pwd  = document.getElementById('reg-pwd').value;
+    const pwd2 = document.getElementById('reg-pwd2').value;
+    const err  = document.getElementById('err-pwd2');
+    if (pwd !== pwd2) { err.classList.add('show'); return; }
+    err.classList.remove('show');
+
+    const btn = event.currentTarget;
+    btn.classList.add('loading');
+    btn.textContent = 'Creando cuenta…';
+    setTimeout(() => {
+      // Ocultar pasos, mostrar success
+      document.getElementById('step-3').style.display = 'none';
+      document.getElementById('panel-registro').querySelector('.steps').style.display = 'none';
+      document.getElementById('success-screen').classList.add('show');
+      document.getElementById('panel-registro').querySelector('h2.form-title') && null;
+    }, 1500);
+  }
+
+  // Google login simulado
+  function loginGoogle() {
+    showToast('Próximamente disponible');
+  }
+
+  // Toast
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+</script>
+</body>
+</html>
