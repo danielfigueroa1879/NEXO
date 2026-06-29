@@ -1,1 +1,1660 @@
-<h1>hola Nexo</h1>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFC NEXO — Tu identidad, en un Click.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAFAFA;
+    --ink: #0A0A0A;
+    --ink-soft: #2C2C2E;
+    --ink-mute: #6E6E73;
+    --line: #E5E5EA;
+    --surface: #FFFFFF;
+    --red: #E82127; /* Tesla Red */
+    --blue: #0033A0; /* Chilean Blue */
+    --teal-greek: #00A896; /* Greek Sea Turquoise */
+    --accent-glow: rgba(232, 33, 39, 0.06);
+    --shadow-soft: 0 1px 2px rgba(0,0,0,0.02), 0 4px 16px rgba(0,0,0,0.02);
+    --shadow-card: 0 25px 60px -20px rgba(0,0,0,0.4);
+    --glass-border: rgba(255,255,255,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-weight: 400;
+    line-height: 1.5;
+    overflow-x: hidden;
+  }
+
+  .display { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.03em; line-height: 1.05; font-weight: 600; }
+
+  /* ===== NAV ===== */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: rgba(250,250,250,0.72);
+    border-bottom: 1px solid var(--line);
+    z-index: 100;
+    padding: 14px 32px;
+  }
+  .nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-family: 'Space Grotesk'; font-weight: 700; font-size: 18px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
+  .logo-dot { width: 9px; height: 9px; background: var(--red); border-radius: 50%; display: inline-block; }
+  .nav-links { display: flex; gap: 28px; font-size: 14px; color: var(--ink-soft); }
+  .nav-links a { color: inherit; text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-cta { background: var(--ink); color: white; padding: 8px 18px; border-radius: 100px; font-size: 13px; font-weight: 500; border: none; cursor: pointer; transition: transform 0.15s; }
+  .nav-cta:hover { transform: scale(0.97); }
+
+  /* ===== HERO ===== */
+  .hero {
+    min-height: 100vh;
+    padding: 140px 32px 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 20%; right: -10%;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .hero-inner { max-width: 1200px; width: 100%; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 80px; align-items: center; position: relative; z-index: 2; }
+
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-mute);
+    padding: 6px 14px;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    background: var(--surface);
+    margin-bottom: 28px;
+  }
+  .eyebrow-dot { width: 6px; height: 6px; background: var(--red); border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  h1.headline {
+    font-family: 'Space Grotesk';
+    font-size: clamp(44px, 6vw, 76px);
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 24px;
+  }
+  h1.headline .accent { color: var(--red); font-style: italic; font-weight: 500; }
+
+  .lede {
+    font-size: 19px;
+    color: var(--ink-mute);
+    line-height: 1.55;
+    max-width: 480px;
+    margin-bottom: 36px;
+    font-weight: 400;
+  }
+
+  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--ink); color: white;
+    padding: 14px 26px; border-radius: 100px;
+    font-size: 15px; font-weight: 500;
+    border: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: transform 0.15s, background 0.2s;
+  }
+  .btn-primary:hover { transform: scale(0.98); background: var(--red); }
+  .btn-secondary {
+    background: transparent; color: var(--ink);
+    padding: 14px 26px; border-radius: 100px;
+    font-size: 15px; font-weight: 500;
+    border: 1px solid var(--line); cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--ink); background: white; }
+
+  /* ===== CARD VISUAL (signature element) & SIMULATOR ===== */
+  .card-stage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    width: 100%;
+    min-height: 550px;
+  }
+
+  .simulator-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    height: 535px;
+  }
+
+  .card-container {
+    position: relative;
+    z-index: 10;
+    perspective: 1000px;
+  }
+
+  .nfc-card {
+    width: 290px;
+    height: 183px;
+    background: linear-gradient(135deg, #1c1d24 0%, #0d0e12 100%);
+    border-radius: 18px;
+    padding: 20px;
+    color: white;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+    transform-style: preserve-3d;
+    transform: rotateY(-15deg) rotateX(10deg);
+    transition: transform 0.1s ease, border-color 0.3s ease;
+    border: 1px solid var(--glass-border);
+    position: relative;
+    overflow: hidden;
+    cursor: grab;
+  }
+  .nfc-card:active { cursor: grabbing; }
+
+  .card-glow {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(232, 33, 39, 0.12) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 1;
+    transition: background 0.5s ease;
+  }
+
+  .card-stripe-indicator {
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 5px;
+    background: linear-gradient(90deg, var(--red) 0%, var(--red) 33%, #FFFFFF 33%, #FFFFFF 66%, var(--blue) 66%);
+    transition: background 0.4s ease;
+    z-index: 4;
+  }
+
+  .nfc-card.profile-guardia .card-stripe-indicator {
+    background: linear-gradient(90deg, var(--red) 0%, var(--red) 50%, rgba(255,255,255,0.8) 100%);
+  }
+  .nfc-card.profile-conductor .card-stripe-indicator {
+    background: linear-gradient(90deg, var(--blue) 0%, var(--blue) 50%, rgba(255,255,255,0.8) 100%);
+  }
+  .nfc-card.profile-empresa .card-stripe-indicator {
+    background: linear-gradient(90deg, var(--teal-greek) 0%, var(--teal-greek) 50%, rgba(255,255,255,0.8) 100%);
+  }
+
+  .card-brand { font-family: 'Space Grotesk'; font-weight: 700; font-size: 15px; letter-spacing: -0.02em; opacity: 0.95; z-index: 2; position: relative; }
+  .card-brand .accent-dot { color: var(--red); }
+  .nfc-icon {
+    position: absolute; top: 20px; right: 20px;
+    width: 28px; height: 28px;
+    opacity: 0.85;
+    z-index: 2;
+  }
+  .card-body { position: absolute; bottom: 20px; left: 20px; right: 20px; z-index: 2; }
+  .card-label { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+  .card-name { font-family: 'Space Grotesk'; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; margin-bottom: 2px; }
+  .card-meta { font-size: 10px; color: rgba(255,255,255,0.55); font-variant-numeric: tabular-nums; }
+
+  /* Phone Mockup */
+  .phone-mockup {
+    position: relative;
+    transform: rotateY(15deg) rotateX(5deg);
+    width: 240px;
+    height: 505px;
+    background: #0f1015;
+    border: 8px solid #2d2f39;
+    border-radius: 36px;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    z-index: 5;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+    flex-shrink: 0;
+  }
+  .phone-mockup:hover {
+    transform: rotateY(5deg) rotateX(2deg) translateY(-5px);
+  }
+
+  .phone-header {
+    height: 32px;
+    background: #15161c;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    font-size: 9px;
+    color: var(--ink-mute);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    flex-shrink: 0;
+  }
+
+  .phone-notch {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 12px;
+    background: #2d2f39;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    transition: background 0.3s ease;
+  }
+
+  .phone-content {
+    flex: 1;
+    padding: 14px 6px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    background: radial-gradient(circle at top, #1a1b23 0%, #0c0d12 100%);
+  }
+  .phone-content::-webkit-scrollbar {
+    width: 3px;
+  }
+  .phone-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .phone-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+  }
+  .phone-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .verification-badge {
+    background: rgba(48, 209, 88, 0.1);
+    border: 1px solid rgba(48, 209, 88, 0.25);
+    border-radius: 100px;
+    padding: 3px 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #30D158;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .pulse-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 100px;
+    border: 1px solid rgba(48, 209, 88, 0.4);
+    animation: phonePulse 2s infinite;
+  }
+  @keyframes phonePulse {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.15); opacity: 0; }
+  }
+
+  .profile-view {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    animation: fadeIn 0.4s ease forwards;
+  }
+
+  .profile-view.active {
+    display: flex;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .profile-header-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding-bottom: 6px;
+    margin-bottom: 2px;
+  }
+
+  .avatar-wrap {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid var(--red);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-soft);
+    background: rgba(255,255,255,0.02);
+    transition: border-color 0.3s ease;
+    flex-shrink: 0;
+  }
+
+  .avatar-wrap svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .profile-header-info h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 1px;
+  }
+
+  .profile-header-info .subtitle {
+    font-size: 9px;
+    color: var(--ink-soft);
+  }
+
+  /* iOS Home Screen Styling */
+  .ios-clock-area {
+    text-align: center;
+    margin-top: 15px;
+    margin-bottom: 20px;
+  }
+  .ios-time {
+    font-size: 36px;
+    font-weight: 300;
+    color: #ffffff;
+    line-height: 1;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .ios-date {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .ios-app-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    padding: 0 10px;
+    margin-bottom: 25px;
+  }
+  .ios-app-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .ios-notification {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border-radius: 14px;
+    padding: 10px 12px;
+    text-align: left;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    animation: floatNoti 3s ease-in-out infinite;
+  }
+  @keyframes floatNoti {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  .ios-noti-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 8px;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .ios-noti-body strong {
+    display: block;
+    font-size: 10px;
+    color: #ffffff;
+    margin-bottom: 2px;
+  }
+  .ios-noti-body p {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.3;
+    margin: 0;
+  }
+  .ios-home-indicator {
+    width: 80px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    margin: 8px auto 0;
+    cursor: pointer;
+    transition: background 0.2s;
+    z-index: 10;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .ios-home-indicator:hover {
+    background: rgba(255, 255, 255, 0.8);
+  }
+
+  /* Profile Badge Styling */
+  .profile-badge {
+    font-size: 8px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 100px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-block;
+    margin-top: 3px;
+  }
+  .badge-guardia {
+    background: rgba(232, 33, 39, 0.15);
+    color: #FF453A;
+  }
+  .badge-conductor {
+    background: rgba(10, 132, 255, 0.15);
+    color: #0A84FF;
+  }
+  .badge-empresa {
+    background: rgba(48, 209, 88, 0.15);
+    color: #30D158;
+  }
+
+  /* Reading State Spinner Styling */
+  .spinner-nfc {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .spinner-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.08);
+    border-top-color: #30D158;
+    animation: nfcSpin 1.2s linear infinite;
+  }
+  .nfc-icon-inside {
+    font-size: 18px;
+    color: #30D158;
+    animation: pulseIcon 1.5s infinite ease-in-out;
+  }
+  #view-reading.active {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  @keyframes nfcSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  @keyframes pulseIcon {
+    0%, 100% { opacity: 0.5; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.1); }
+  }
+
+  /* Card Sweep Animation (Behind the cell phone) */
+  @keyframes nfcTap {
+    0% {
+      transform: rotateY(-15deg) rotateX(10deg) translate3d(0, 0, 0);
+      z-index: 10;
+    }
+    30% {
+      transform: rotateY(-5deg) rotateX(5deg) translate3d(80px, -20px, 50px);
+      z-index: 10;
+    }
+    50% {
+      /* Place directly behind the 240px wide phone */
+      transform: rotateY(15deg) rotateX(5deg) translate3d(260px, -10px, -120px);
+      z-index: 3;
+    }
+    75% {
+      transform: rotateY(15deg) rotateX(5deg) translate3d(260px, -10px, -120px);
+      z-index: 3;
+    }
+    100% {
+      transform: rotateY(-15deg) rotateX(10deg) translate3d(0, 0, 0);
+      z-index: 10;
+    }
+  }
+
+  .card-container.animating {
+    animation: nfcTap 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  }
+
+  .doc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .doc-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 6px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s ease;
+  }
+
+  .doc-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .doc-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+  }
+
+  .doc-card-icon {
+    font-size: 14px;
+  }
+
+  .doc-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .doc-card-info h4 {
+    font-size: 10px;
+    font-weight: 600;
+    color: #FFFFFF !important;
+    margin: 0;
+  }
+
+  .doc-card-info p {
+    font-size: 8px;
+    color: rgba(255, 255, 255, 0.5) !important;
+    margin: 0;
+  }
+
+  .doc-card-status {
+    font-size: 8px;
+    font-weight: 700;
+    padding: 3px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+  }
+
+  .doc-card-status.status-ok {
+    background: rgba(48, 209, 88, 0.15);
+    color: #30D158;
+  }
+
+  /* Real Document Replica Styles */
+  .document-replica {
+    background: #FFFFFF !important;
+    border: 1px solid #dcdcdc;
+    border-radius: 4px;
+    padding: 10px;
+    margin-top: 10px;
+    font-family: Arial, Helvetica, sans-serif;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Force black text for all content inside the replica by default */
+  .document-replica,
+  .document-replica div,
+  .document-replica span,
+  .document-replica p,
+  .document-replica table,
+  .document-replica td,
+  .document-replica th {
+    color: #000000 !important;
+  }
+
+  .replica-permiso-header {
+    background: #eef5fc !important;
+    border: 1px solid #c2d5e7;
+    padding: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 2px;
+    margin-bottom: 6px;
+  }
+
+  .replica-permiso-logo {
+    font-size: 7px;
+    font-weight: 800;
+    color: #004085 !important;
+    text-transform: uppercase;
+  }
+
+  .replica-permiso-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    color: #0056b3 !important;
+    text-transform: uppercase;
+  }
+
+  .replica-meta-strip {
+    background: #000000 !important;
+    padding: 2px 4px;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    border-radius: 2px;
+  }
+
+  .replica-meta-strip span {
+    color: #FFFFFF !important;
+    font-size: 6px;
+    font-weight: bold;
+  }
+
+  .replica-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 6px;
+    font-size: 6.5px;
+  }
+
+  .replica-table th {
+    background: #f1f1f1 !important;
+    font-weight: bold;
+    font-size: 5.5px;
+    text-transform: uppercase;
+    border: 1px solid #888;
+    padding: 2px 3px;
+    text-align: left;
+  }
+
+  .replica-table td {
+    background: #FFFFFF !important;
+    border: 1px solid #888;
+    padding: 2px 3px;
+    text-align: left;
+    font-size: 6.5px;
+  }
+
+  .replica-stamp-red {
+    border: 1.5px solid #d9534f !important;
+    color: #d9534f !important;
+    font-weight: 900;
+    font-size: 6.5px;
+    padding: 2px 4px;
+    text-align: center;
+    border-radius: 3px;
+    display: inline-block;
+    transform: rotate(-5deg);
+    text-transform: uppercase;
+  }
+
+  .replica-revision-header {
+    border: 1.5px solid #000000;
+    padding: 4px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 8px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    background: #fdfdfd !important;
+  }
+
+  .replica-soap-header {
+    background: #ffffff !important;
+    border-bottom: 2px solid #009639;
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .replica-hdi-logo {
+    color: #009639 !important;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: -1px;
+  }
+
+  .replica-padron-header {
+    border-bottom: 2px solid #ff8800;
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+    text-align: center;
+    background: #ffffff !important;
+  }
+
+  .replica-padron-logo {
+    font-size: 6px;
+    color: #ff8800 !important;
+    font-weight: bold;
+    letter-spacing: 0.02em;
+  }
+
+  /* Specific color overrides for headers/stamps */
+  .document-replica .replica-permiso-logo {
+    color: #004085 !important;
+  }
+  .document-replica .replica-permiso-title {
+    color: #0056b3 !important;
+  }
+  .document-replica .replica-stamp-red {
+    color: #d9534f !important;
+  }
+  .document-replica .stamp-aprobado {
+    color: #28a745 !important;
+    border-color: #28a745 !important;
+  }
+  .document-replica .replica-hdi-logo {
+    color: #009639 !important;
+  }
+  .document-replica .replica-padron-logo {
+    color: #ff8800 !important;
+  }
+
+  /* Scanned Guardia Documents Style */
+  .replica-image {
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    margin-top: 10px;
+    display: block;
+    background: #ffffff;
+  }
+
+  /* Transmission Signal animation */
+  .nfc-wave {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border: 2px solid rgba(232, 33, 39, 0.4);
+    border-radius: 50%;
+    z-index: 8;
+    pointer-events: none;
+    opacity: 0;
+    left: 42%;
+    top: 40%;
+    transform: translate(-50%, -50%);
+  }
+
+  .nfc-wave.pulse {
+    animation: waveEmit 0.8s ease-out;
+  }
+
+  @keyframes waveEmit {
+    0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+    50% { opacity: 0.8; }
+    100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+  }
+
+  /* Controls */
+  .simulator-controls {
+    display: flex;
+    gap: 8px;
+    background: rgba(0,0,0,0.04);
+    border: 1px solid var(--line);
+    padding: 6px;
+    border-radius: 100px;
+    z-index: 15;
+    position: relative;
+  }
+
+  .sim-btn {
+    background: transparent;
+    border: none;
+    color: var(--ink-mute);
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .sim-btn:hover {
+    color: var(--ink);
+  }
+
+  .sim-btn.active {
+    background: var(--ink);
+    color: var(--surface);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  .check-dot { width: 14px; height: 14px; border-radius: 50%; background: #30D158; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 8px; font-weight: 700; }
+
+  [data-grid-profile] {
+    cursor: pointer;
+  }
+
+  /* ===== STATS STRIP ===== */
+  .stats {
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 28px 32px;
+    background: var(--surface);
+  }
+  .stats-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; }
+  .stat-item { text-align: left; }
+  .stat-number { font-family: 'Space Grotesk'; font-size: 28px; font-weight: 600; letter-spacing: -0.02em; }
+  .stat-label { font-size: 12px; color: var(--ink-mute); margin-top: 2px; letter-spacing: 0.02em; }
+
+  /* ===== USE CASES ===== */
+  .section { padding: 120px 32px; }
+  .section-inner { max-width: 1200px; margin: 0 auto; }
+  .section-eyebrow { font-size: 12px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: var(--red); margin-bottom: 16px; }
+  h2.section-title { font-family: 'Space Grotesk'; font-size: clamp(36px, 4.5vw, 56px); font-weight: 600; letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 24px; max-width: 720px; }
+  .section-lede { font-size: 18px; color: var(--ink-mute); max-width: 580px; margin-bottom: 64px; line-height: 1.55; }
+
+  .perfiles-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .perfil-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 32px 28px;
+    transition: border-color 0.25s, transform 0.25s;
+    position: relative;
+    cursor: pointer;
+  }
+  .perfil-card:hover { border-color: var(--ink); transform: translateY(-2px); }
+  .perfil-card.active { border-color: var(--red); background: linear-gradient(180deg, #fff 0%, #fffafa 100%); }
+  .perfil-card.coming { opacity: 0.55; }
+  .perfil-card.coming:hover { transform: none; border-color: var(--line); cursor: default; }
+
+  .perfil-num { font-family: 'Space Grotesk'; font-size: 13px; font-weight: 500; color: var(--ink-mute); font-variant-numeric: tabular-nums; }
+  .perfil-icon-wrap { margin: 20px 0 24px; display: flex; align-items: center; gap: 12px; }
+  .perfil-icon {
+    width: 44px; height: 44px;
+    background: var(--bg);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--line);
+  }
+  .perfil-card.active .perfil-icon { background: var(--red); border-color: var(--red); color: white; }
+  .perfil-name { font-family: 'Space Grotesk'; font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .perfil-desc { font-size: 14px; color: var(--ink-mute); line-height: 1.55; }
+  .perfil-status { margin-top: 20px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500; }
+  .status-live { color: #34C759; }
+  .status-soon { color: var(--ink-mute); }
+
+  /* ===== FLOW ===== */
+  .flow-section { background: var(--ink); color: white; }
+  .flow-section .section-eyebrow { color: #FF453A; }
+  .flow-section h2.section-title { color: white; }
+  .flow-section .section-lede { color: rgba(255,255,255,0.6); }
+
+  .flow-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid rgba(255,255,255,0.1); }
+  .flow-step { padding: 40px 32px; border-right: 1px solid rgba(255,255,255,0.1); position: relative; }
+  .flow-step:last-child { border-right: none; }
+  .flow-step-num { font-family: 'Space Grotesk'; font-size: 56px; font-weight: 500; line-height: 1; color: rgba(255,255,255,0.15); margin-bottom: 24px; letter-spacing: -0.03em; }
+  .flow-step-title { font-family: 'Space Grotesk'; font-size: 22px; font-weight: 600; margin-bottom: 12px; }
+  .flow-step-desc { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.6; }
+
+  /* ===== PRICING ===== */
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 48px; }
+  .pricing-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 32px;
+    position: relative;
+  }
+  .pricing-card.featured { border-color: var(--ink); }
+  .pricing-card.featured::before {
+    content: 'Recomendado';
+    position: absolute; top: -10px; left: 32px;
+    background: var(--red); color: white;
+    font-size: 11px; font-weight: 500; letter-spacing: 0.05em;
+    padding: 4px 10px; border-radius: 100px;
+  }
+  .price-name { font-family: 'Space Grotesk'; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 16px; }
+  .price-amount { font-family: 'Space Grotesk'; font-size: 42px; font-weight: 600; letter-spacing: -0.03em; }
+  .price-period { font-size: 14px; color: var(--ink-mute); margin-left: 4px; }
+  .price-tagline { font-size: 14px; color: var(--ink-mute); margin: 12px 0 24px; line-height: 1.5; }
+  .price-features { list-style: none; }
+  .price-features li { font-size: 14px; padding: 8px 0; display: flex; gap: 10px; align-items: flex-start; color: var(--ink-soft); }
+  .price-features li::before { content: '→'; color: var(--red); flex-shrink: 0; }
+
+  /* ===== CTA FOOTER ===== */
+  .cta-final {
+    padding: 120px 32px;
+    text-align: center;
+    background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 100%);
+  }
+  .cta-final h2 { font-family: 'Space Grotesk'; font-size: clamp(40px, 5vw, 68px); font-weight: 600; letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 24px; max-width: 800px; margin-left: auto; margin-right: auto; }
+  .cta-final h2 .accent { color: var(--red); font-style: italic; font-weight: 500; }
+  .cta-final p { font-size: 18px; color: var(--ink-mute); max-width: 520px; margin: 0 auto 36px; line-height: 1.55; }
+
+  /* ===== FOOTER ===== */
+  footer { padding: 48px 32px; border-top: 1px solid var(--line); }
+  .footer-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+  .footer-meta { font-size: 12px; color: var(--ink-mute); }
+  .footer-flag { display: inline-flex; align-items: center; gap: 6px; }
+  /* Bandera chilena: rojo arriba, blanco abajo, cuadrado azul con estrella a la izquierda */
+  .flag-stripe {
+    width: 22px; height: 14px; border-radius: 2px;
+    display: grid;
+    grid-template-columns: 8px 14px;
+    grid-template-rows: 7px 7px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .flag-stripe .fs-blue  { background: var(--blue); grid-column:1; grid-row:1; display:flex; align-items:center; justify-content:center; font-size:5px; color:#fff; line-height:1; }
+  .flag-stripe .fs-white { background: #fff; grid-column:1; grid-row:2; }
+  .flag-stripe .fs-red   { background: var(--red); grid-column:2; grid-row:1; }
+  .flag-stripe .fs-white2 { background: #fff; grid-column:2; grid-row:2; border-top: 1px solid var(--line); }
+  .fs-blue { background: var(--blue); flex: 0 0 8px !important; }
+  .fs-white { background: white; flex: 0 0 6px !important; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .fs-red { background: var(--red); }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    .nav-links { display: none; }
+    .hero-inner { grid-template-columns: 1fr; gap: 40px; text-align: center; }
+    .lede { margin-left: auto; margin-right: auto; }
+    .cta-row { justify-content: center; }
+    .simulator-wrapper { height: auto; flex-direction: column; gap: 20px; }
+    .card-container { left: auto; transform: scale(0.9) !important; top: auto; bottom: auto; }
+    .nfc-card { transform: none !important; }
+    .phone-mockup { right: auto; transform: scale(0.9) !important; top: auto; bottom: auto; }
+    .phone-mockup:hover { transform: scale(0.9) translateY(-5px) !important; }
+    .stats-inner { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    .perfiles-grid { grid-template-columns: 1fr; }
+    .flow-steps { grid-template-columns: 1fr; }
+    .flow-step { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .flow-step:last-child { border-bottom: none; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .section { padding: 80px 24px; }
+    .hero { padding: 120px 24px 40px; }
+    .nfc-wave { left: 50%; top: 35%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="logo">
+      <span>NFC</span>
+      <span class="logo-dot"></span>
+      <span>NEXO</span>
+    </div>
+    <div class="nav-links">
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#perfiles">Perfiles</a>
+      <a href="#precios">Precios</a>
+      <a href="#contacto">Contacto</a>
+    </div>
+    <a href="login.html" class="nav-cta" style="text-decoration:none;">Obtener mi tarjeta</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="eyebrow">
+        <span class="eyebrow-dot"></span>
+        Plataforma chilena de identidad digital
+      </div>
+      <h1 class="headline">
+        Tu identidad,<br>
+        en <span class="accent">un Click.</span>
+      </h1>
+      <p class="lede">
+        Una sola tarjeta NFC reúne tus credenciales profesionales, documentos de conducir y permisos comerciales. <strong>Cambia tu identidad en un solo click.</strong>
+      </p>
+      <div class="cta-row">
+        <a href="login.html" class="btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+          Obtener mi tarjeta
+          <span>→</span>
+        </a>
+        <a href="verificar.html" class="btn-secondary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">Ver cómo funciona</a>
+      </div>
+    </div>
+
+    <div class="card-stage">
+      <div class="simulator-wrapper">
+        <!-- NFC Wave Transmission Animation -->
+        <div class="nfc-wave" id="nfcWave"></div>
+
+        <!-- 3D NFC Card -->
+        <div class="card-container" id="cardContainer">
+          <div class="nfc-card profile-guardia" id="nfcCard">
+            <div class="card-glow"></div>
+            <div class="card-stripe-indicator"></div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; position: relative; z-index: 3;">
+              <div class="card-brand">NFC<span class="accent-dot">·</span>NEXO</div>
+              <svg class="nfc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M2 12c0-5.523 4.477-10 10-10"/>
+                <path d="M5 12c0-3.866 3.134-7 7-7"/>
+                <path d="M8 12c0-2.209 1.791-4 4-4"/>
+                <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+              </svg>
+            </div>
+            <div class="card-body">
+              <div class="card-label" id="cardLabel">Perfil: Guardia</div>
+              <div class="card-name">Juan Pérez S.</div>
+              <div class="card-meta">NFC·NX 0001 · CL · OS10</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phone Mockup for Digital Credential Verification -->
+        <div class="phone-mockup" id="phoneMockup">
+          <div class="phone-header">
+            <div class="phone-notch"></div>
+            <span>NEXO VERIFY</span>
+            <span>12:30 📶</span>
+          </div>
+          <div class="phone-content">
+            <!-- Reading NFC State (Scanning Loader) -->
+            <div class="profile-view" id="view-reading" style="display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 280px; gap: 15px;">
+              <div class="spinner-nfc">
+                <div class="spinner-ring"></div>
+                <div class="nfc-icon-inside">⚡</div>
+              </div>
+              <div class="reading-text" style="color: rgba(255,255,255,0.7); font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">Leyendo Tarjeta...</div>
+            </div>
+
+            <!-- iOS Locked/Home Screen (Initial State) -->
+            <div class="profile-view active" id="view-home">
+              <div class="ios-clock-area">
+                <div class="ios-time">12:30</div>
+                <div class="ios-date">Lunes, 29 de junio</div>
+              </div>
+              <div class="ios-app-grid">
+                <div class="ios-app-icon">💬</div>
+                <div class="ios-app-icon">📞</div>
+                <div class="ios-app-icon">🌐</div>
+                <div class="ios-app-icon">⚙️</div>
+              </div>
+              <div class="ios-notification">
+                <div class="ios-noti-header">
+                  <span>📶 NFC NEXO</span>
+                  <span>ahora</span>
+                </div>
+                <div class="ios-noti-body">
+                  <strong>Listo para escanear</strong>
+                  <p>Acerca tu tarjeta NFC al teléfono para verificar.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Profile: Guardia de Seguridad -->
+            <div class="profile-view" id="view-guardia">
+              <div class="verification-badge" style="margin-bottom: 8px;">
+                <div class="pulse-ring"></div>
+                <span class="check-dot">✓</span>
+                <span>VERIFICADO</span>
+              </div>
+              <div class="profile-header-info">
+                <div class="avatar-wrap" style="border-color: var(--red);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3>Juan Pérez S.</h3>
+                  <span class="profile-badge badge-guardia">GUARDIA</span>
+                </div>
+              </div>
+              <!-- Scanned Documents (Images provided by user) -->
+              <img src="images/Certificado.png" alt="Certificado OS10" class="replica-image">
+              <img src="images/CertifficadoAnteceddentes.png" alt="Certificado de Antecedentes" class="replica-image">
+              <img src="images/CedulaIdentidad.png" alt="Cédula de Identidad" class="replica-image">
+            </div>
+
+            <!-- Profile: Conductor Particular -->
+            <div class="profile-view" id="view-conductor">
+              <div class="verification-badge" style="margin-bottom: 8px;">
+                <div class="pulse-ring"></div>
+                <span class="check-dot">✓</span>
+                <span>VERIFICADO</span>
+              </div>
+              <div class="profile-header-info">
+                <div class="avatar-wrap" style="border-color: var(--blue);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3>Juan Pérez S.</h3>
+                  <span class="profile-badge badge-conductor">CONDUCTOR</span>
+                </div>
+              </div>
+
+              <!-- Scanned Documents (Images provided by user) -->
+              <img src="images/PermisoCirculacion.png" alt="Permiso de Circulación" class="replica-image">
+              <img src="images/Revisiontecnica.png" alt="Revisión Técnica" class="replica-image">
+              <img src="images/seguro.png" alt="Seguro SOAP" class="replica-image">
+              <img src="images/padron.png" alt="Padrón / Certificado Inscripción" class="replica-image">
+            </div>
+
+            <!-- Profile: Empresa -->
+            <div class="profile-view" id="view-empresa">
+              <div class="verification-badge" style="margin-bottom: 8px;">
+                <div class="pulse-ring"></div>
+                <span class="check-dot">✓</span>
+                <span>VERIFICADO</span>
+              </div>
+              <div class="profile-header-info">
+                <div class="avatar-wrap" style="border-color: var(--teal-greek);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3>Seguridad Coquimbo Ltda.</h3>
+                  <span class="profile-badge badge-empresa">EMPRESA</span>
+                </div>
+              </div>
+              <div class="doc-list">
+                <div class="doc-card">
+                  <div class="doc-card-header">
+                    <span class="doc-card-icon">📋</span>
+                    <div class="doc-card-info">
+                      <h4>Directiva Funcionamiento</h4>
+                      <p>Aprobada por Prefectura OS10</p>
+                    </div>
+                  </div>
+                  <div class="doc-card-status status-ok">APROBADA</div>
+                </div>
+                <div class="doc-card">
+                  <div class="doc-card-header">
+                    <span class="doc-card-icon">📜</span>
+                    <div class="doc-card-info">
+                      <h4>Resolución OS10</h4>
+                      <p>N° 4412 - Vigente hasta 2028</p>
+                    </div>
+                  </div>
+                  <div class="doc-card-status status-ok">VIGENTE</div>
+                </div>
+                <div class="doc-card">
+                  <div class="doc-card-header">
+                    <span class="doc-card-icon">🛡️</span>
+                    <div class="doc-card-info">
+                      <h4>Póliza de Seguros RC</h4>
+                      <p>Consorcio - Monto: 250 UF</p>
+                    </div>
+                  </div>
+                  <div class="doc-card-status status-ok">CONTRATADA</div>
+                </div>
+                <div class="doc-card">
+                  <div class="doc-card-header">
+                    <span class="doc-card-icon">👥</span>
+                    <div class="doc-card-info">
+                      <h4>Listado de Guardias</h4>
+                      <p>12 Guardias acreditados en turno</p>
+                    </div>
+                  </div>
+                  <div class="doc-card-status status-ok">12 ACTIVOS</div>
+                </div>
+                <div class="doc-card">
+                  <div class="doc-card-header">
+                    <span class="doc-card-icon">🏪</span>
+                    <div class="doc-card-info">
+                      <h4>Patente Comercial</h4>
+                      <p>Muni. Coquimbo - N° 9924-A</p>
+                    </div>
+                  </div>
+                  <div class="doc-card-status status-ok">AL DÍA</div>
+                </div>
+                <div class="doc-card">
+                  <div class="doc-card-header">
+                    <span class="doc-card-icon">📈</span>
+                    <div class="doc-card-info">
+                      <h4>Iniciación Actividades</h4>
+                      <p>SII - Rubro Seguridad Privada</p>
+                    </div>
+                  </div>
+                  <div class="doc-card-status status-ok">VERIFICADA</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- iOS Home Indicator Bar -->
+          <div class="ios-home-indicator" id="iosHomeIndicator" title="Bloquear teléfono / Volver a inicio"></div>
+        </div>
+      </div>
+
+      <!-- Simulator Selector Buttons -->
+      <div class="simulator-controls">
+        <button class="sim-btn active" data-profile="guardia">👮 Guardia</button>
+        <button class="sim-btn" data-profile="conductor">🚗 Conductor</button>
+        <button class="sim-btn" data-profile="empresa">🏢 Empresa</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats">
+  <div class="stats-inner">
+    <div class="stat-item">
+      <div class="stat-number">3<span style="color:var(--ink-mute); font-weight:400;">s</span></div>
+      <div class="stat-label">Tiempo de verificación</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">2.000+</div>
+      <div class="stat-label">Guardias en la región</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">10<span style="color:var(--ink-mute); font-weight:400;">+</span></div>
+      <div class="stat-label">Tipos de fiscalización</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">100<span style="color:var(--ink-mute); font-weight:400;">%</span></div>
+      <div class="stat-label">Ley 21.659</div>
+    </div>
+  </div>
+</section>
+
+<!-- PERFILES -->
+<section class="section" id="perfiles">
+  <div class="section-inner">
+    <div class="section-eyebrow">Una tarjeta. Varias identidades.</div>
+    <h2 class="section-title">Configura los perfiles que necesites.</h2>
+    <p class="section-lede">
+      Empezamos con dos perfiles activos. A medida que crezca la plataforma, agregaremos nuevos universos profesionales. Tu tarjeta se expande contigo.
+    </p>
+
+    <div class="perfiles-grid">
+      <div class="perfil-card active" data-grid-profile="guardia">
+        <div class="perfil-num">001 / Activo</div>
+        <div class="perfil-icon-wrap">
+          <div class="perfil-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="M9 12l2 2 4-4"/>
+            </svg>
+          </div>
+        </div>
+        <div class="perfil-name">Guardia de Seguridad</div>
+        <div class="perfil-desc">Credencial OS10, curso vigente, empresa empleadora y estado de vigencia en tiempo real.</div>
+        <div class="perfil-status status-live">— Disponible en Demo</div>
+      </div>
+
+      <div class="perfil-card active" data-grid-profile="conductor">
+        <div class="perfil-num">002 / Activo</div>
+        <div class="perfil-icon-wrap">
+          <div class="perfil-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M3 17h18M5 17V9l2-4h10l2 4v8M7 9h10"/>
+              <circle cx="7.5" cy="17" r="1.5"/>
+              <circle cx="16.5" cy="17" r="1.5"/>
+            </svg>
+          </div>
+        </div>
+        <div class="perfil-name">Conductor Particular</div>
+        <div class="perfil-desc">Licencia, padrón del vehículo, permiso de circulación, revisión técnica y seguro obligatorio.</div>
+        <div class="perfil-status status-live">— Disponible en Demo</div>
+      </div>
+
+      <div class="perfil-card active" data-grid-profile="empresa">
+        <div class="perfil-num">003 / Demo Interactiva</div>
+        <div class="perfil-icon-wrap">
+          <div class="perfil-icon" style="background: rgba(0, 168, 150, 0.08); border-color: rgba(0, 168, 150, 0.2); color: var(--teal-greek);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="2" y="2" width="20" height="20" rx="2" ry="2"/>
+              <path d="M7 22V14h10v8"/>
+              <path d="M9 8h2v2H9V8zm4 0h2v2h-2V8zm-4 4h2v2H9v-2zm4 0h2v2h-2v-2z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="perfil-name">Empresa / Directiva</div>
+        <div class="perfil-desc">Directiva de funcionamiento autorizada por OS10, resoluciones oficiales, pólizas RC, contratos y listado de guardias.</div>
+        <div class="perfil-status status-live" style="color: var(--teal-greek);">— Probar en simulador</div>
+      </div>
+
+      <div class="perfil-card coming">
+        <div class="perfil-num">004 / Próximamente</div>
+        <div class="perfil-icon-wrap">
+          <div class="perfil-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M20 7h-9l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="perfil-name">Trabajador Dependiente</div>
+        <div class="perfil-desc">Contrato laboral, AFP, salud, antecedentes y certificados de capacitación verificables.</div>
+        <div class="perfil-status status-soon">— En desarrollo</div>
+      </div>
+
+      <div class="perfil-card coming">
+        <div class="perfil-num">005 / Próximamente</div>
+        <div class="perfil-icon-wrap">
+          <div class="perfil-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+        </div>
+        <div class="perfil-name">Profesional Colegiado</div>
+        <div class="perfil-desc">Título profesional, registro en colegio respectivo y habilitación para ejercer.</div>
+        <div class="perfil-status status-soon">— En desarrollo</div>
+      </div>
+
+      <div class="perfil-card coming">
+        <div class="perfil-num">006 / Próximamente</div>
+        <div class="perfil-icon-wrap">
+          <div class="perfil-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+          </div>
+        </div>
+        <div class="perfil-name">Más perfiles</div>
+        <div class="perfil-desc">Manipulador de alimentos, operario industrial, conductor profesional, transportista y más.</div>
+        <div class="perfil-status status-soon">— Conforme escale la plataforma</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FLOW -->
+<section class="section flow-section" id="como-funciona">
+  <div class="section-inner">
+    <div class="section-eyebrow">Cómo funciona</div>
+    <h2 class="section-title">Tres pasos. Sin fricción.</h2>
+    <p class="section-lede">Del momento en que recibes tu tarjeta hasta la verificación en terreno.</p>
+  </div>
+  <div class="section-inner" style="margin-top: 64px;">
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="flow-step-num">01</div>
+        <div class="flow-step-title">Registras tus documentos</div>
+        <div class="flow-step-desc">Subes tu cédula, curso OS10, licencia, permiso de circulación y cualquier credencial que necesites. Todo en tu perfil privado.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-num">02</div>
+        <div class="flow-step-title">Recibes tu tarjeta NFC</div>
+        <div class="flow-step-desc">Te llega impresa con tus datos y enlazada a tu perfil mediante un código único cifrado. La portas como cualquier credencial.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-num">03</div>
+        <div class="flow-step-title">Te fiscalizan, escaneas, listo</div>
+        <div class="flow-step-desc">Acercas la tarjeta a un celular. Aparece el perfil correspondiente: guardia, conductor o empresa. Todo verificado en tiempo real.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="precios">
+  <div class="section-inner">
+    <div class="section-eyebrow">Para ti, no para tu empresa</div>
+    <h2 class="section-title">Planes pensados para el profesional individual.</h2>
+    <p class="section-lede">Comienza con la tarjeta. Suma la suscripción cuando quieras alertas automáticas y respaldo en la nube.</p>
+
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="price-name">Tarjeta</div>
+        <div><span class="price-amount">$8.000</span><span class="price-period">/ única vez</span></div>
+        <div class="price-tagline">La tarjeta NFC física, lista para usar.</div>
+        <ul class="price-features">
+          <li>Tarjeta PVC con chip NFC y QR</li>
+          <li>Perfil web verificable</li>
+          <li>Hasta 2 identidades configurables</li>
+          <li>Verificación pública en tiempo real</li>
+        </ul>
+      </div>
+
+      <div class="pricing-card featured">
+        <div class="price-name">Suscripción</div>
+        <div><span class="price-amount">$3.990</span><span class="price-period">/ mes</span></div>
+        <div class="price-tagline">Mantén toda tu documentación viva.</div>
+        <ul class="price-features">
+          <li>Tarjeta incluida</li>
+          <li>Alertas de vencimiento (30, 15, 7 días)</li>
+          <li>Documentos respaldados en la nube</li>
+          <li>Historial de fiscalizaciones</li>
+          <li>Soporte personalizado</li>
+        </ul>
+      </div>
+
+      <div class="pricing-card">
+        <div class="price-name">Empresa</div>
+        <div><span class="price-amount" style="font-size:32px;">A medida</span></div>
+        <div class="price-tagline">Para empresas de seguridad con varios guardias y puntos de servicio.</div>
+        <ul class="price-features">
+          <li>Tarjetas para guardias + directiva</li>
+          <li>Base de datos independiente</li>
+          <li>Panel de administración corporativo</li>
+          <li>Reportes de cumplimiento</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-final" id="contacto">
+  <h2>Una sola tarjeta.<br><span class="accent">Toda tu vida profesional.</span></h2>
+  <p>Pide tu NFC NEXO hoy y deja de cargar fotocopias. Las primeras 500 tarjetas en la Región de Coquimbo.</p>
+  <a href="login.html" class="btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">Quiero la mía →</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="logo">
+      <span>NFC</span>
+      <span class="logo-dot"></span>
+      <span>NEXO</span>
+    </div>
+    <div class="footer-meta footer-flag">
+      Hecho en Chile
+      <span class="flag-stripe">
+        <span class="fs-blue">★</span>
+        <span class="fs-red"></span>
+        <span class="fs-white"></span>
+        <span class="fs-white2"></span>
+      </span>
+      · © 2026
+    </div>
+  </div>
+</footer>
+
+<script>
+  // --- 3D CARD TILT EFFECT ---
+  const card = document.getElementById('nfcCard');
+  const container = document.getElementById('cardContainer');
+
+  if (card && container) {
+    container.addEventListener('mousemove', (e) => {
+      // Ignore mouse tilt during the card sweep animation
+      if (container.classList.contains('animating')) return;
+
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left - (rect.width / 2);
+      const y = e.clientY - rect.top - (rect.height / 2);
+      
+      // Calculate tilt angles (max 15 degrees)
+      const tiltX = -(y / (rect.height / 2)) * 15;
+      const tiltY = (x / (rect.width / 2)) * 15;
+      
+      card.style.transform = `rotateY(${tiltY}deg) rotateX(${tiltX}deg) scale(1.03)`;
+      
+      // Update glow coordinates
+      const mx = ((e.clientX - rect.left) / rect.width) * 100;
+      const my = ((e.clientY - rect.top) / rect.height) * 100;
+      card.style.setProperty('--mx', `${mx}%`);
+      card.style.setProperty('--my', `${my}%`);
+    });
+
+    container.addEventListener('mouseleave', () => {
+      if (container.classList.contains('animating')) return;
+      card.style.transform = 'rotateY(-15deg) rotateX(10deg) scale(1)';
+      card.style.setProperty('--mx', '50%');
+      card.style.setProperty('--my', '50%');
+    });
+  }
+
+  // --- SIMULATOR PROFILE SWITCHING WITH NFC SWEEP ---
+  const buttons = document.querySelectorAll('.sim-btn');
+  const views = document.querySelectorAll('.profile-view');
+  const nfcCard = document.getElementById('nfcCard');
+  const cardLabel = document.getElementById('cardLabel');
+  const nfcWave = document.getElementById('nfcWave');
+  const phoneMockup = document.getElementById('phoneMockup');
+  const iosHomeIndicator = document.getElementById('iosHomeIndicator');
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Avoid double clicks during animation
+      if (container.classList.contains('animating')) return;
+
+      const profile = btn.getAttribute('data-profile');
+      
+      // 1. Update active button in UI immediately
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      // 2. Start the sweep animation (card passing behind the phone)
+      container.classList.add('animating');
+      card.style.transform = ''; // Clear inline mousemove styles
+
+      // Show intermediate reading screen
+      views.forEach(view => view.classList.remove('active'));
+      document.getElementById('view-reading').classList.add('active');
+
+      // 3. Trigger card tap logic when it passes behind the phone (~550ms)
+      setTimeout(() => {
+        // Play NFC transmission wave animation
+        nfcWave.classList.remove('pulse');
+        void nfcWave.offsetWidth; // Trigger reflow to restart animation
+        nfcWave.classList.add('pulse');
+        
+        // Update NFC Card styling class
+        nfcCard.className = `nfc-card profile-${profile}`;
+        
+        // Update card meta info
+        let labelText = "Perfil: Guardia";
+        let metaText = "NFC·NX 0001 · CL · OS10";
+        if (profile === 'conductor') {
+          labelText = "Perfil: Conductor";
+          metaText = "NFC·NX 0001 · CL · TRANSITO";
+        } else if (profile === 'empresa') {
+          labelText = "Perfil: Empresa";
+          metaText = "NFC·NX 0001 · CL · DIRECTIVA";
+        }
+        cardLabel.textContent = labelText;
+        nfcCard.querySelector('.card-meta').textContent = metaText;
+
+        // Flash phone mockup green (NFC tap success haptic feedback)
+        phoneMockup.style.borderColor = '#30D158'; 
+        setTimeout(() => {
+          phoneMockup.style.borderColor = '#2d2f39';
+        }, 300);
+
+        // Switch to corresponding digital profile view
+        views.forEach(view => {
+          view.classList.remove('active');
+          if (view.id === `view-${profile}`) {
+            view.classList.add('active');
+            view.scrollTop = 0; // Reset scroll view to top
+          }
+        });
+      }, 550);
+
+      // 4. End animation cycle and restore tilt control (~1200ms)
+      setTimeout(() => {
+        container.classList.remove('animating');
+        // Restore standard starting 3D rotation
+        card.style.transform = 'rotateY(-15deg) rotateX(10deg) scale(1)';
+      }, 1200);
+    });
+  });
+
+  // --- iOS HOME INDICATOR (Lock Screen Reset) ---
+  if (iosHomeIndicator) {
+    iosHomeIndicator.addEventListener('click', () => {
+      if (container.classList.contains('animating')) return;
+
+      // 1. Reset buttons
+      buttons.forEach(b => b.classList.remove('active'));
+      
+      // 2. Hide profiles, show home lock screen
+      views.forEach(v => v.classList.remove('active'));
+      document.getElementById('view-home').classList.add('active');
+      
+      // 3. Reset card style
+      nfcCard.className = 'nfc-card';
+      cardLabel.textContent = 'Acerca tu tarjeta';
+      nfcCard.querySelector('.card-meta').textContent = 'NFC·NX 0001 · CL';
+    });
+  }
+
+  // --- CLICK GRID PROFILE TO SIMULATE ---
+  const gridCards = document.querySelectorAll('[data-grid-profile]');
+  gridCards.forEach(card => {
+    card.addEventListener('click', () => {
+      const targetProfile = card.getAttribute('data-grid-profile');
+      const simButton = document.querySelector(`.sim-btn[data-profile="${targetProfile}"]`);
+      if (simButton) {
+        // Scroll to hero section
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+        // Click the simulator button after a brief delay for scroll start
+        setTimeout(() => {
+          simButton.click();
+        }, 400);
+      }
+    });
+  });
+</script>
+</body>
+</html>
