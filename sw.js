@@ -7,13 +7,13 @@ self.addEventListener('install', (event) => {
       return cache.addAll([
         './',
         'index.html',
-        'favicon-96x96.png',
-        'favicon.ico',
-        'favicon.svg',
-        'apple-touch-icon.png',
-        'site.webmanifest',
-        'web-app-manifest-192x192.png',
-        'web-app-manifest-512x512.png'
+        'favicon/favicon-96x96.png',
+        'favicon/favicon.ico',
+        'favicon/favicon.svg',
+        'favicon/apple-touch-icon.png',
+        'favicon/site.webmanifest',
+        'favicon/web-app-manifest-192x192.png',
+        'favicon/web-app-manifest-512x512.png'
       ]).catch((error) => {
         console.warn('Pre-caching failed, will cache dynamically:', error);
       });
