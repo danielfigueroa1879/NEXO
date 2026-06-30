@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFC NEXO — Solicitar mi tarjeta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F5F7;
+    --ink: #0A0A0A;
+    --ink-soft: #2C2C2E;
+    --ink-mute: #6E6E73;
+    --line: #E5E5EA;
+    --surface: #FFFFFF;
+    --red: #E82127;
+    --blue: #0033A0;
+    --green: #34C759;
+    --green-light: #E8F9ED;
+    --orange: #FF9500;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg); color: var(--ink); min-height: 100vh;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+    padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .back-btn {
+    width: 36px; height: 36px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; text-decoration: none; color: var(--ink);
+    transition: background .15s;
+  }
+  .back-btn:hover { background: var(--bg); }
+  .header-brand { display: flex; align-items: center; gap: 8px; }
+  .header-logo {
+    width: 30px; height: 30px; background: var(--ink);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  }
+  .header-logo svg { width: 16px; height: 16px; fill: #fff; }
+  .header-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 16px; letter-spacing: -0.02em;
+  }
+  .header-name span { color: var(--red); }
+  .user-chip {
+    background: var(--bg); border: 1px solid var(--line);
+    padding: 5px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .user-chip .av {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--ink); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700;
+  }
+
+  /* ===== PAGE ===== */
+  .page { max-width: 520px; margin: 0 auto; padding: 20px 16px 120px; }
+
+  /* ===== STEPS ===== */
+  .steps {
+    display: flex; gap: 4px;
+    margin-bottom: 24px;
+  }
+  .step-bar {
+    flex: 1; height: 4px;
+    background: var(--line);
+    border-radius: 4px;
+    transition: background .3s;
+  }
+  .step-bar.active { background: var(--ink); }
+  .step-bar.done { background: var(--green); }
+  .step-label {
+    text-align: center;
+    font-size: 12px; color: var(--ink-mute); font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .step-num {
+    text-align: center; font-size: 11px; color: var(--ink-mute);
+    margin-bottom: 4px; font-weight: 700; letter-spacing: 0.08em;
+  }
+
+  /* ===== STEP HEADERS ===== */
+  .step-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px; font-weight: 700; letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  .step-sub {
+    font-size: 14px; color: var(--ink-mute);
+    margin-bottom: 24px; line-height: 1.5;
+  }
+
+  /* ===== SECTION ===== */
+  .card {
+    background: #fff;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    padding: 20px;
+    margin-bottom: 14px;
+  }
+
+  /* ===== FIELDS ===== */
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label {
+    display: block; font-size: 11px; font-weight: 700;
+    color: var(--ink-mute); text-transform: uppercase;
+    letter-spacing: 0.07em; margin-bottom: 6px;
+  }
+  .input-wrap { position: relative; }
+  .input-wrap .ico {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    font-size: 15px; pointer-events: none; line-height: 1;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 12px 14px 12px 38px;
+    border: 1.5px solid var(--line); border-radius: 11px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px; font-weight: 500;
+    background: #fff; color: var(--ink);
+    outline: none; transition: border-color .2s, box-shadow .2s;
+    -webkit-appearance: none;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--ink);
+    box-shadow: 0 0 0 3px rgba(10,10,10,0.06);
+  }
+  .field textarea { padding-left: 14px; padding-top: 12px; resize: vertical; min-height: 70px; }
+  .field-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+
+  /* ===== PERFIL OPTION (Step 2) ===== */
+  .perfil-options {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .perfil-opt {
+    border: 1.5px solid var(--line); border-radius: 12px;
+    padding: 14px 16px; cursor: pointer;
+    display: flex; align-items: center; gap: 12px;
+    transition: all .2s; background: #fff;
+  }
+  .perfil-opt:hover { border-color: var(--ink-mute); }
+  .perfil-opt.selected {
+    border-color: var(--ink);
+    box-shadow: 0 0 0 2px var(--ink) inset, 0 8px 20px rgba(0,0,0,0.05);
+    background: #FAFAFA;
+  }
+  .perfil-opt .p-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .perfil-opt.selected .p-icon { background: var(--ink); color: #fff; }
+  .perfil-opt .p-info { flex: 1; }
+  .perfil-opt .p-info h4 { font-size: 14px; font-weight: 700; }
+  .perfil-opt .p-info p { font-size: 12px; color: var(--ink-mute); margin-top: 2px; }
+  .perfil-opt .check {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all .2s;
+  }
+  .perfil-opt.selected .check {
+    background: var(--ink); border-color: var(--ink);
+  }
+  .perfil-opt.selected .check::after {
+    content: '✓'; color: #fff; font-size: 12px; font-weight: 700;
+  }
+
+  /* ===== TEMA TARJETA ===== */
+  .nfc-preview-wrap {
+    display: flex; justify-content: center; padding: 16px 0;
+  }
+  .nfc-card-mini {
+    width: 280px; height: 175px;
+    background: linear-gradient(135deg, #0A0A0A, #1C1C1E);
+    border-radius: 14px; padding: 16px; color: #fff;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+    position: relative; overflow: hidden;
+    transition: background .3s;
+  }
+  .nfc-card-mini::before {
+    content: '';
+    position: absolute; top: -20px; right: -20px;
+    width: 80px; height: 80px;
+    background: rgba(232,33,39,0.18); border-radius: 50%;
+  }
+  .nfc-card-mini .flag {
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    grid-template-rows: 1.5px 1.5px;
+  }
+  .nfc-card-mini .flag .fb { background: var(--blue); grid-column:1; grid-row:1; }
+  .nfc-card-mini .flag .fw { background: #fff; grid-column:2; grid-row:1; }
+  .nfc-card-mini .flag .fr { background: var(--red); grid-column:1 / span 2; grid-row:2; }
+  .nfc-card-mini .brand {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 14px; letter-spacing: -0.02em;
+  }
+  .nfc-card-mini .brand .dot { color: var(--red); }
+  .nfc-card-mini .nm {
+    position: absolute; bottom: 32px; left: 16px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px; font-weight: 500; z-index: 1;
+  }
+  .nfc-card-mini .meta {
+    position: absolute; bottom: 16px; left: 16px;
+    font-size: 10px; opacity: 0.55;
+  }
+  .theme-picker {
+    display: flex; gap: 10px; justify-content: center;
+    padding-top: 12px;
+  }
+  .theme-dot {
+    width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+    transition: transform .2s; border: 3px solid transparent;
+  }
+  .theme-dot.selected { border-color: var(--ink); box-shadow: 0 0 0 2px #fff inset; }
+  .theme-dot.t-negro { background: linear-gradient(135deg, #0A0A0A, #2C2C2E); }
+  .theme-dot.t-rojo  { background: linear-gradient(135deg, #B81E22, var(--red)); }
+  .theme-dot.t-azul  { background: linear-gradient(135deg, #002576, var(--blue)); }
+  .theme-dot.t-verde { background: linear-gradient(135deg, #1F8A3F, var(--green)); }
+
+  /* ===== RESUMEN ===== */
+  .resumen-row {
+    display: flex; justify-content: space-between;
+    padding: 10px 0; font-size: 14px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .resumen-row:last-child { border-bottom: none; }
+  .resumen-row .lbl { color: var(--ink-mute); }
+  .resumen-row .val { font-weight: 600; }
+  .resumen-row.total {
+    border-top: 2px solid var(--ink);
+    border-bottom: none;
+    margin-top: 8px; padding-top: 14px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px; font-weight: 700;
+  }
+  .resumen-row.total .val { color: var(--ink); }
+
+  /* ===== PAGO ===== */
+  .pay-methods {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin-top: 12px;
+  }
+  .pay-opt {
+    padding: 14px 10px; border: 1.5px solid var(--line);
+    border-radius: 12px; cursor: pointer;
+    text-align: center; transition: all .2s;
+    background: #fff;
+  }
+  .pay-opt:hover { border-color: var(--ink-mute); }
+  .pay-opt.selected {
+    border-color: var(--ink);
+    box-shadow: 0 0 0 2px var(--ink) inset;
+  }
+  .pay-opt .icon { font-size: 26px; margin-bottom: 4px; }
+  .pay-opt .name { font-size: 12px; font-weight: 700; }
+  .pay-opt .desc { font-size: 10px; color: var(--ink-mute); margin-top: 2px; }
+
+  /* ===== SUCCESS ===== */
+  .success-page {
+    text-align: center; padding: 40px 20px;
+  }
+  .success-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 28px 0 8px;
+    text-align: left;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .summary-info h4 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px; font-weight: 700;
+    margin-bottom: 12px; color: var(--ink-mute);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .summary-info .info-line {
+    display: flex; flex-direction: column; gap: 1px;
+    padding: 6px 0; border-bottom: 1px solid var(--line);
+  }
+  .summary-info .info-line:last-child { border-bottom: none; }
+  .summary-info .info-line .lbl {
+    font-size: 10px; color: var(--ink-mute); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .summary-info .info-line .val {
+    font-size: 13px; font-weight: 600; color: var(--ink);
+    word-break: break-word;
+  }
+  .summary-card-wrap {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 10px;
+  }
+  .summary-card-wrap .nfc-card-mini {
+    width: 100%; max-width: 220px; height: 138px;
+    padding: 12px;
+  }
+  .summary-card-wrap .nfc-card-mini .brand { font-size: 12px; }
+  .summary-card-wrap .nfc-card-mini .nm {
+    bottom: 26px; left: 12px; font-size: 13px;
+  }
+  .summary-card-wrap .nfc-card-mini .meta {
+    bottom: 12px; left: 12px; font-size: 9px;
+  }
+  .card-caption {
+    font-size: 11px; color: var(--ink-mute); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .success-icon-big {
+    width: 96px; height: 96px;
+    background: var(--green-light);
+    border-radius: 50%;
+    margin: 0 auto 22px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 44px;
+    animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes pop {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+  }
+  .success-page h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px; font-weight: 700; letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  .success-page p {
+    font-size: 14px; color: var(--ink-mute); line-height: 1.55;
+    margin-bottom: 28px;
+  }
+  .next-options {
+    display: flex; flex-direction: column; gap: 12px;
+    text-align: left;
+  }
+  .next-card {
+    background: #fff; border: 1.5px solid var(--line);
+    border-radius: 14px; padding: 16px;
+    display: flex; align-items: center; gap: 14px;
+    text-decoration: none; color: var(--ink);
+    cursor: pointer; transition: all .2s;
+  }
+  .next-card:hover {
+    border-color: var(--ink); transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.07);
+  }
+  .next-card .ic {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: var(--ink); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .next-card .ic.email { background: var(--blue); }
+  .next-card .info { flex: 1; }
+  .next-card .info h4 { font-size: 15px; font-weight: 700; }
+  .next-card .info p { font-size: 12px; color: var(--ink-mute); margin-top: 3px; line-height: 1.4; }
+  .next-card .arrow { color: var(--ink-mute); font-size: 20px; flex-shrink: 0; }
+
+  /* ===== BOTTOM BAR ===== */
+  .bottom-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(250,250,250,0.92);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--line);
+    padding: 14px 16px; z-index: 100;
+  }
+  .bottom-bar .inner {
+    max-width: 520px; margin: 0 auto;
+    display: flex; gap: 10px; align-items: center;
+  }
+  .price-tag {
+    flex: 1; font-size: 12px; color: var(--ink-mute);
+  }
+  .price-tag strong {
+    display: block; font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px; font-weight: 700; color: var(--ink); margin-top: 2px;
+  }
+  .btn-action {
+    padding: 14px 24px; border-radius: 12px; border: none;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-action.secondary {
+    background: #fff; color: var(--ink); border: 1.5px solid var(--line);
+  }
+  .btn-action.primary {
+    background: var(--ink); color: #fff;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-action:active { transform: scale(0.97); }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: #fff;
+    padding: 12px 22px; border-radius: 30px;
+    font-size: 13px; font-weight: 600;
+    opacity: 0; pointer-events: none;
+    transition: opacity .3s; z-index: 200;
+  }
+  .toast.show { opacity: 1; }
+
+  /* ===== HIDE ===== */
+  .step-panel { display: none; }
+  .step-panel.active { display: block; animation: fadeUp .4s ease; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== MOBILE ===== */
+  @media (max-width: 375px) {
+    .header { padding: 10px 12px; }
+    .header-name { font-size: 14px; }
+    .user-chip { font-size: 11px; padding: 4px 10px; }
+    .page { padding: 14px 10px 130px; }
+    .step-title { font-size: 20px; }
+    .step-sub { font-size: 13px; margin-bottom: 18px; }
+    .card { padding: 14px; }
+    .field-grid { grid-template-columns: 1fr; }
+    .field input, .field select { font-size: 13px; padding: 11px 12px 11px 36px; }
+    .perfil-opt { padding: 12px 14px; gap: 10px; }
+    .perfil-opt .p-icon { width: 38px; height: 38px; font-size: 17px; }
+    .nfc-card-mini { width: 100%; max-width: 280px; }
+    .pay-methods { grid-template-columns: 1fr 1fr; }
+    .pay-opt { padding: 12px 8px; }
+    .btn-action { padding: 12px 18px; font-size: 13px; }
+    .price-tag strong { font-size: 18px; }
+    .success-icon-big { width: 80px; height: 80px; font-size: 38px; }
+    .success-page h2 { font-size: 22px; }
+    .success-summary { grid-template-columns: 1fr; gap: 14px; padding: 14px; }
+    .summary-card-wrap .nfc-card-mini { max-width: 240px; height: 150px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <a href="login.html" class="back-btn" title="Salir">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    </a>
+    <div class="header-brand">
+      <div class="header-logo">
+        <svg viewBox="0 0 24 24"><path d="M6 2C4.9 2 4 2.9 4 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 3h8v1.5H8V16zm0-6h3v1.5H8V10z"/></svg>
+      </div>
+      <div class="header-name">NFC <span>NEXO</span></div>
+    </div>
+  </div>
+  <div class="user-chip">
+    <div class="av" id="userAv">?</div>
+    <span id="userName">Mi cuenta</span>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- STEP INDICATOR -->
+  <div class="step-num" id="stepNum">PASO 1 DE 4</div>
+  <div class="steps">
+    <div class="step-bar active" id="bar1"></div>
+    <div class="step-bar" id="bar2"></div>
+    <div class="step-bar" id="bar3"></div>
+    <div class="step-bar" id="bar4"></div>
+  </div>
+
+  <!-- ============ STEP 1: DATOS PERSONALES ============ -->
+  <div class="step-panel active" id="step-1">
+    <h1 class="step-title">Datos para tu tarjeta</h1>
+    <p class="step-sub">Llena tus datos. Estos aparecerán impresos en tu tarjeta NFC física.</p>
+
+    <div class="card">
+      <div class="field">
+        <label>Nombre completo</label>
+        <div class="input-wrap">
+          <span class="ico">👤</span>
+          <input type="text" id="f-nombre" placeholder="Ej: Juan Pérez Soto" oninput="actualizarPreview()">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>RUT</label>
+        <div class="input-wrap">
+          <span class="ico">🪪</span>
+          <input type="text" id="f-rut" placeholder="12.345.678-9" maxlength="12">
+        </div>
+      </div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label>Teléfono</label>
+          <div class="input-wrap">
+            <span class="ico">📱</span>
+            <input type="tel" id="f-tel" placeholder="+56 9 1234 5678">
+          </div>
+        </div>
+        <div class="field">
+          <label>Correo</label>
+          <div class="input-wrap">
+            <span class="ico">✉️</span>
+            <input type="email" id="f-mail" placeholder="correo@ejemplo.cl">
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Dirección de envío</label>
+        <div class="input-wrap">
+          <span class="ico">📍</span>
+          <input type="text" id="f-dir" placeholder="Calle, número, comuna, ciudad">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STEP 2: CONFIGURACIÓN PERFILES ============ -->
+  <div class="step-panel" id="step-2">
+    <h1 class="step-title">Configura tu tarjeta</h1>
+    <p class="step-sub">Selecciona qué perfiles quieres activar. Puedes agregar más después.</p>
+
+    <div class="card">
+      <div class="perfil-options">
+        <div class="perfil-opt selected" data-perfil="guardia" onclick="togglePerfil(this)">
+          <div class="p-icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 6 Q6 4 12 4 Q18 4 18 6 L18 7 L6 7 Z" fill="#1a1a1a"/>
+              <circle cx="12" cy="5.5" r="0.9" fill="#FFC107"/>
+              <circle cx="12" cy="10" r="3.5" fill="#F5C9A1"/>
+              <circle cx="10.7" cy="10" r="0.5" fill="#1a1a1a"/>
+              <circle cx="13.3" cy="10" r="0.5" fill="#1a1a1a"/>
+              <path d="M3 24 L3 17 Q3 14.5 5 14 L9 13.5 L12 16 L15 13.5 L19 14 Q21 14.5 21 17 L21 24 Z" fill="#E82127"/>
+              <path d="M9 13.5 L12 17 L15 13.5 L15 21 L9 21 Z" fill="#0a0a0a"/>
+              <circle cx="12" cy="19" r="0.45" fill="#FFC107"/>
+              <circle cx="12" cy="21.5" r="0.45" fill="#FFC107"/>
+            </svg>
+          </div>
+          <div class="p-info">
+            <h4>Guardia de Seguridad OS10</h4>
+            <p>Curso OS10, credencial, cédula, antecedentes</p>
+          </div>
+          <div class="check"></div>
+        </div>
+
+        <div class="perfil-opt" data-perfil="vehiculo" onclick="togglePerfil(this)">
+          <div class="p-icon">🚗</div>
+          <div class="p-info">
+            <h4>Vehículo (Conductor)</h4>
+            <p>Licencia, padrón, permiso, revisión técnica, SOAP</p>
+          </div>
+          <div class="check"></div>
+        </div>
+
+        <!-- Campo patente — visible solo si elige Vehículo -->
+        <div id="patenteWrap" style="display:none; padding:16px; background:#FAFAFA; border:1.5px dashed var(--line); border-radius:12px; margin-top:-2px;">
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">🚗 Patente de tu vehículo</label>
+          <input type="text" id="f-patente" placeholder="PKMB-26" maxlength="8"
+                 style="width:100%;padding:14px 18px;border:1.5px solid var(--line);border-radius:11px;font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;text-align:center;background:#fff;color:var(--ink);outline:none;">
+          <p style="font-size:11px;color:var(--ink-mute);margin-top:8px;line-height:1.4;text-align:center;">Aparecerá en tu tarjeta como el segundo perfil al escanear.</p>
+        </div>
+
+        <div class="perfil-opt" data-perfil="comerciante" onclick="togglePerfil(this)">
+          <div class="p-icon">🏪</div>
+          <div class="p-info">
+            <h4>Comerciante / Botillería</h4>
+            <p>Patente comercial, RUT, autorización municipal</p>
+          </div>
+          <div class="check"></div>
+        </div>
+
+        <div class="perfil-opt" data-perfil="profesional" onclick="togglePerfil(this)" style="opacity:0.5;pointer-events:none;">
+          <div class="p-icon">🎓</div>
+          <div class="p-info">
+            <h4>Profesional Colegiado</h4>
+            <p>Próximamente</p>
+          </div>
+          <div class="check"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STEP 3: DISEÑO ============ -->
+  <div class="step-panel" id="step-3">
+    <h1 class="step-title">Diseño de tu tarjeta</h1>
+    <p class="step-sub">Elige el color que más te represente. Verás un preview en tiempo real.</p>
+
+    <div class="card">
+      <div class="nfc-preview-wrap">
+        <div class="nfc-card-mini" id="cardPreview">
+          <div class="flag"><div class="fb"></div><div class="fw"></div><div class="fr"></div></div>
+          <div class="brand">NFC<span class="dot">·</span>NEXO</div>
+          <div class="nm" id="prevName">Tu nombre aquí</div>
+          <div class="meta">NFC·NX 0001 · CL</div>
+        </div>
+      </div>
+      <div class="theme-picker">
+        <div class="theme-dot t-negro selected" onclick="setTheme('negro',this)" title="Clásico"></div>
+        <div class="theme-dot t-rojo" onclick="setTheme('rojo',this)" title="Rojo Chile"></div>
+        <div class="theme-dot t-azul" onclick="setTheme('azul',this)" title="Azul"></div>
+        <div class="theme-dot t-verde" onclick="setTheme('verde',this)" title="Verde"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STEP 4: RESUMEN + PAGO ============ -->
+  <div class="step-panel" id="step-4">
+    <h1 class="step-title">Resumen y pago</h1>
+    <p class="step-sub">Revisa lo que solicitaste antes de pagar.</p>
+
+    <div class="card">
+      <div class="resumen-row">
+        <span class="lbl">Tarjeta NFC NEXO</span>
+        <span class="val">1 unidad</span>
+      </div>
+      <div class="resumen-row">
+        <span class="lbl">Perfiles activos</span>
+        <span class="val" id="r-perfiles">Guardia OS10</span>
+      </div>
+      <div class="resumen-row">
+        <span class="lbl">Diseño</span>
+        <span class="val" id="r-tema">Clásico Negro</span>
+      </div>
+      <div class="resumen-row">
+        <span class="lbl">Envío a domicilio</span>
+        <span class="val">$0 — Gratis</span>
+      </div>
+      <div class="resumen-row total">
+        <span>Total</span>
+        <span class="val">$8.000 CLP</span>
+      </div>
+    </div>
+
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;margin:18px 0 10px;">Método de pago</h3>
+    <div class="card" style="padding: 14px;">
+      <div class="pay-methods">
+        <div class="pay-opt selected" onclick="selPay(this)">
+          <div class="icon">💳</div>
+          <div class="name">Tarjeta</div>
+          <div class="desc">Crédito / débito</div>
+        </div>
+        <div class="pay-opt" onclick="selPay(this)">
+          <div class="icon">🏦</div>
+          <div class="name">Transferencia</div>
+          <div class="desc">Banco</div>
+        </div>
+        <div class="pay-opt" onclick="selPay(this)">
+          <div class="icon">📱</div>
+          <div class="name">Mercado Pago</div>
+          <div class="desc">QR o cuenta</div>
+        </div>
+        <div class="pay-opt" onclick="selPay(this)">
+          <div class="icon">🟢</div>
+          <div class="name">Webpay</div>
+          <div class="desc">Plus</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SUCCESS ============ -->
+  <div class="step-panel" id="step-success">
+    <div class="success-page">
+      <div class="success-icon-big">✅</div>
+      <h2>¡Pago exitoso!</h2>
+      <p>Tu tarjeta NFC NEXO está en camino.<br>
+      Recibirás un correo de confirmación a <strong id="sMail">tu correo</strong>.</p>
+
+      <!-- Resumen lado a lado: info + tarjeta -->
+      <div class="success-summary">
+        <div class="summary-info">
+          <h4>Tu configuración</h4>
+          <div class="info-line"><span class="lbl">Titular</span><span class="val" id="sNombre">—</span></div>
+          <div class="info-line"><span class="lbl">RUT</span><span class="val" id="sRut">—</span></div>
+          <div class="info-line"><span class="lbl">Perfiles</span><span class="val" id="sPerf">—</span></div>
+          <div class="info-line patente-line" id="sPatLine" style="display:none;"><span class="lbl">Patente</span><span class="val" id="sPat">—</span></div>
+          <div class="info-line"><span class="lbl">Diseño</span><span class="val" id="sTema">—</span></div>
+          <div class="info-line"><span class="lbl">Total pagado</span><span class="val" style="color:var(--green);font-weight:700;">$8.000 CLP</span></div>
+        </div>
+        <div class="summary-card-wrap">
+          <div class="nfc-card-mini" id="successCard">
+            <div class="flag"><div class="fb"></div><div class="fw"></div><div class="fr"></div></div>
+            <div class="brand">NFC<span class="dot">·</span>NEXO</div>
+            <div class="nm" id="sCardName">Tu nombre</div>
+            <div class="meta" id="sCardMeta">NFC·NX 0001 · CL</div>
+          </div>
+          <div class="card-caption">Tu tarjeta</div>
+        </div>
+      </div>
+
+      <h3 style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;margin:24px 0 12px;text-align:left;">Próximo paso: tus documentos</h3>
+      <div class="next-options">
+        <a href="subir-documentos.html" class="next-card">
+          <div class="ic">📤</div>
+          <div class="info">
+            <h4>Subir documentos aquí</h4>
+            <p>Carga tus archivos directamente desde tu celular o computador.</p>
+          </div>
+          <span class="arrow">›</span>
+        </a>
+
+        <a href="mailto:documentos@nfcnexo.cl?subject=Documentos%20mi%20tarjeta%20NFC%20NEXO&body=Hola%2C%20adjunto%20mis%20documentos%20para%20activar%20mi%20tarjeta%20NFC%20NEXO.%0A%0ANombre%3A%20Elias%20Figueroa%20M.%0ARUT%3A%2012.345.678-9" class="next-card">
+          <div class="ic email">✉️</div>
+          <div class="info">
+            <h4>Enviar por correo</h4>
+            <p>Envíanos los archivos a <strong>documentos@nfcnexo.cl</strong></p>
+          </div>
+          <span class="arrow">›</span>
+        </a>
+
+        <a href="verificar.html" style="display:block;text-align:center;margin-top:14px;color:var(--ink-mute);font-size:13px;font-weight:600;text-decoration:none;">
+          Continuar después →
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar" id="bottomBar">
+  <div class="inner">
+    <div class="price-tag">
+      <span>Total</span>
+      <strong>$8.000 CLP</strong>
+    </div>
+    <button class="btn-action secondary" id="btnBack" onclick="prev()" style="display:none;">← Atrás</button>
+    <button class="btn-action primary" id="btnNext" onclick="next()">
+      Continuar
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">Listo</div>
+
+<script>
+  let paso = 1;
+  const TOTAL_PASOS = 4;
+  let perfiles = ['guardia'];
+  let tema = 'negro';
+  let pago = 'tarjeta';
+
+  // Iniciales del nombre para el avatar
+  function iniciales(n) {
+    return (n || '').trim().split(/\s+/).slice(0,2).map(p => p[0] || '').join('').toUpperCase() || '?';
+  }
+  function actualizarPreview() {
+    const nm = document.getElementById('f-nombre').value.trim();
+    document.getElementById('prevName').textContent = nm || 'Tu nombre aquí';
+    const primero = nm.split(/\s+/)[0] || 'Mi cuenta';
+    document.getElementById('userName').textContent = primero;
+    document.getElementById('userAv').textContent = iniciales(nm);
+  }
+
+  function showStep(n) {
+    paso = n;
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('step-' + n).classList.add('active');
+
+    // Barras de progreso
+    for (let i = 1; i <= TOTAL_PASOS; i++) {
+      const bar = document.getElementById('bar' + i);
+      bar.classList.remove('active', 'done');
+      if (i < n) bar.classList.add('done');
+      else if (i === n) bar.classList.add('active');
+    }
+    document.getElementById('stepNum').textContent = `PASO ${n} DE ${TOTAL_PASOS}`;
+
+    // Botones
+    document.getElementById('btnBack').style.display = n > 1 ? 'inline-flex' : 'none';
+    if (n === TOTAL_PASOS) {
+      document.getElementById('btnNext').innerHTML = '🔒 Pagar $8.000 <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>';
+    } else {
+      document.getElementById('btnNext').innerHTML = 'Continuar <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>';
+    }
+
+    // Actualizar resumen si llega al paso 4
+    if (n === 4) actualizarResumen();
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+
+  function next() {
+    // Validaciones por paso
+    if (paso === 1) {
+      const nombre = document.getElementById('f-nombre').value.trim();
+      const rut    = document.getElementById('f-rut').value.trim();
+      const mail   = document.getElementById('f-mail').value.trim();
+      if (!nombre) { showToast('Ingresa tu nombre completo'); return; }
+      if (!rut)    { showToast('Ingresa tu RUT'); return; }
+      if (!mail)   { showToast('Ingresa tu correo'); return; }
+    }
+    if (paso === 2 && perfiles.includes('vehiculo')) {
+      const pat = (document.getElementById('f-patente').value || '').trim();
+      if (!pat) { showToast('Ingresa la patente del vehículo'); return; }
+    }
+
+    if (paso < TOTAL_PASOS) {
+      showStep(paso + 1);
+    } else {
+      // Guardar datos y procesar pago
+      guardarDatos();
+      const btn = document.getElementById('btnNext');
+      btn.innerHTML = 'Procesando pago…';
+      btn.style.opacity = '0.7';
+      setTimeout(() => {
+        document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('step-success').classList.add('active');
+        document.getElementById('bottomBar').style.display = 'none';
+        document.getElementById('stepNum').textContent = 'COMPLETADO';
+        for (let i = 1; i <= TOTAL_PASOS; i++) {
+          document.getElementById('bar' + i).classList.remove('active');
+          document.getElementById('bar' + i).classList.add('done');
+        }
+        llenarResumenSuccess();
+        window.scrollTo({top: 0, behavior: 'smooth'});
+      }, 1800);
+    }
+  }
+
+  // Guardar toda la configuración en localStorage para verificar.html / admin.html
+  function guardarDatos() {
+    const datos = {
+      nombre: document.getElementById('f-nombre').value.trim(),
+      rut: document.getElementById('f-rut').value.trim(),
+      tel: document.getElementById('f-tel').value.trim(),
+      mail: document.getElementById('f-mail').value.trim(),
+      dir: document.getElementById('f-dir').value.trim(),
+      patente: (document.getElementById('f-patente').value || '').trim().toUpperCase(),
+      perfiles: [...perfiles],
+      tema: tema,
+      pago: pago,
+      fecha: new Date().toISOString()
+    };
+    try {
+      localStorage.setItem('nexo_cuenta', JSON.stringify(datos));
+    } catch(e) { console.warn('No se pudo guardar', e); }
+  }
+
+  // Llenar el resumen lado-a-lado en la pantalla de éxito
+  function llenarResumenSuccess() {
+    const nombre = document.getElementById('f-nombre').value.trim() || 'Tu nombre';
+    const rut    = document.getElementById('f-rut').value.trim() || '—';
+    const mail   = document.getElementById('f-mail').value.trim() || 'tu correo';
+    const pat    = (document.getElementById('f-patente').value || '').trim().toUpperCase();
+    const nombres = { guardia: 'Guardia OS10', vehiculo: 'Vehículo', comerciante: 'Comerciante' };
+    const lista = perfiles.map(p => nombres[p]).join(' + ');
+    const temas = { negro: 'Clásico Negro', rojo: 'Rojo Chile', azul: 'Azul Chile', verde: 'Verde' };
+
+    document.getElementById('sNombre').textContent = nombre;
+    document.getElementById('sRut').textContent    = rut;
+    document.getElementById('sPerf').textContent   = lista;
+    document.getElementById('sTema').textContent   = temas[tema];
+    document.getElementById('sMail').textContent   = mail;
+
+    if (perfiles.includes('vehiculo') && pat) {
+      document.getElementById('sPatLine').style.display = 'flex';
+      document.getElementById('sPat').textContent = pat;
+    }
+
+    // Tarjeta del resumen con el tema elegido
+    document.getElementById('sCardName').textContent = nombre;
+    const grads = {
+      negro: 'linear-gradient(135deg, #0A0A0A, #1C1C1E)',
+      rojo:  'linear-gradient(135deg, #6B0F11, #B81E22)',
+      azul:  'linear-gradient(135deg, #001142, #002576)',
+      verde: 'linear-gradient(135deg, #0E3D1A, #1F8A3F)'
+    };
+    document.getElementById('successCard').style.background = grads[tema];
+
+    // Actualizar mailto con el correo real
+    const enlace = document.querySelector('.next-card[href^="mailto"]');
+    if (enlace) {
+      enlace.setAttribute('href',
+        `mailto:documentos@nfcnexo.cl?subject=${encodeURIComponent('Documentos mi tarjeta NFC NEXO')}&body=${encodeURIComponent('Hola, adjunto mis documentos para activar mi tarjeta NFC NEXO.\n\nNombre: ' + nombre + '\nRUT: ' + rut + '\nCorreo: ' + mail)}`
+      );
+    }
+  }
+
+  function prev() {
+    if (paso > 1) showStep(paso - 1);
+  }
+
+  // Toggle perfil
+  function togglePerfil(el) {
+    const p = el.getAttribute('data-perfil');
+    if (el.classList.contains('selected')) {
+      if (perfiles.length > 1) {
+        el.classList.remove('selected');
+        perfiles = perfiles.filter(x => x !== p);
+      } else {
+        showToast('Debes mantener al menos un perfil activo');
+      }
+    } else {
+      el.classList.add('selected');
+      perfiles.push(p);
+    }
+    // Mostrar/ocultar campo patente
+    const patWrap = document.getElementById('patenteWrap');
+    if (patWrap) patWrap.style.display = perfiles.includes('vehiculo') ? 'block' : 'none';
+  }
+
+  // Tema
+  function setTheme(t, el) {
+    tema = t;
+    const card = document.getElementById('cardPreview');
+    const grads = {
+      negro: 'linear-gradient(135deg, #0A0A0A, #1C1C1E)',
+      rojo:  'linear-gradient(135deg, #6B0F11, #B81E22)',
+      azul:  'linear-gradient(135deg, #001142, #002576)',
+      verde: 'linear-gradient(135deg, #0E3D1A, #1F8A3F)'
+    };
+    card.style.background = grads[t];
+    document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  // Pago
+  function selPay(el) {
+    document.querySelectorAll('.pay-opt').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    pago = el.querySelector('.name').textContent.toLowerCase();
+  }
+
+  // Actualizar resumen
+  function actualizarResumen() {
+    const nombres = {
+      guardia: 'Guardia OS10',
+      vehiculo: 'Vehículo',
+      comerciante: 'Comerciante'
+    };
+    const lista = perfiles.map(p => nombres[p]).join(', ');
+    document.getElementById('r-perfiles').textContent = lista || '—';
+    const temas = { negro: 'Clásico Negro', rojo: 'Rojo Chile', azul: 'Azul Chile', verde: 'Verde' };
+    document.getElementById('r-tema').textContent = temas[tema];
+  }
+
+  // Toast
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2400);
+  }
+</script>
+</body>
+</html>
