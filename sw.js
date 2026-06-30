@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nfc-nexo-v3';
+const CACHE_NAME = 'nfc-nexo-v4';
 const OFFLINE_URL = 'index.html';
 
 self.addEventListener('install', (event) => {
@@ -11,7 +11,7 @@ self.addEventListener('install', (event) => {
         'favicon/favicon.ico',
         'favicon/favicon.svg',
         'favicon/apple-touch-icon.png',
-        'favicon/site.webmanifest',
+        'favicon/nexo.webmanifest',
         'favicon/web-app-manifest-192x192.png',
         'favicon/web-app-manifest-512x512.png'
       ]).catch((error) => {
