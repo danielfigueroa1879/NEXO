@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFC NEXO — Administración</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F5F7;
+    --ink: #0A0A0A;
+    --ink-soft: #2C2C2E;
+    --ink-mute: #6E6E73;
+    --line: #E5E5EA;
+    --surface: #FFFFFF;
+    --red: #E82127;
+    --blue: #0033A0;
+    --green: #34C759;
+    --green-light: #E8F9ED;
+    --orange: #FF9500;
+    --orange-light: #FFF4E0;
+    --radius: 14px;
+    --shadow: 0 2px 20px rgba(0,0,0,0.07);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg); color: var(--ink); min-height: 100vh;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+    padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .back-btn {
+    width: 36px; height: 36px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; text-decoration: none; color: var(--ink);
+    transition: background .15s;
+  }
+  .back-btn:hover { background: var(--bg); }
+  .header-brand { display: flex; align-items: center; gap: 8px; }
+  .header-logo {
+    width: 30px; height: 30px; background: var(--ink);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  }
+  .header-logo svg { width: 16px; height: 16px; fill: #fff; }
+  .header-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 16px; letter-spacing: -0.02em;
+  }
+  .header-name span { color: var(--red); }
+  .admin-badge {
+    background: var(--ink); color: #fff;
+    font-size: 10px; font-weight: 700; padding: 3px 9px;
+    border-radius: 20px; letter-spacing: 0.08em;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+
+  /* ===== PAGE ===== */
+  .page { max-width: 520px; margin: 0 auto; padding: 20px 16px 100px; }
+
+  /* ===== OWNER CARD ===== */
+  .owner-card {
+    background: linear-gradient(135deg, #0A0A0A, #1C1C1E);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    color: #fff;
+    margin-bottom: 20px;
+    position: relative; overflow: hidden;
+  }
+  .owner-card::before {
+    content: '';
+    position: absolute; top: -30px; right: -30px;
+    width: 120px; height: 120px;
+    background: rgba(232,33,39,0.15); border-radius: 50%;
+  }
+  .owner-card h3 {
+    font-size: 11px; font-weight: 700; opacity: 0.5;
+    text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;
+  }
+  .owner-card .nombre {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px; font-weight: 700; letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+  .owner-card .rut {
+    font-size: 12px; opacity: 0.5; letter-spacing: 0.04em;
+  }
+  .owner-card .nfc-id {
+    margin-top: 14px; padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 10px; position: relative; z-index: 1;
+  }
+  .owner-card .nfc-id label {
+    font-size: 10px; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .owner-card .nfc-id .id-val {
+    font-family: 'Space Grotesk', monospace;
+    font-size: 14px; font-weight: 600; letter-spacing: 0.05em; margin-top: 2px;
+  }
+  .copy-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 11px; font-weight: 600;
+    padding: 6px 12px; border-radius: 8px;
+    cursor: pointer; font-family: 'Outfit', sans-serif;
+    transition: background .15s;
+  }
+  .copy-btn:hover { background: rgba(255,255,255,0.2); }
+
+  /* ===== SECTION ===== */
+  .section {
+    background: #fff;
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .section-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-head .icon { font-size: 18px; line-height: 1; }
+  .section-head h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px; font-weight: 700; letter-spacing: -0.01em; flex: 1;
+  }
+  .section-head .help {
+    font-size: 11px; color: var(--ink-mute); font-weight: 500;
+  }
+
+  /* ===== PERFIL ROW ===== */
+  .perfil-row {
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .perfil-row:last-child { border-bottom: none; }
+  .perfil-row .p-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .perfil-row .p-info { flex: 1; min-width: 0; }
+  .perfil-row .p-info h4 { font-size: 14px; font-weight: 700; }
+  .perfil-row .p-info p { font-size: 11px; color: var(--ink-mute); margin-top: 2px; }
+
+  /* TOGGLE SWITCH */
+  .switch {
+    position: relative; display: inline-block;
+    width: 44px; height: 26px; flex-shrink: 0;
+  }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; inset: 0;
+    background: #D1D1D6; border-radius: 26px;
+    cursor: pointer; transition: background .25s;
+  }
+  .slider::before {
+    content: '';
+    position: absolute; top: 3px; left: 3px;
+    width: 20px; height: 20px;
+    background: #fff; border-radius: 50%;
+    transition: transform .25s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .switch input:checked + .slider { background: var(--green); }
+  .switch input:checked + .slider::before { transform: translateX(18px); }
+  .switch.coming-soon { opacity: 0.4; pointer-events: none; }
+
+  /* ===== DOC PRIVACY ROW ===== */
+  .doc-priv {
+    padding: 12px 18px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .doc-priv:last-child { border-bottom: none; }
+  .doc-priv .d-thumb {
+    width: 40px; height: 50px; flex-shrink: 0;
+    border-radius: 6px; overflow: hidden;
+    background: var(--bg); border: 1px solid var(--line);
+  }
+  .doc-priv .d-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .doc-priv .d-name { flex: 1; font-size: 13px; font-weight: 600; min-width: 0; }
+  .privacy-select {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 28px 7px 11px;
+    font-size: 12px; font-weight: 600;
+    font-family: 'Outfit', sans-serif;
+    color: var(--ink); cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%236E6E73' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 9px center;
+  }
+
+  /* ===== TARJETA NFC PREVIEW ===== */
+  .nfc-preview {
+    padding: 18px;
+    display: flex; flex-direction: column; align-items: center;
+    background: linear-gradient(180deg, #FAFAFA 0%, #fff 100%);
+  }
+  .nfc-card-mini {
+    width: 280px; height: 175px;
+    background: linear-gradient(135deg, #0A0A0A, #1C1C1E);
+    border-radius: 14px;
+    padding: 16px;
+    color: #fff;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+    position: relative; overflow: hidden;
+    transition: transform .3s;
+  }
+  .nfc-card-mini::before {
+    content: '';
+    position: absolute; top: -20px; right: -20px;
+    width: 80px; height: 80px;
+    background: rgba(232,33,39,0.18); border-radius: 50%;
+  }
+  .nfc-card-mini.theme-rojo::before { background: rgba(232,33,39,0.35); }
+  .nfc-card-mini.theme-azul::before { background: rgba(0,51,160,0.35); }
+  .nfc-card-mini.theme-verde::before { background: rgba(52,199,89,0.3); }
+  .nfc-card-mini .head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    position: relative; z-index: 1;
+  }
+  .nfc-card-mini .brand {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 14px; letter-spacing: -0.02em;
+  }
+  .nfc-card-mini .brand .dot { color: var(--red); }
+  .nfc-card-mini .nfc-ic {
+    width: 22px; height: 22px; opacity: 0.85;
+  }
+  .nfc-card-mini .body {
+    position: absolute; bottom: 16px; left: 16px; right: 16px; z-index: 1;
+  }
+  .nfc-card-mini .body .label {
+    font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+    opacity: 0.5; margin-bottom: 4px;
+  }
+  .nfc-card-mini .body .nm {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px; font-weight: 500;
+  }
+  .nfc-card-mini .body .meta {
+    font-size: 10px; opacity: 0.55; margin-top: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+  /* Bandera mini en tarjeta */
+  .nfc-card-mini .flag {
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    grid-template-rows: 1.5px 1.5px;
+  }
+  .nfc-card-mini .flag .fb { background: var(--blue); grid-column:1; grid-row:1; }
+  .nfc-card-mini .flag .fw { background: #fff; grid-column:2; grid-row:1; }
+  .nfc-card-mini .flag .fr { background: var(--red); grid-column:1 / span 2; grid-row:2; }
+
+  /* ===== TEMA ===== */
+  .theme-picker {
+    display: flex; gap: 10px;
+    padding: 12px 18px 18px;
+    justify-content: center;
+  }
+  .theme-dot {
+    width: 32px; height: 32px; border-radius: 50%;
+    cursor: pointer; transition: transform .2s, box-shadow .2s;
+    border: 3px solid transparent;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .theme-dot.selected {
+    border-color: var(--ink);
+    box-shadow: 0 0 0 2px #fff inset;
+  }
+  .theme-dot:hover { transform: scale(1.1); }
+  .theme-dot.t-negro { background: linear-gradient(135deg, #0A0A0A, #2C2C2E); }
+  .theme-dot.t-rojo  { background: linear-gradient(135deg, #B81E22, var(--red)); }
+  .theme-dot.t-azul  { background: linear-gradient(135deg, #002576, var(--blue)); }
+  .theme-dot.t-verde { background: linear-gradient(135deg, #1F8A3F, var(--green)); }
+
+  /* ===== ACCIONES PELIGROSAS ===== */
+  .danger-zone {
+    background: #FFEEEE;
+    border: 1.5px solid rgba(232,33,39,0.25);
+  }
+  .danger-zone .section-head { border-bottom-color: rgba(232,33,39,0.15); }
+  .danger-zone .section-head h3 { color: var(--red); }
+  .danger-row {
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid rgba(232,33,39,0.1);
+  }
+  .danger-row:last-child { border-bottom: none; }
+  .danger-row .d-info { flex: 1; }
+  .danger-row .d-info h4 { font-size: 13px; font-weight: 700; color: var(--red); }
+  .danger-row .d-info p { font-size: 11px; color: #8B4040; margin-top: 2px; }
+  .btn-danger {
+    background: #fff;
+    border: 1.5px solid rgba(232,33,39,0.4);
+    color: var(--red);
+    padding: 8px 14px; border-radius: 10px;
+    font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: 'Outfit', sans-serif;
+    transition: background .15s;
+  }
+  .btn-danger:hover { background: var(--red); color: #fff; }
+
+  /* ===== SAVE BAR ===== */
+  .save-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(250,250,250,0.92);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--line);
+    padding: 14px 16px; display: flex; gap: 10px;
+    z-index: 100;
+  }
+  .save-bar .inner {
+    max-width: 520px; margin: 0 auto;
+    display: flex; gap: 10px; width: 100%;
+  }
+  .btn-save {
+    padding: 14px;
+    border-radius: 12px; border: none;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: all .2s;
+  }
+  .btn-save.primary { background: var(--ink); color: #fff; flex: 1; }
+  .btn-save.secondary { background: #fff; color: var(--ink); border: 1.5px solid var(--line); flex: 0 0 auto; padding: 14px 20px; }
+  .btn-save:active { transform: scale(0.98); }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: #fff;
+    padding: 12px 22px; border-radius: 30px;
+    font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+    opacity: 0; pointer-events: none;
+    transition: opacity .3s; z-index: 200; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+
+  /* ===== BACK TO TOP ===== */
+  .btt {
+    position: fixed; bottom: 90px; right: 16px;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--ink); color: #fff; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    opacity: 0; visibility: hidden; transform: translateY(12px);
+    transition: opacity .3s, visibility .3s, transform .3s, background .2s;
+    z-index: 150;
+  }
+  .btt.show { opacity: 1; visibility: visible; transform: translateY(0); }
+  .btt:hover { background: var(--red); }
+  .btt svg { width: 20px; height: 20px; }
+
+  /* ===== MOBILE ≤ 375 ===== */
+  @media (max-width: 375px) {
+    .header { padding: 10px 12px; }
+    .header-name { font-size: 14px; }
+    .admin-badge { font-size: 9px; padding: 2px 7px; }
+    .page { padding: 14px 10px 110px; }
+    .owner-card { padding: 14px 16px; }
+    .owner-card .nombre { font-size: 17px; }
+    .section-head { padding: 12px 14px; }
+    .section-head h3 { font-size: 14px; }
+    .perfil-row, .doc-priv, .danger-row { padding: 12px 14px; }
+    .perfil-row .p-info h4 { font-size: 13px; }
+    .nfc-card-mini { width: 100%; max-width: 280px; }
+    .theme-picker { gap: 8px; padding: 10px 14px 14px; }
+    .theme-dot { width: 28px; height: 28px; }
+    .btn-save { font-size: 13px; padding: 12px; }
+    .btt { bottom: 80px; right: 10px; width: 38px; height: 38px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <a href="verificar.html" class="back-btn" title="Volver a mi tarjeta">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    </a>
+    <div class="header-brand">
+      <div class="header-logo">
+        <svg viewBox="0 0 24 24"><path d="M6 2C4.9 2 4 2.9 4 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 3h8v1.5H8V16zm0-6h3v1.5H8V10z"/></svg>
+      </div>
+      <div class="header-name">NFC <span>NEXO</span></div>
+    </div>
+  </div>
+  <span class="admin-badge">
+    <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+    ADMIN
+  </span>
+</div>
+
+<div class="page">
+
+  <!-- DUEÑO DE LA CUENTA -->
+  <div class="owner-card">
+    <h3>Dueño de la cuenta</h3>
+    <div class="nombre" id="adminNombre">Tu nombre</div>
+    <div class="rut" id="adminRut">RUT: —</div>
+    <div class="nfc-id">
+      <div>
+        <label>ID de tu tarjeta NFC</label>
+        <div class="id-val" id="nfc-id-val">NFC·NX·0001-CL</div>
+      </div>
+      <button class="copy-btn" onclick="copyId()">📋 Copiar</button>
+    </div>
+  </div>
+
+  <!-- ===== PERFILES ACTIVOS ===== -->
+  <div class="section">
+    <div class="section-head">
+      <span class="icon">🪪</span>
+      <h3>Perfiles activos</h3>
+      <span class="help">Qué se ve al escanear</span>
+    </div>
+
+    <div class="perfil-row">
+      <div class="p-icon" style="padding:6px;">
+        <svg viewBox="0 0 24 24" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 6 Q6 4 12 4 Q18 4 18 6 L18 7 L6 7 Z" fill="#1a1a1a"/>
+          <circle cx="12" cy="5.5" r="0.9" fill="#FFC107"/>
+          <circle cx="12" cy="10" r="3.5" fill="#F5C9A1"/>
+          <circle cx="10.7" cy="10" r="0.5" fill="#1a1a1a"/>
+          <circle cx="13.3" cy="10" r="0.5" fill="#1a1a1a"/>
+          <path d="M3 24 L3 17 Q3 14.5 5 14 L9 13.5 L12 16 L15 13.5 L19 14 Q21 14.5 21 17 L21 24 Z" fill="#E82127"/>
+          <path d="M9 13.5 L12 17 L15 13.5 L15 21 L9 21 Z" fill="#0a0a0a"/>
+        </svg>
+      </div>
+      <div class="p-info">
+        <h4>Guardia de Seguridad OS10</h4>
+        <p>3 documentos · Activo</p>
+      </div>
+      <label class="switch">
+        <input type="checkbox" checked onchange="togglePerfil('guardia',this)">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="perfil-row" id="rowVehiculo">
+      <div class="p-icon">🚗</div>
+      <div class="p-info">
+        <h4 id="vehiculoTitle">Vehículo</h4>
+        <p id="vehiculoSub">4 documentos · Activo</p>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="vehiculoToggle" onchange="togglePerfil('conductor',this)">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="perfil-row">
+      <div class="p-icon">🏪</div>
+      <div class="p-info">
+        <h4>Comerciante / Botillería</h4>
+        <p>0 documentos · Inactivo</p>
+      </div>
+      <label class="switch">
+        <input type="checkbox" onchange="togglePerfil('comerciante',this)">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="perfil-row">
+      <div class="p-icon" style="opacity:0.4">🎓</div>
+      <div class="p-info" style="opacity:0.5">
+        <h4>Profesional Colegiado</h4>
+        <p>Próximamente</p>
+      </div>
+      <label class="switch coming-soon">
+        <input type="checkbox" disabled>
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- ===== GESTIÓN DE DOCUMENTOS (ADMIN) ===== -->
+  <div class="section">
+    <div class="section-head">
+      <span class="icon">📁</span>
+      <h3>Gestión de documentos</h3>
+      <span class="help">Solo admin</span>
+    </div>
+    <div style="padding: 16px 18px;">
+      <p style="font-size:13px;color:var(--ink-mute);margin-bottom:14px;line-height:1.5;">
+        Subir, reemplazar y editar los documentos visibles al fiscalizar. Esta acción está restringida al dueño de la cuenta.
+      </p>
+      <a href="subir-documentos.html" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;background:var(--ink);color:#fff;border-radius:12px;font-size:14px;font-weight:700;text-decoration:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+        Subir / cambiar documentos
+      </a>
+    </div>
+  </div>
+
+  <!-- ===== DISEÑO DE LA TARJETA ===== -->
+  <div class="section">
+    <div class="section-head">
+      <span class="icon">🎨</span>
+      <h3>Diseño de tu tarjeta</h3>
+    </div>
+    <div class="nfc-preview">
+      <div class="nfc-card-mini theme-negro" id="cardPreview">
+        <div class="flag"><div class="fb"></div><div class="fw"></div><div class="fr"></div></div>
+        <div class="head">
+          <div class="brand">NFC<span class="dot">·</span>NEXO</div>
+          <svg class="nfc-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M2 12c0-5.523 4.477-10 10-10"/>
+            <path d="M5 12c0-3.866 3.134-7 7-7"/>
+            <path d="M8 12c0-2.209 1.791-4 4-4"/>
+            <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="body">
+          <div class="label">Tarjeta personal</div>
+          <div class="nm" id="adminPreviewName">Tu nombre</div>
+          <div class="meta">NFC·NX 0001 · CL</div>
+        </div>
+      </div>
+    </div>
+    <div class="theme-picker">
+      <div class="theme-dot t-negro selected" onclick="setTheme('negro',this)" title="Clásico"></div>
+      <div class="theme-dot t-rojo" onclick="setTheme('rojo',this)" title="Rojo Chile"></div>
+      <div class="theme-dot t-azul" onclick="setTheme('azul',this)" title="Azul Chile"></div>
+      <div class="theme-dot t-verde" onclick="setTheme('verde',this)" title="Verde"></div>
+    </div>
+  </div>
+
+  <!-- ===== PRIVACIDAD DE DOCUMENTOS ===== -->
+  <div class="section">
+    <div class="section-head">
+      <span class="icon">🔒</span>
+      <h3>Privacidad de documentos</h3>
+      <span class="help">Quién puede ver cada uno</span>
+    </div>
+
+    <div class="doc-priv">
+      <div class="d-thumb"><img src="images/Certificado.png" alt=""></div>
+      <div class="d-name">Certificado Curso OS10</div>
+      <select class="privacy-select">
+        <option value="publico">🌐 Público</option>
+        <option value="fiscal" selected>👮 Solo fiscalizador</option>
+        <option value="privado">🔒 Privado</option>
+      </select>
+    </div>
+
+    <div class="doc-priv">
+      <div class="d-thumb"><img src="images/CedulaIdentidad.png" alt=""></div>
+      <div class="d-name">Cédula de Identidad</div>
+      <select class="privacy-select">
+        <option value="publico">🌐 Público</option>
+        <option value="fiscal" selected>👮 Solo fiscalizador</option>
+        <option value="privado">🔒 Privado</option>
+      </select>
+    </div>
+
+    <div class="doc-priv">
+      <div class="d-thumb"><img src="images/CertifficadoAnteceddentes.png" alt=""></div>
+      <div class="d-name">Cert. Antecedentes</div>
+      <select class="privacy-select">
+        <option value="publico">🌐 Público</option>
+        <option value="fiscal" selected>👮 Solo fiscalizador</option>
+        <option value="privado">🔒 Privado</option>
+      </select>
+    </div>
+
+    <div class="doc-priv">
+      <div class="d-thumb"><img src="images/PermisoCirculacion.png" alt=""></div>
+      <div class="d-name">Permiso de Circulación</div>
+      <select class="privacy-select">
+        <option value="publico" selected>🌐 Público</option>
+        <option value="fiscal">👮 Solo fiscalizador</option>
+        <option value="privado">🔒 Privado</option>
+      </select>
+    </div>
+
+    <div class="doc-priv">
+      <div class="d-thumb"><img src="images/Revisiontecnica.png" alt=""></div>
+      <div class="d-name">Revisión Técnica</div>
+      <select class="privacy-select">
+        <option value="publico" selected>🌐 Público</option>
+        <option value="fiscal">👮 Solo fiscalizador</option>
+        <option value="privado">🔒 Privado</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ===== SEGURIDAD ===== -->
+  <div class="section">
+    <div class="section-head">
+      <span class="icon">🛡️</span>
+      <h3>Seguridad y notificaciones</h3>
+    </div>
+
+    <div class="perfil-row">
+      <div class="p-icon">🔔</div>
+      <div class="p-info">
+        <h4>Avísame cuando me fiscalicen</h4>
+        <p>Recibe alerta cada vez que escaneen tu tarjeta</p>
+      </div>
+      <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+    </div>
+
+    <div class="perfil-row">
+      <div class="p-icon">⏰</div>
+      <div class="p-info">
+        <h4>Alertas de vencimiento</h4>
+        <p>Avisarme 30 días antes que venza un documento</p>
+      </div>
+      <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+    </div>
+
+    <div class="perfil-row">
+      <div class="p-icon">📍</div>
+      <div class="p-info">
+        <h4>Guardar ubicación de fiscalizaciones</h4>
+        <p>Útil para historial y reportes</p>
+      </div>
+      <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+    </div>
+
+    <div class="perfil-row">
+      <div class="p-icon">🔑</div>
+      <div class="p-info">
+        <h4>Verificación en dos pasos</h4>
+        <p>Pedir código al editar perfil</p>
+      </div>
+      <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+    </div>
+  </div>
+
+  <!-- ===== ZONA PELIGROSA ===== -->
+  <div class="section danger-zone">
+    <div class="section-head">
+      <span class="icon">⚠️</span>
+      <h3>Zona peligrosa</h3>
+    </div>
+
+    <div class="danger-row">
+      <div class="d-info">
+        <h4>Bloquear tarjeta NFC</h4>
+        <p>Si la perdiste o te la robaron, desactívala</p>
+      </div>
+      <button class="btn-danger" onclick="confirmar('¿Bloquear tarjeta NFC? Nadie podrá escanearla.')">Bloquear</button>
+    </div>
+
+    <div class="danger-row">
+      <div class="d-info">
+        <h4>Pedir nueva tarjeta</h4>
+        <p>Reemplazo físico con el mismo perfil</p>
+      </div>
+      <button class="btn-danger" onclick="confirmar('Se generará pedido por $8.000 CLP')">Pedir</button>
+    </div>
+
+    <div class="danger-row">
+      <div class="d-info">
+        <h4>Eliminar cuenta</h4>
+        <p>Borra toda tu información permanentemente</p>
+      </div>
+      <button class="btn-danger" onclick="confirmar('¿Eliminar tu cuenta? Esta acción es irreversible.')">Eliminar</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- SAVE BAR -->
+<div class="save-bar">
+  <div class="inner">
+    <button class="btn-save secondary" onclick="window.location.href='verificar.html'">👁 Ver tarjeta</button>
+    <button class="btn-save primary" onclick="guardar()">Guardar configuración</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+  <span id="toast-msg">Listo</span>
+</div>
+
+<!-- BACK TO TOP -->
+<button class="btt" id="btt" title="Volver arriba" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="18 15 12 9 6 15"></polyline>
+  </svg>
+</button>
+
+<script>
+  // Toggle perfiles
+  function togglePerfil(id, el) {
+    showToast(el.checked ? 'Perfil ' + id + ' activado' : 'Perfil ' + id + ' desactivado');
+  }
+
+  // Tema de tarjeta
+  function setTheme(tema, el) {
+    const card = document.getElementById('cardPreview');
+    card.className = 'nfc-card-mini theme-' + tema;
+    document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('selected'));
+    el.classList.add('selected');
+    // Gradiente del fondo
+    const grads = {
+      negro: 'linear-gradient(135deg, #0A0A0A, #1C1C1E)',
+      rojo:  'linear-gradient(135deg, #6B0F11, #B81E22)',
+      azul:  'linear-gradient(135deg, #001142, #002576)',
+      verde: 'linear-gradient(135deg, #0E3D1A, #1F8A3F)'
+    };
+    card.style.background = grads[tema];
+  }
+
+  // Copiar ID NFC
+  function copyId() {
+    const id = document.getElementById('nfc-id-val').textContent;
+    navigator.clipboard && navigator.clipboard.writeText(id);
+    showToast('ID copiado: ' + id);
+  }
+
+  // Guardar
+  function guardar() {
+    showToast('¡Configuración guardada!');
+  }
+
+  // Confirmaciones zona peligrosa
+  function confirmar(msg) {
+    if (confirm(msg)) {
+      showToast('Solicitud enviada');
+    }
+  }
+
+  // Toast
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // Back to top
+  const _btt = document.getElementById('btt');
+  window.addEventListener('scroll', () => {
+    _btt.classList.toggle('show', window.scrollY > 120);
+  });
+
+  // ===== CARGAR DATOS DEL USUARIO =====
+  (function() {
+    function iniciales(n) {
+      return (n || '').trim().split(/\s+/).slice(0,2).map(p => p[0] || '').join('').toUpperCase() || '??';
+    }
+    let datos = null;
+    try { datos = JSON.parse(localStorage.getItem('nexo_cuenta') || 'null'); } catch(e) {}
+    if (!datos) datos = { nombre: 'Tu nombre', rut: '—', perfiles: ['guardia'], patente: '', tema: 'negro' };
+
+    document.getElementById('adminNombre').textContent       = datos.nombre || 'Tu nombre';
+    document.getElementById('adminRut').textContent          = 'RUT: ' + (datos.rut || '—');
+    document.getElementById('adminPreviewName').textContent  = datos.nombre || 'Tu nombre';
+
+    // Estado vehículo
+    const tieneVehiculo = datos.perfiles.includes('vehiculo');
+    document.getElementById('vehiculoToggle').checked = tieneVehiculo;
+    document.getElementById('vehiculoTitle').textContent = datos.patente
+      ? 'Vehículo · ' + datos.patente
+      : 'Vehículo (Conductor)';
+    document.getElementById('vehiculoSub').textContent = tieneVehiculo
+      ? '4 documentos · Activo'
+      : 'Sin configurar';
+
+    // Tema seleccionado
+    if (datos.tema) {
+      const dot = document.querySelector('.theme-dot.t-' + datos.tema);
+      if (dot) setTheme(datos.tema, dot);
+    }
+  })();
+</script>
+</body>
+</html>
