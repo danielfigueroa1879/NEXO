@@ -1,19 +1,19 @@
 const CACHE_NAME = 'nfc-nexo-v1';
-const OFFLINE_URL = '/index.html';
+const OFFLINE_URL = 'index.html';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll([
-        '/',
-        '/index.html',
-        '/favicon-96x96.png',
-        '/favicon.ico',
-        '/favicon.svg',
-        '/apple-touch-icon.png',
-        '/site.webmanifest',
-        '/web-app-manifest-192x192.png',
-        '/web-app-manifest-512x512.png'
+        './',
+        'index.html',
+        'favicon-96x96.png',
+        'favicon.ico',
+        'favicon.svg',
+        'apple-touch-icon.png',
+        'site.webmanifest',
+        'web-app-manifest-192x192.png',
+        'web-app-manifest-512x512.png'
       ]).catch((error) => {
         console.warn('Pre-caching failed, will cache dynamically:', error);
       });
