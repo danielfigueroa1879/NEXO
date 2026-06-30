@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>NFC NEXO — Verificación</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -398,6 +401,141 @@
     0%, 100% { opacity: 1; }
     50%       { opacity: 0.4; }
   }
+  /* ===== DOCUMENTOS UNO A LA VEZ (CARRUSEL VERTICAL) ===== */
+  .docs-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+  }
+  .doc-img-card {
+    background: #fff;
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform .2s, box-shadow .2s, border-color .2s;
+    display: flex; flex-direction: column;
+    width: 100%;
+  }
+  .doc-img-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+    border-color: var(--ink);
+  }
+  .doc-img-thumb {
+    aspect-ratio: 3/4;
+    background: #F0F0F5;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .doc-img-thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .doc-img-thumb .status-pill {
+    position: absolute; top: 10px; right: 10px;
+    font-size: 10px; font-weight: 700;
+    padding: 4px 10px; border-radius: 20px;
+    background: var(--green-light); color: #1A7A34;
+    border: 1px solid rgba(52,199,89,0.4);
+  }
+  .doc-img-thumb .status-pill.warn { background: var(--orange-light); color: #B85C00; border-color: rgba(255,149,0,0.4); }
+  .doc-img-info {
+    padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+  }
+  .doc-img-info .nombre {
+    font-size: 14px; font-weight: 700; color: var(--ink);
+    line-height: 1.25;
+  }
+  .doc-img-info .vence {
+    font-size: 11px; color: var(--ink-mute); margin-top: 3px;
+    font-weight: 500;
+  }
+  .doc-img-info .chev {
+    color: var(--ink-mute); font-size: 18px; flex-shrink: 0;
+  }
+
+  /* ===== MODAL VIEWER ===== */
+  .doc-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 500;
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(8px);
+  }
+  .doc-modal.show { display: flex; animation: fadeIn .25s ease; }
+  .doc-modal-inner {
+    background: #fff;
+    border-radius: 18px;
+    max-width: 480px; width: 100%;
+    max-height: 92vh;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+  }
+  .doc-modal-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+  }
+  .doc-modal-header h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px; font-weight: 700; letter-spacing: -0.01em;
+  }
+  .doc-modal-close {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: none; background: var(--bg);
+    cursor: pointer; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink); transition: background .15s;
+  }
+  .doc-modal-close:hover { background: var(--line); }
+  .doc-modal-body {
+    flex: 1; overflow: auto;
+    background: #1C1C1E;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+    min-height: 300px;
+  }
+  .doc-modal-body img {
+    max-width: 100%; max-height: 60vh;
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  }
+  .doc-modal-footer {
+    padding: 12px 18px;
+    border-top: 1px solid var(--line);
+    display: flex; gap: 8px;
+  }
+  .doc-modal-footer button, .doc-modal-footer a {
+    flex: 1; padding: 11px;
+    border-radius: 10px; border: none;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer; text-decoration: none;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .doc-modal-footer .btn-replace { background: var(--ink); color: #fff; }
+  .doc-modal-footer .btn-close { background: #fff; color: var(--ink); border: 1.5px solid var(--line); }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  @media (max-width: 375px) {
+    .docs-grid { gap: 12px; padding: 12px; }
+    .doc-img-info { padding: 12px 14px; }
+    .doc-img-info .nombre { font-size: 13px; }
+    .doc-img-info .vence { font-size: 10px; }
+  }
+
   /* ===== BACK TO TOP CHEVRON ===== */
   .btt {
     position: fixed; bottom: 24px; right: 16px;
@@ -458,7 +596,12 @@
       <div class="header-name">NFC <span>NEXO</span></div>
     </div>
   </div>
-  <div class="timestamp" id="ts">—</div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <a href="admin.html" title="Configuración (solo dueño)" style="width:34px;height:34px;border:1.5px solid var(--line);border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;color:var(--ink);flex-shrink:0;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61L4.89 11.06c-.05.3-.07.62-.07.94 0 .32.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+    </a>
+    <div class="timestamp" id="ts">—</div>
+  </div>
 </div>
 
 <div class="page">
@@ -474,13 +617,13 @@
     </div>
   </div>
 
-  <!-- SELECTOR DE PERFIL -->
-  <div class="profile-selector">
-    <button class="profile-tab active" onclick="switchPanel('guardia', this)">
+  <!-- SELECTOR DE PERFIL — se ajusta según los perfiles activos -->
+  <div class="profile-selector" id="profileSelector">
+    <button class="profile-tab active" id="tab-guardia" onclick="switchPanel('guardia', this)">
       <span class="dot"></span> Guardia OS10
     </button>
-    <button class="profile-tab" onclick="switchPanel('conductor', this)">
-      <span class="dot"></span> Conductor
+    <button class="profile-tab" id="tab-conductor" onclick="switchPanel('conductor', this)">
+      <span class="dot"></span> <span id="patenteLabel">🚗 Vehículo</span>
     </button>
   </div>
 
@@ -490,10 +633,10 @@
     <!-- Tarjeta de identidad -->
     <div class="id-card">
       <div class="card-header">
-        <div class="avatar">EF</div>
+        <div class="avatar" id="avG">??</div>
         <div class="card-identity">
-          <h2>Elias Figueroa M.</h2>
-          <div class="rut">RUT: 12.345.678-9</div>
+          <h2 id="nameG">Cargando…</h2>
+          <div class="rut" id="rutG">RUT: —</div>
           <div class="card-type-badge">
             <span class="dot"></span>
             <span>Guardia de Seguridad</span>
@@ -508,118 +651,50 @@
       </div>
 
       <div class="card-body">
-
-        <!-- Estado general -->
-        <div class="info-section">
-          <div class="section-label">Estado de vigencia</div>
-          <div class="info-grid">
-            <div class="info-item">
-              <label>Estado OS10</label>
-              <div class="status-badge vigente" style="margin-top:4px">
-                <span class="status-dot"></span> Vigente
+        <!-- Documentos como imágenes (primero el Certificado OS10) -->
+        <div class="docs-grid">
+          <div class="doc-img-card" onclick="abrirDoc('images/Certificado.png','Certificado Curso OS10','Vence: 10 Ene 2026')">
+            <div class="doc-img-thumb">
+              <img src="images/Certificado.png" alt="Certificado OS10" loading="lazy">
+              <span class="status-pill">Vigente</span>
+            </div>
+            <div class="doc-img-info">
+              <div>
+                <div class="nombre">Certificado Curso OS10</div>
+                <div class="vence">Vence 10 Ene 2026</div>
               </div>
+              <span class="chev">›</span>
             </div>
-            <div class="info-item">
-              <label>Vence credencial</label>
-              <value>15 Mar 2026</value>
+          </div>
+
+          <div class="doc-img-card" onclick="abrirDoc('images/CedulaIdentidad.png','Cédula de Identidad','Vence: 14 Ago 2028')">
+            <div class="doc-img-thumb">
+              <img src="images/CedulaIdentidad.png" alt="Cédula de Identidad" loading="lazy">
+              <span class="status-pill">Vigente</span>
             </div>
-            <div class="info-item">
-              <label>Empresa empleadora</label>
-              <value>Seguridad Norte Ltda.</value>
+            <div class="doc-img-info">
+              <div>
+                <div class="nombre">Cédula de Identidad</div>
+                <div class="vence">Vence 14 Ago 2028</div>
+              </div>
+              <span class="chev">›</span>
             </div>
-            <div class="info-item">
-              <label>Punto de servicio hoy</label>
-              <value>Estadio La Portada</value>
+          </div>
+
+          <div class="doc-img-card" onclick="abrirDoc('images/CertifficadoAnteceddentes.png','Certificado de Antecedentes','Emitido: 15 Mar 2025')">
+            <div class="doc-img-thumb">
+              <img src="images/CertifficadoAnteceddentes.png" alt="Certificado de Antecedentes" loading="lazy">
+              <span class="status-pill">Vigente</span>
+            </div>
+            <div class="doc-img-info">
+              <div>
+                <div class="nombre">Certificado de Antecedentes</div>
+                <div class="vence">Emitido 15 Mar 2025</div>
+              </div>
+              <span class="chev">›</span>
             </div>
           </div>
         </div>
-
-        <!-- Cédula de identidad -->
-        <div class="info-section">
-          <div class="section-label">Cédula de identidad</div>
-          <div class="cedula-preview">
-            <div class="cedula-foto">👤</div>
-            <div class="cedula-datos">
-              <div class="nombre">ELIAS FIGUEROA MUÑOZ</div>
-              <div class="rut-num">12.345.678-9</div>
-              <div class="nacimiento">Nacimiento: 14 Ago 1985</div>
-              <div class="nacimiento" style="margin-top:2px">Vence: 14 Ago 2028</div>
-              <div class="nacionalidad"><span class="mini-flag">🇨🇱</span> Chilena</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Documentación OS10 -->
-        <div class="info-section">
-          <div class="section-label">Documentación OS10</div>
-          <div class="doc-list">
-            <div class="doc-item">
-              <div class="doc-left">
-                <div class="doc-icon">📋</div>
-                <div>
-                  <div class="doc-name">Curso OS10 — Nivel Básico</div>
-                  <div class="doc-date">Emitido: 10 Ene 2024 · Vence: 10 Ene 2026</div>
-                </div>
-              </div>
-              <div class="doc-status ok">Vigente</div>
-            </div>
-            <div class="doc-item">
-              <div class="doc-left">
-                <div class="doc-icon">🪪</div>
-                <div>
-                  <div class="doc-name">Credencial OS10</div>
-                  <div class="doc-date">N° CR-2024-00892 · Coquimbo</div>
-                </div>
-              </div>
-              <div class="doc-status ok">Vigente</div>
-            </div>
-            <div class="doc-item">
-              <div class="doc-left">
-                <div class="doc-icon">📄</div>
-                <div>
-                  <div class="doc-name">Contrato de trabajo</div>
-                  <div class="doc-date">Vigente desde: 01 Mar 2024</div>
-                </div>
-              </div>
-              <div class="doc-status ok">Activo</div>
-            </div>
-            <div class="doc-item">
-              <div class="doc-left">
-                <div class="doc-icon">⛑️</div>
-                <div>
-                  <div class="doc-name">Examen preocupacional</div>
-                  <div class="doc-date">Realizado: 28 Feb 2024 · Vence: Feb 2025</div>
-                </div>
-              </div>
-              <div class="doc-status warn">Por vencer</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Historial de fiscalizaciones -->
-        <div class="info-section">
-          <div class="section-label">Últimas fiscalizaciones</div>
-          <div class="historial-item">
-            <div class="hist-dot-col">
-              <div class="hist-dot"></div>
-              <div class="hist-line"></div>
-            </div>
-            <div class="hist-info">
-              <div class="hist-tipo">Fiscalización OS10 — Estadio La Portada</div>
-              <div class="hist-meta">27 Jun 2025 · 14:32 · Sin observaciones</div>
-            </div>
-          </div>
-          <div class="historial-item">
-            <div class="hist-dot-col">
-              <div class="hist-dot" style="background:var(--orange)"></div>
-            </div>
-            <div class="hist-info">
-              <div class="hist-tipo">Fiscalización OS10 — Supermercado El Trébol</div>
-              <div class="hist-meta">14 May 2025 · 09:15 · Examen preocupacional por vencer</div>
-            </div>
-          </div>
-        </div>
-
       </div>
     </div>
 
@@ -631,13 +706,13 @@
 
     <div class="id-card">
       <div class="card-header">
-        <div class="avatar">EF</div>
+        <div class="avatar" id="avV">??</div>
         <div class="card-identity">
-          <h2>Elias Figueroa M.</h2>
-          <div class="rut">RUT: 12.345.678-9</div>
+          <h2 id="nameV">Cargando…</h2>
+          <div class="rut" id="rutV">RUT: —</div>
           <div class="card-type-badge">
             <span class="dot"></span>
-            <span>Conductor — Vehículo Particular</span>
+            <span id="vehLabel">Vehículo</span>
           </div>
         </div>
       </div>
@@ -648,94 +723,64 @@
         <div class="fl-white2"></div>
       </div>
       <div class="card-body">
-
-        <!-- Licencia -->
-        <div class="info-section">
-          <div class="section-label">Licencia de conducir</div>
-          <div class="info-grid">
-            <div class="info-item">
-              <label>Clase</label>
-              <value>B — Vehículo particular</value>
+        <!-- Documentos del vehículo como imágenes -->
+        <div class="docs-grid">
+          <div class="doc-img-card" onclick="abrirDoc('images/PermisoCirculacion.png','Permiso de Circulación','Válido hasta Dic 2025')">
+            <div class="doc-img-thumb">
+              <img src="images/PermisoCirculacion.png" alt="Permiso de Circulación" loading="lazy">
+              <span class="status-pill">Vigente</span>
             </div>
-            <div class="info-item">
-              <label>Estado</label>
-              <div class="status-badge vigente" style="margin-top:4px">
-                <span class="status-dot"></span> Vigente
+            <div class="doc-img-info">
+              <div>
+                <div class="nombre">Permiso de Circulación</div>
+                <div class="vence">Vence Dic 2025</div>
               </div>
+              <span class="chev">›</span>
             </div>
-            <div class="info-item">
-              <label>Emitida</label>
-              <value>20 Abr 2019</value>
+          </div>
+
+          <div class="doc-img-card" onclick="abrirDoc('images/Revisiontecnica.png','Revisión Técnica','Vence: Nov 2025')">
+            <div class="doc-img-thumb">
+              <img src="images/Revisiontecnica.png" alt="Revisión Técnica" loading="lazy">
+              <span class="status-pill">Vigente</span>
             </div>
-            <div class="info-item">
-              <label>Vence</label>
-              <value>20 Abr 2029</value>
+            <div class="doc-img-info">
+              <div>
+                <div class="nombre">Revisión Técnica</div>
+                <div class="vence">Vence Nov 2025</div>
+              </div>
+              <span class="chev">›</span>
+            </div>
+          </div>
+
+          <div class="doc-img-card" onclick="abrirDoc('images/seguro.png','SOAP','Vence: Ene 2026')">
+            <div class="doc-img-thumb">
+              <img src="images/seguro.png" alt="SOAP" loading="lazy">
+              <span class="status-pill">Vigente</span>
+            </div>
+            <div class="doc-img-info">
+              <div>
+                <div class="nombre">SOAP</div>
+                <div class="vence">Vence Ene 2026</div>
+              </div>
+              <span class="chev">›</span>
+            </div>
+          </div>
+
+          <div class="doc-img-card" onclick="abrirDoc('images/padron.png','Padrón del Vehículo','PKMB-26 · Nissan Versa 2021')">
+            <div class="doc-img-thumb">
+              <img src="images/padron.png" alt="Padrón" loading="lazy">
+              <span class="status-pill">Vigente</span>
+            </div>
+            <div class="doc-img-info">
+              <div>
+                <div class="nombre">Padrón Vehículo</div>
+                <div class="vence">PKMB-26</div>
+              </div>
+              <span class="chev">›</span>
             </div>
           </div>
         </div>
-
-        <!-- Vehículo -->
-        <div class="info-section">
-          <div class="section-label">Vehículo</div>
-          <div class="info-grid">
-            <div class="info-item">
-              <label>Patente</label>
-              <value style="font-size:18px;letter-spacing:0.08em">BCFK-32</value>
-            </div>
-            <div class="info-item">
-              <label>Estado patente</label>
-              <div class="status-badge vigente" style="margin-top:4px">
-                <span class="status-dot"></span> Al día
-              </div>
-            </div>
-            <div class="info-item">
-              <label>Marca / Modelo</label>
-              <value>Nissan Versa 2021</value>
-            </div>
-            <div class="info-item">
-              <label>Color</label>
-              <value>Blanco</value>
-            </div>
-          </div>
-        </div>
-
-        <!-- Documentos vehiculo -->
-        <div class="info-section">
-          <div class="section-label">Documentación vehicular</div>
-          <div class="doc-list">
-            <div class="doc-item">
-              <div class="doc-left">
-                <div class="doc-icon">📝</div>
-                <div>
-                  <div class="doc-name">Permiso de circulación</div>
-                  <div class="doc-date">Pagado · Válido hasta Dic 2025</div>
-                </div>
-              </div>
-              <div class="doc-status ok">Vigente</div>
-            </div>
-            <div class="doc-item">
-              <div class="doc-left">
-                <div class="doc-icon">🔧</div>
-                <div>
-                  <div class="doc-name">Revisión técnica</div>
-                  <div class="doc-date">Aprobada · Vence: Nov 2025</div>
-                </div>
-              </div>
-              <div class="doc-status ok">Vigente</div>
-            </div>
-            <div class="doc-item">
-              <div class="doc-left">
-                <div class="doc-icon">🛡️</div>
-                <div>
-                  <div class="doc-name">SOAP</div>
-                  <div class="doc-date">Póliza N° 2024-441892 · Vence: Ene 2026</div>
-                </div>
-              </div>
-              <div class="doc-status ok">Vigente</div>
-            </div>
-          </div>
-        </div>
-
       </div>
     </div>
 
@@ -780,6 +825,60 @@
   updateTime();
   setInterval(updateTime, 30000);
 
+  // ===== CARGAR DATOS DEL USUARIO desde localStorage =====
+  function iniciales(n) {
+    return (n || '').trim().split(/\s+/).slice(0,2).map(p => p[0] || '').join('').toUpperCase() || '??';
+  }
+  function cargarDatosUsuario() {
+    let datos = null;
+    try { datos = JSON.parse(localStorage.getItem('nexo_cuenta') || 'null'); } catch(e) {}
+    // Datos por defecto si no hay nada guardado
+    if (!datos) datos = { nombre: 'Tu nombre', rut: '—', perfiles: ['guardia'], patente: '' };
+
+    const nombre = datos.nombre || 'Tu nombre';
+    const rut    = datos.rut    || '—';
+    const ini    = iniciales(nombre);
+
+    // Panel guardia
+    document.getElementById('avG').textContent   = ini;
+    document.getElementById('nameG').textContent = nombre;
+    document.getElementById('rutG').textContent  = 'RUT: ' + rut;
+
+    // Panel vehículo
+    document.getElementById('avV').textContent   = ini;
+    document.getElementById('nameV').textContent = nombre;
+    document.getElementById('rutV').textContent  = 'RUT: ' + rut;
+
+    // Mostrar/ocultar pestañas según perfiles activos
+    const tieneGuardia  = datos.perfiles.includes('guardia');
+    const tieneVehiculo = datos.perfiles.includes('vehiculo');
+    const tabG = document.getElementById('tab-guardia');
+    const tabV = document.getElementById('tab-conductor');
+    tabG.style.display = tieneGuardia  ? '' : 'none';
+    tabV.style.display = tieneVehiculo ? '' : 'none';
+
+    // Si solo tiene un perfil, ocultar el selector entero
+    const totalActivos = (tieneGuardia ? 1 : 0) + (tieneVehiculo ? 1 : 0);
+    if (totalActivos <= 1) {
+      document.getElementById('profileSelector').style.display = 'none';
+    }
+
+    // Etiqueta con la patente
+    if (tieneVehiculo && datos.patente) {
+      document.getElementById('patenteLabel').textContent = '🚗 ' + datos.patente;
+      document.getElementById('vehLabel').textContent = 'Vehículo · ' + datos.patente;
+    }
+
+    // Si no tiene guardia, activar el panel del vehículo por defecto
+    if (!tieneGuardia && tieneVehiculo) {
+      document.getElementById('panel-guardia').classList.remove('active');
+      document.getElementById('panel-conductor').classList.add('active');
+      tabV.classList.add('active');
+      tabG.classList.remove('active');
+    }
+  }
+  cargarDatosUsuario();
+
   // Switch perfil
   function switchPanel(id, btn) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -803,7 +902,43 @@
   function reportarProblema() {
     alert('Función disponible próximamente. Contacte a NFC NEXO en soporte@nfcnexo.cl');
   }
+
+  // Abrir documento en modal
+  function abrirDoc(src, titulo, subtitulo) {
+    document.getElementById('modalImg').src = src;
+    document.getElementById('modalTitle').textContent = titulo;
+    document.getElementById('modalSub').textContent = subtitulo || '';
+    document.getElementById('docModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+  function cerrarDoc() {
+    document.getElementById('docModal').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+  // Cerrar con tecla ESC
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') cerrarDoc();
+  });
 </script>
+
+<!-- MODAL VISOR DE DOCUMENTOS -->
+<div class="doc-modal" id="docModal" onclick="if(event.target===this)cerrarDoc()">
+  <div class="doc-modal-inner">
+    <div class="doc-modal-header">
+      <div>
+        <h3 id="modalTitle">Documento</h3>
+        <div id="modalSub" style="font-size:11px;color:var(--ink-mute);margin-top:2px;"></div>
+      </div>
+      <button class="doc-modal-close" onclick="cerrarDoc()">✕</button>
+    </div>
+    <div class="doc-modal-body">
+      <img id="modalImg" src="" alt="Documento">
+    </div>
+    <div class="doc-modal-footer">
+      <button class="btn-close" onclick="cerrarDoc()" style="flex:1">Cerrar</button>
+    </div>
+  </div>
+</div>
 
 <!-- CHEVRON VOLVER ARRIBA -->
 <button class="btt" id="btt" title="Volver arriba" onclick="window.scrollTo({top:0,behavior:'smooth'})">
@@ -817,5 +952,6 @@
     _btt.classList.toggle('show', window.scrollY > 120);
   });
 </script>
+<script>/* Auto cache-buster v20260630010411 */if("serviceWorker" in navigator){navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));}if(window.caches){caches.keys().then(ks=>ks.forEach(k=>caches.delete(k)));}</script>
 </body>
 </html>

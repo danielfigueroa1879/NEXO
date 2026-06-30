@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>NFC NEXO — Ingresa</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -399,7 +402,17 @@
 
         <div class="tipo-grid">
           <div class="tipo-btn selected" id="tipo-guardia" onclick="selectTipo('guardia')">
-            <div class="tipo-icon">🛡️</div>
+            <div class="tipo-icon">
+              <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 6 Q6 4 12 4 Q18 4 18 6 L18 7 L6 7 Z" fill="#1a1a1a"/>
+                <circle cx="12" cy="5.5" r="0.9" fill="#FFC107"/>
+                <circle cx="12" cy="10" r="3.5" fill="#F5C9A1"/>
+                <circle cx="10.7" cy="10" r="0.5" fill="#1a1a1a"/>
+                <circle cx="13.3" cy="10" r="0.5" fill="#1a1a1a"/>
+                <path d="M3 24 L3 17 Q3 14.5 5 14 L9 13.5 L12 16 L15 13.5 L19 14 Q21 14.5 21 17 L21 24 Z" fill="#E82127"/>
+                <path d="M9 13.5 L12 17 L15 13.5 L15 21 L9 21 Z" fill="#0a0a0a"/>
+              </svg>
+            </div>
             <span class="tipo-name">Guardia</span>
             <span class="tipo-desc">Seguridad OS10</span>
           </div>
@@ -531,12 +544,9 @@
     <div id="success-screen" class="success-screen">
       <div class="success-icon">✅</div>
       <h3>¡Cuenta creada!</h3>
-      <p>Tu perfil NFC NEXO está listo.<br>Ahora sube tus documentos para activar tu tarjeta.</p>
-      <a href="subir-documentos.html" class="btn-main" style="text-decoration:none;margin-top:28px;display:flex;">
-        Subir mis documentos →
-      </a>
-      <a href="verificar.html" style="display:block;margin-top:12px;font-size:13px;color:var(--ink-mute);text-align:center;text-decoration:none;font-weight:600;">
-        Ver mi tarjeta primero
+      <p>Tu cuenta NFC NEXO está lista.<br>Ahora solicita tu tarjeta y elige tu configuración.</p>
+      <a href="solicitar.html" class="btn-main" style="text-decoration:none;margin-top:28px;display:flex;">
+        Solicitar mi tarjeta →
       </a>
     </div>
 
@@ -631,7 +641,7 @@
     setTimeout(() => {
       btn.classList.remove('loading');
       btn.innerHTML = 'Ingresar <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>';
-      window.location.href = 'subir-documentos.html';
+      window.location.href = 'solicitar.html';
     }, 1400);
   }
 
@@ -680,5 +690,6 @@
     <polyline points="18 15 12 9 6 15"></polyline>
   </svg>
 </button>
+<script>/* Auto cache-buster v20260630010411 */if("serviceWorker" in navigator){navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));}if(window.caches){caches.keys().then(ks=>ks.forEach(k=>caches.delete(k)));}</script>
 </body>
 </html>

@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>NFC NEXO — Mis Documentos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -344,7 +347,7 @@
 <!-- HEADER -->
 <div class="header">
   <div class="header-left">
-    <a href="index.html" class="back-btn" title="Volver al inicio">
+    <a href="admin.html" class="back-btn" title="Volver al panel admin">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
     </a>
     <div class="header-brand">
@@ -354,20 +357,26 @@
       <div class="header-name">NFC <span>NEXO</span></div>
     </div>
   </div>
-  <a href="verificar.html" class="preview-btn">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-    Ver mi tarjeta
-  </a>
+  <div style="display:flex;gap:6px;">
+    <a href="admin.html" class="preview-btn" style="background:#fff;color:var(--ink);border:1.5px solid var(--line);" title="Administrar tarjeta (solo dueño)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61L4.89 11.06c-.05.3-.07.62-.07.94 0 .32.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+      Admin
+    </a>
+    <a href="verificar.html" class="preview-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+      Ver
+    </a>
+  </div>
 </div>
 
 <div class="page">
 
   <!-- PERFIL USUARIO -->
   <div class="perfil-card">
-    <div class="avatar-lg">EF</div>
+    <div class="avatar-lg" id="userAv">??</div>
     <div class="perfil-info">
-      <h2>Elias Figueroa M.</h2>
-      <div class="rut">RUT: 12.345.678-9</div>
+      <h2 id="userNombre">Tu nombre</h2>
+      <div class="rut" id="userRut">RUT: —</div>
       <div class="completado">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
         60% completado
@@ -393,8 +402,17 @@
 
   <!-- TABS PERFIL -->
   <div class="perfil-tabs">
-    <button class="ptab active" onclick="switchTab('guardia', this)">🛡️ Guardia OS10</button>
-    <button class="ptab" onclick="switchTab('conductor', this)">🚗 Conductor</button>
+    <button class="ptab active" id="ptab-guardia" onclick="switchTab('guardia', this)">
+      <svg viewBox="0 0 24 24" width="16" height="16" style="vertical-align:-3px;margin-right:3px;">
+        <path d="M6 6 Q6 4 12 4 Q18 4 18 6 L18 7 L6 7 Z" fill="#1a1a1a"/>
+        <circle cx="12" cy="5.5" r="0.9" fill="#FFC107"/>
+        <circle cx="12" cy="10" r="3.5" fill="#F5C9A1"/>
+        <circle cx="10.7" cy="10" r="0.5" fill="#1a1a1a"/>
+        <circle cx="13.3" cy="10" r="0.5" fill="#1a1a1a"/>
+        <path d="M3 24 L3 17 Q3 14.5 5 14 L9 13.5 L12 16 L15 13.5 L19 14 Q21 14.5 21 17 L21 24 Z" fill="#E82127"/>
+        <path d="M9 13.5 L12 17 L15 13.5 L15 21 L9 21 Z" fill="#0a0a0a"/>
+      </svg>Guardia OS10</button>
+    <button class="ptab" id="ptab-conductor" onclick="switchTab('conductor', this)">🚗 Vehículo</button>
   </div>
 
   <!-- ===== DOCUMENTOS GUARDIA ===== -->
@@ -808,6 +826,36 @@
 
   updateProgress();
 
+  // ===== CARGAR DATOS DEL USUARIO =====
+  (function() {
+    function iniciales(n) {
+      return (n || '').trim().split(/\s+/).slice(0,2).map(p => p[0] || '').join('').toUpperCase() || '??';
+    }
+    let datos = null;
+    try { datos = JSON.parse(localStorage.getItem('nexo_cuenta') || 'null'); } catch(e) {}
+    if (!datos) datos = { nombre: 'Tu nombre', rut: '—', perfiles: ['guardia'], patente: '' };
+
+    document.getElementById('userAv').textContent     = iniciales(datos.nombre);
+    document.getElementById('userNombre').textContent = datos.nombre || 'Tu nombre';
+    document.getElementById('userRut').textContent    = 'RUT: ' + (datos.rut || '—');
+
+    const tieneGuardia  = datos.perfiles.includes('guardia');
+    const tieneVehiculo = datos.perfiles.includes('vehiculo');
+    const tabG = document.getElementById('ptab-guardia');
+    const tabV = document.getElementById('ptab-conductor');
+    tabG.style.display = tieneGuardia  ? '' : 'none';
+    tabV.style.display = tieneVehiculo ? '' : 'none';
+
+    if (tieneVehiculo && datos.patente) {
+      tabV.innerHTML = '🚗 ' + datos.patente;
+    }
+
+    // Si solo eligió vehículo, mostrar primero ese panel
+    if (!tieneGuardia && tieneVehiculo) {
+      switchTab('conductor', tabV);
+    }
+  })();
+
   // Chevron volver arriba
   const _btt = document.getElementById('btt');
   window.addEventListener('scroll', () => {
@@ -820,5 +868,6 @@
     <polyline points="18 15 12 9 6 15"></polyline>
   </svg>
 </button>
+<script>/* Auto cache-buster v20260630010411 */if("serviceWorker" in navigator){navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));}if(window.caches){caches.keys().then(ks=>ks.forEach(k=>caches.delete(k)));}</script>
 </body>
 </html>

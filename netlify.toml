@@ -1,0 +1,25 @@
+[build]
+  publish = "."
+
+# ===== FORZAR NO-CACHE EN TODOS LOS DISPOSITIVOS =====
+# Cada vez que un usuario abra la página, el navegador descarga la versión nueva.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "no-store, no-cache, must-revalidate, max-age=0"
+    Pragma        = "no-cache"
+    Expires       = "0"
+
+# HTML siempre fresco
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-store, no-cache, must-revalidate, max-age=0, proxy-revalidate"
+    Pragma        = "no-cache"
+    Expires       = "0"
+
+# Imágenes con cache corto (1 hora) — pueden cambiarse pero no se actualizan tan seguido
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, must-revalidate"
