@@ -569,11 +569,11 @@
 
   /* Card Sweep Animation — MÓVIL: tarjeta baja por detrás del teléfono (abajo) */
   @keyframes nfcTapMobile {
-    0%   { transform: scale(0.9) rotateY(-5deg) rotateX(5deg) translate3d(0,0,0); z-index: 10; }
-    25%  { transform: scale(0.95) rotateY(0deg) rotateX(0deg) translate3d(0,20px,30px); z-index: 10; }
-    50%  { transform: scale(0.88) rotateY(0deg) rotateX(-8deg) translate3d(0,180px,-80px); z-index: 3; }
-    70%  { transform: scale(0.88) rotateY(0deg) rotateX(-8deg) translate3d(0,180px,-80px); z-index: 3; }
-    100% { transform: scale(0.9) rotateY(-5deg) rotateX(5deg) translate3d(0,0,0); z-index: 10; }
+    0%   { transform: scale(0.78) rotateY(-5deg) rotateX(5deg) translate3d(0,0,0); z-index: 10; }
+    25%  { transform: scale(0.82) rotateY(0deg) rotateX(0deg) translate3d(0,15px,30px); z-index: 10; }
+    50%  { transform: scale(0.74) rotateY(0deg) rotateX(-8deg) translate3d(0,160px,-100px); z-index: 3; }
+    70%  { transform: scale(0.74) rotateY(0deg) rotateX(-8deg) translate3d(0,160px,-100px); z-index: 3; }
+    100% { transform: scale(0.78) rotateY(-5deg) rotateX(5deg) translate3d(0,0,0); z-index: 10; }
   }
 
   .card-container.animating {
@@ -1020,12 +1020,12 @@
     .hero-inner { grid-template-columns: 1fr; gap: 40px; text-align: center; }
     .lede { margin-left: auto; margin-right: auto; }
     .cta-row { justify-content: center; }
-    .simulator-wrapper { height: auto; flex-direction: column; gap: 20px; }
-    .card-container { left: auto; top: auto; bottom: auto; }
-    .card-container:not(.animating):not(.animating-mobile) { transform: scale(0.9); }
-    .nfc-card:not(.card-container.animating-mobile *) { transform: scale(0.9) rotateY(-5deg) rotateX(5deg); }
-    .phone-mockup { right: auto; top: auto; bottom: auto; transform: scale(0.9); }
-    .phone-mockup:hover { transform: scale(0.9) translateY(-5px); }
+    .simulator-wrapper { height: auto; flex-direction: column; gap: 4px; padding-top: 8px; }
+    .card-container { left: auto; top: auto; bottom: auto; margin-bottom: -24px; }
+    .card-container:not(.animating):not(.animating-mobile) { transform: scale(0.78); }
+    .nfc-card { transform: rotateY(-5deg) rotateX(5deg); }
+    .phone-mockup { right: auto; top: auto; bottom: auto; transform: scale(0.92); margin-top: -10px; }
+    .phone-mockup:hover { transform: scale(0.92) translateY(-3px); }
     .stats-inner { grid-template-columns: repeat(2, 1fr); gap: 24px; }
     .perfiles-grid { grid-template-columns: 1fr; }
     .flow-steps { grid-template-columns: 1fr; }
@@ -1270,7 +1270,7 @@
                 </div>
                 <div>
                   <h3>Juan Pérez S.</h3>
-                  <span class="profile-badge badge-conductor">CONDUCTOR</span>
+                  <span class="profile-badge badge-conductor">🚗 PKMB-26</span>
                 </div>
               </div>
 
@@ -1379,7 +1379,7 @@
       <!-- Simulator Selector Buttons -->
       <div class="simulator-controls">
         <button class="sim-btn active" data-profile="guardia">👮 Guardia</button>
-        <button class="sim-btn" data-profile="conductor">🚗 Conductor</button>
+        <button class="sim-btn" data-profile="conductor">🚗 PKMB-26</button>
         <button class="sim-btn" data-profile="empresa">🏢 Empresa</button>
       </div>
     </div>
@@ -1694,7 +1694,7 @@
         let labelText = "Perfil: Guardia";
         let metaText = "NFC·NX 0001 · CL · OS10";
         if (profile === 'conductor') {
-          labelText = "Perfil: Conductor";
+          labelText = "Perfil: PKMB-26";
           metaText = "NFC·NX 0001 · CL · TRANSITO";
         } else if (profile === 'empresa') {
           labelText = "Perfil: Empresa";
@@ -1725,7 +1725,7 @@
         container.classList.remove('animating-mobile');
         const isMob = window.innerWidth < 900;
         card.style.transform = isMob
-          ? 'scale(0.9) rotateY(-5deg) rotateX(5deg)'
+          ? 'rotateY(-5deg) rotateX(5deg)'
           : 'rotateY(-15deg) rotateX(10deg) scale(1)';
       }, 1200);
     });
