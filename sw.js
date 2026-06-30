@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nfc-nexo-v4';
+const CACHE_NAME = 'nfc-nexo-v5';
 const OFFLINE_URL = 'index.html';
 
 self.addEventListener('install', (event) => {
