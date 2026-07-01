@@ -25,8 +25,67 @@ create table if not exists public.cuentas (
   pago          text,
   estado        text default 'pendiente', -- pendiente | activa | rechazada
   es_admin      boolean default false,     -- true = ve todas las cuentas en admin.html
+  codigo_publico text unique,              -- código corto para la URL del NFC
   fecha         timestamptz default now()
 );
+
+-- Si la tabla ya existía, agregar la columna
+alter table public.cuentas add column if not exists codigo_publico text unique;
+
+-- Trigger: auto-generar codigo_publico en cada insert si viene NULL
+create or replace function public.generar_codigo_publico() returns trigger
+  language plpgsql as $$
+declare c text;
+begin
+  if new.codigo_publico is null then
+    loop
+      c := upper(substr(md5(random()::text || clock_timestamp()::text), 1, 8));
+      exit when not exists (select 1 from public.cuentas where codigo_publico = c);
+    end loop;
+    new.codigo_publico := c;
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists tg_generar_codigo on public.cuentas;
+create trigger tg_generar_codigo before insert on public.cuentas
+  for each row execute function public.generar_codigo_publico();
+
+-- Rellenar codigo_publico en filas que ya existen sin él
+update public.cuentas
+   set codigo_publico = upper(substr(md5(random()::text || id::text), 1, 8))
+ where codigo_publico is null;
+
+-- Función pública: leer datos verificables por codigo_publico SIN autenticación
+-- Devuelve JSON con datos de la cuenta + lista de documentos.
+create or replace function public.verificar_publico(codigo text)
+returns json language sql stable security definer set search_path = public as $$
+  select json_build_object(
+    'nombre',    c.nombre,
+    'rut',       c.rut,
+    'perfiles',  c.perfiles,
+    'tema',      c.tema,
+    'patente',   c.patente,
+    'estado',    c.estado,
+    'codigo',    c.codigo_publico,
+    'documentos', coalesce(
+      (select json_agg(json_build_object(
+         'tipo',   d.tipo,
+         'titulo', d.titulo,
+         'nombre', d.nombre,
+         'path',   d.path
+       ))
+       from public.documentos d
+       where d.cuenta_id = c.id and d.path <> ''), '[]'::json)
+  )
+  from public.cuentas c
+  where c.codigo_publico = codigo
+  limit 1;
+$$;
+grant execute on function public.verificar_publico(text) to anon, authenticated;
+
+-- Hacer PÚBLICO el bucket documentos para que las URLs funcionen sin token
+update storage.buckets set public = true where id = 'documentos';
 
 -- Índices útiles para admin
 create index if not exists cuentas_rut_idx    on public.cuentas (rut);

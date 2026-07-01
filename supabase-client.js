@@ -199,6 +199,27 @@ async function urlDocumento(path) {
   return data.signedUrl;
 }
 
+// ============ ACCESO PÚBLICO (para el link del NFC) ============
+// Lee datos verificables por codigo_publico SIN necesidad de sesión.
+async function verificarPublico(codigo) {
+  const { data, error } = await sb.rpc('verificar_publico', { codigo });
+  if (error) throw error;
+  return data; // { nombre, rut, perfiles, tema, patente, estado, documentos: [...] }
+}
+
+// URL pública de un archivo del bucket 'documentos' (bucket debe ser público)
+function urlPublicaDocumento(path) {
+  const { data } = sb.storage.from('documentos').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+// URL para grabar en el NFC del usuario logueado
+async function urlDeMiTarjeta() {
+  const c = await obtenerCuenta();
+  if (!c || !c.codigo_publico) return null;
+  return location.origin + '/verificar.html?id=' + c.codigo_publico;
+}
+
 // URL firmada de la foto de perfil del usuario (o null si no ha subido)
 async function urlFotoPerfil() {
   const user = await nexoUsuarioActual();
@@ -230,5 +251,6 @@ Object.assign(window, {
   nexoSignUp, nexoSignIn, nexoSignOut, nexoUsuarioActual,
   guardarCuenta, obtenerCuenta, listarCuentas,
   subirDocumento, guardarTituloDocumento, listarDocumentos, eliminarDocumento, urlDocumento,
-  urlFotoPerfil, aplicarFotoPerfil
+  urlFotoPerfil, aplicarFotoPerfil,
+  verificarPublico, urlPublicaDocumento, urlDeMiTarjeta
 });

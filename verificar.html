@@ -918,9 +918,21 @@
   function iniciales(n) {
     return (n || '').trim().split(/\s+/).slice(0,2).map(p => p[0] || '').join('').toUpperCase() || '??';
   }
+  // Si vienen con ?id=CODIGO en la URL → modo público (nadie está logueado)
+  const codigoPublico = new URLSearchParams(location.search).get('id');
+  window._datosPublicos = null;
+
   async function cargarDatosUsuario() {
     let datos = null;
-    try { datos = await obtenerCuenta(); } catch(e) { console.warn(e); }
+    if (codigoPublico) {
+      try {
+        datos = await verificarPublico(codigoPublico);
+        window._datosPublicos = datos;
+      } catch(e) { console.warn('Error cargando pública:', e); }
+    }
+    if (!datos) {
+      try { datos = await obtenerCuenta(); } catch(e) { console.warn(e); }
+    }
     if (!datos) {
       try { datos = JSON.parse(localStorage.getItem('nexo_cuenta') || 'null'); } catch(e) {}
     }
@@ -994,7 +1006,7 @@
     cont.innerHTML = '';
     for (const d of docs) {
       let url;
-      try { url = await urlDocumento(d.path); } catch(e) { continue; }
+      try { url = codigoPublico ? urlPublicaDocumento(d.path) : await urlDocumento(d.path); } catch(e) { continue; }
       const titulo = d.titulo || NOMBRES_DOC[d.tipo] || d.tipo;
       const sub = d.nombre || '';
       const div = document.createElement('div');
@@ -1021,7 +1033,10 @@
   // Reemplazar imágenes de demo por los archivos que el usuario subió a Supabase
   async function cargarDocumentosUsuario() {
     try {
-      const docs = await listarDocumentos();
+      // Modo público (visitante del NFC) → usar documentos del RPC
+      const docs = codigoPublico && window._datosPublicos
+        ? (window._datosPublicos.documentos || []).map(d => ({ ...d, tamano: 0, fecha: new Date().toISOString() }))
+        : await listarDocumentos();
       const extras = [];
       const comerciante = [];
       const empresa = [];
@@ -1042,7 +1057,7 @@
         const card = document.querySelector('.doc-img-card[data-tipo="' + d.tipo + '"]');
         if (!card) continue;
         let url;
-        try { url = await urlDocumento(d.path); } catch(e) { continue; }
+        try { url = codigoPublico ? urlPublicaDocumento(d.path) : await urlDocumento(d.path); } catch(e) { continue; }
         const img = card.querySelector('img');
         if (img) img.src = url;
         const titulo = card.dataset.titulo || d.nombre;
@@ -1064,7 +1079,7 @@
         cont.innerHTML = '';
         for (const d of extras) {
           let url;
-          try { url = await urlDocumento(d.path); } catch(e) { continue; }
+          try { url = codigoPublico ? urlPublicaDocumento(d.path) : await urlDocumento(d.path); } catch(e) { continue; }
           const num = d.tipo.replace('extra', '');
           const titulo = 'Documento extra ' + num;
           const div = document.createElement('div');
