@@ -781,13 +781,22 @@
     if (badge) { badge.className = 'doc-badge ok'; badge.textContent = '✓ Cargado'; }
     const info = card.querySelector('.doc-info p');
     if (info) info.textContent = nombreArchivo + ' · ' + (cuando || 'Subido ahora');
-    const zone = panel && panel.querySelector('.upload-zone');
+    if (!panel) return;
+
+    const previewHtml = `<span>📄</span><span class="fname">${nombreArchivo}</span><span class="fsize">${tamanoKB} KB</span><button class="fdel" onclick="eliminarDoc('${docId}')">✕</button>`;
+
+    // Primera subida: reemplazar la .upload-zone por un .file-preview
+    const zone = panel.querySelector('.upload-zone');
     if (zone) {
       const preview = document.createElement('div');
       preview.className = 'file-preview';
-      preview.innerHTML = `<span>📄</span><span class="fname">${nombreArchivo}</span><span class="fsize">${tamanoKB} KB</span><button class="fdel" onclick="eliminarDoc('${docId}')">✕</button>`;
+      preview.innerHTML = previewHtml;
       zone.replaceWith(preview);
+      return;
     }
+    // Subida posterior: ya existe un .file-preview, actualizar su contenido
+    const existente = panel.querySelector('.file-preview');
+    if (existente) existente.innerHTML = previewHtml;
   }
 
   // Archivo seleccionado → subir a Supabase Storage
