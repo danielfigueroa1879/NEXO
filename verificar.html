@@ -742,6 +742,9 @@
         <div class="avatar" id="avV">??</div>
         <div class="card-identity">
           <h2 id="nameV">Cargando…</h2>
+          <div class="patente-line" id="patenteLine" style="display:none;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;letter-spacing:0.14em;margin:2px 0 4px;text-transform:uppercase;">
+            🚗 <span id="patenteText">—</span>
+          </div>
           <div class="rut" id="rutV">RUT: —</div>
           <div class="card-type-badge">
             <span class="dot"></span>
@@ -971,6 +974,13 @@
     if (activos.conductor && datos.patente) {
       document.getElementById('patenteLabel').textContent = '🚗 ' + datos.patente;
       document.getElementById('vehLabel').textContent = 'Vehículo · ' + datos.patente;
+      // Mostrar la patente en blanco debajo del nombre en el panel del vehículo
+      const linea = document.getElementById('patenteLine');
+      const txt   = document.getElementById('patenteText');
+      if (linea && txt) {
+        txt.textContent = datos.patente;
+        linea.style.display = '';
+      }
     }
 
     // Activar el primer panel disponible
