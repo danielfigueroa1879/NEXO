@@ -971,9 +971,9 @@
   </svg>
 </button>
 <script>
-  const _btt = document.getElementById('btt');
   window.addEventListener('scroll', () => {
-    _btt.classList.toggle('show', window.scrollY > 120);
+    const _btt = document.getElementById('btt');
+    if (_btt) _btt.classList.toggle('show', window.scrollY > 120);
   });
 </script>
 
