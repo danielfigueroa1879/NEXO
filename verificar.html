@@ -1042,6 +1042,8 @@
     }
   }
   document.addEventListener('DOMContentLoaded', async () => {
+    // Si venimos del OAuth de Google, esperar a que se procese la sesión
+    await esperarSesionOAuth();
     await cargarDatosUsuario();
     aplicarFotoPerfil();
   });

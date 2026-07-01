@@ -15,7 +15,12 @@ const SUPABASE_ANON_KEY = 'sb_publishable_Ksaisk6CWNecrUnI9fD3wg_dxnO_TsB';  // 
 
 // Cliente global (usa el bundle UMD cargado por <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">)
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true }
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,   // ← detecta ?code=... del OAuth de Google
+    flowType: 'pkce'
+  }
 });
 window.sb = sb;
 
@@ -83,6 +88,26 @@ async function nexoSignOut() {
 async function nexoUsuarioActual() {
   const { data } = await sb.auth.getUser();
   return data.user || null;
+}
+
+// Espera a que la sesión OAuth se establezca (después del redirect de Google).
+// Cuando la URL tiene ?code=... del callback de Supabase, `detectSessionInUrl`
+// procesa el intercambio asincrónicamente. Este helper aguarda hasta que exista
+// sesión o se agote el tiempo (2s). Ideal llamarla al inicio de cada página.
+async function esperarSesionOAuth() {
+  const url = new URL(location.href);
+  const tieneCode = url.searchParams.has('code');
+  if (!tieneCode) return;
+  const tope = Date.now() + 2500;
+  while (Date.now() < tope) {
+    const { data } = await sb.auth.getSession();
+    if (data && data.session) break;
+    await new Promise(r => setTimeout(r, 100));
+  }
+  // Limpiar el ?code=... de la URL para que quede prolija
+  url.searchParams.delete('code');
+  url.searchParams.delete('state');
+  history.replaceState(null, '', url.pathname + (url.searchParams.toString() ? '?' + url.searchParams : '') + url.hash);
 }
 
 // Asegura que exista una fila en `cuentas` para el usuario actual.
@@ -269,7 +294,7 @@ async function aplicarFotoPerfil() {
 
 // Exponer al window para poder llamarlas desde inline scripts
 Object.assign(window, {
-  nexoSignUp, nexoSignIn, nexoSignOut, nexoUsuarioActual, asegurarCuenta,
+  nexoSignUp, nexoSignIn, nexoSignOut, nexoUsuarioActual, asegurarCuenta, esperarSesionOAuth,
   guardarCuenta, obtenerCuenta, listarCuentas,
   subirDocumento, guardarTituloDocumento, listarDocumentos, eliminarDocumento, urlDocumento,
   urlFotoPerfil, aplicarFotoPerfil,
