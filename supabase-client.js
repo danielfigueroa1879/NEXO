@@ -199,9 +199,36 @@ async function urlDocumento(path) {
   return data.signedUrl;
 }
 
+// URL firmada de la foto de perfil del usuario (o null si no ha subido)
+async function urlFotoPerfil() {
+  const user = await nexoUsuarioActual();
+  if (!user) return null;
+  const { data } = await sb.from('documentos')
+    .select('path').eq('cuenta_id', user.id).eq('tipo', 'foto').maybeSingle();
+  if (!data || !data.path) return null;
+  try { return await urlDocumento(data.path); } catch(e) { return null; }
+}
+
+// Aplica la foto de perfil como imagen de fondo en TODOS los .avatar / #userAv
+async function aplicarFotoPerfil() {
+  const url = await urlFotoPerfil();
+  if (!url) return;
+  const selectores = [
+    '#userAv','#avG','#avV','#avC','#avE',
+    '#adminAvatar','.user-badge .u-av'
+  ];
+  document.querySelectorAll(selectores.join(',')).forEach(el => {
+    el.style.backgroundImage    = 'url("' + url + '")';
+    el.style.backgroundSize     = 'cover';
+    el.style.backgroundPosition = 'center';
+    el.style.color              = 'transparent'; // oculta iniciales
+  });
+}
+
 // Exponer al window para poder llamarlas desde inline scripts
 Object.assign(window, {
   nexoSignUp, nexoSignIn, nexoSignOut, nexoUsuarioActual,
   guardarCuenta, obtenerCuenta, listarCuentas,
-  subirDocumento, guardarTituloDocumento, listarDocumentos, eliminarDocumento, urlDocumento
+  subirDocumento, guardarTituloDocumento, listarDocumentos, eliminarDocumento, urlDocumento,
+  urlFotoPerfil, aplicarFotoPerfil
 });

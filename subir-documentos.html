@@ -1223,6 +1223,8 @@
       await subirDocumento({ tipo: docId, file, titulo });
       marcarCardSubida(docId, file.name, (file.size/1024).toFixed(0));
       updateProgress();
+      // Si acabó de subir la foto de perfil, refrescar todos los avatares
+      if (docId === 'foto') aplicarFotoPerfil();
       showToast('Archivo subido: ' + file.name);
     } catch (e) {
       console.error(e);
@@ -1366,6 +1368,9 @@
       });
       updateProgress();
     } catch (e) { console.warn('No se pudieron cargar documentos previos:', e.message); }
+
+    // Aplicar foto de perfil si la tiene subida
+    aplicarFotoPerfil();
   })();
 
   // Chevron volver arriba

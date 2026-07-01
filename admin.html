@@ -877,6 +877,8 @@
 
     // Si el usuario es admin, mostrar la lista de TODAS las cuentas
     if (datos.es_admin) await cargarListaCuentas();
+    // Aplicar foto de perfil en cualquier avatar
+    aplicarFotoPerfil();
   }
 
   async function cargarListaCuentas() {

@@ -971,7 +971,10 @@
       if (tabs[primero]) tabs[primero].classList.add('active');
     }
   }
-  document.addEventListener('DOMContentLoaded', cargarDatosUsuario);
+  document.addEventListener('DOMContentLoaded', async () => {
+    await cargarDatosUsuario();
+    aplicarFotoPerfil();
+  });
 
   // Nombres bonitos para tipos de documento
   const NOMBRES_DOC = {

@@ -2034,6 +2034,8 @@
       const menu = document.getElementById('userMenu');
       if (menu) menu.classList.remove('open');
     });
+    // Foto de perfil como avatar redondo
+    aplicarFotoPerfil();
   }
   async function cerrarSesion() {
     try { await nexoSignOut(); } catch(e) {}
