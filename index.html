@@ -1337,6 +1337,57 @@
   .user-menu a:hover, .user-menu button:hover { background:#f5f5f7; }
   .user-menu .logout { color:#E82127; }
   .user-menu hr { border:none; border-top:1px solid #e5e5ea; margin:6px 4px; }
+
+  /* ===== MODAL "MI PERFIL" ===== */
+  .perfil-modal {
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.55); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .perfil-modal.open { display: flex; }
+  .perfil-box {
+    background: #fff; border-radius: 20px; width: 100%; max-width: 400px;
+    padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    max-height: 90vh; overflow-y: auto;
+  }
+  .perfil-box h3 { font-family:'Space Grotesk',sans-serif; font-size:19px; font-weight:700; margin-bottom:4px; }
+  .perfil-box .pm-sub { font-size:13px; color:var(--ink-mute); margin-bottom:18px; }
+  .pm-avatar-wrap { display:flex; justify-content:center; margin-bottom:6px; }
+  .pm-avatar-btn { position:relative; border:none; background:none; padding:0; cursor:pointer; line-height:0; }
+  .pm-avatar {
+    width:88px; height:88px; border-radius:50%;
+    background: linear-gradient(135deg,#3A3A3C,#0A0A0A);
+    color:#fff; font-size:30px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    background-size:cover; background-position:center;
+  }
+  .pm-cam {
+    position:absolute; bottom:2px; right:2px;
+    width:28px; height:28px; border-radius:50%;
+    background:var(--red); color:#fff; font-size:13px;
+    display:flex; align-items:center; justify-content:center;
+    border:3px solid #fff;
+  }
+  .perfil-box label { display:block; font-size:11px; font-weight:700; color:var(--ink-mute); text-transform:uppercase; letter-spacing:0.06em; margin:12px 0 6px; }
+  .perfil-box input {
+    width:100%; padding:12px 14px; border-radius:11px;
+    border:1.5px solid var(--line); font-family:'Outfit',sans-serif;
+    font-size:15px; background:#fff; color:var(--ink); outline:none;
+    box-sizing:border-box;
+  }
+  .perfil-box input:focus { border-color:var(--red); }
+  .pm-actions { display:flex; gap:10px; margin-top:22px; }
+  .pm-btn { flex:1; padding:13px; border-radius:12px; border:none; font-family:'Outfit',sans-serif; font-size:14px; font-weight:700; cursor:pointer; }
+  .pm-btn.primary { background:var(--ink); color:#fff; }
+  .pm-btn.secondary { background:#fff; color:var(--ink); border:1.5px solid var(--line); }
+  /* Toast de la home */
+  .home-toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; padding:13px 20px; border-radius:12px;
+    font-size:14px; font-weight:600; z-index:1100; opacity:0; pointer-events:none;
+    transition:opacity .3s, transform .3s; box-shadow:0 10px 30px rgba(0,0,0,0.25);
+  }
+  .home-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 </style>
 
 <!-- HERO -->
@@ -2016,6 +2067,7 @@
       <div class="user-menu" id="userMenu">
         <a href="verificar.html">👁 Ver mi tarjeta</a>
         <a href="solicitar.html">📝 Mi solicitud</a>
+        <a href="#" onclick="event.preventDefault(); event.stopPropagation(); abrirPerfil();">👤 Mi perfil</a>
         <a href="subir-documentos.html">📄 Mis documentos</a>
         <a href="admin.html">⚙️ Configuración</a>
         <hr>
@@ -2035,6 +2087,116 @@
   }
   window.cerrarSesion = cerrarSesion;
   document.addEventListener('DOMContentLoaded', mostrarUsuarioLogueado);
+
+  // ===== MI PERFIL (modal en la pantalla de inicio) =====
+  function initPerfilModal() {
+    if (document.getElementById('perfilModal')) return;
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
+      <div class="perfil-modal" id="perfilModal" onclick="if(event.target===this) cerrarPerfil()">
+        <div class="perfil-box">
+          <h3>Mi perfil</h3>
+          <div class="pm-sub">Actualiza tu foto, nombre y correo.</div>
+          <div class="pm-avatar-wrap">
+            <button class="pm-avatar-btn" type="button" onclick="document.getElementById('pm-foto').click()" title="Cambiar foto">
+              <div class="pm-avatar" id="pm-avatar">??</div>
+              <span class="pm-cam">📷</span>
+            </button>
+            <input type="file" id="pm-foto" accept=".jpg,.jpeg,.png" style="display:none" onchange="cambiarFotoPerfilHome(this)">
+          </div>
+          <label>Nombre completo</label>
+          <input type="text" id="pm-nombre" placeholder="Tu nombre">
+          <label>Correo electrónico</label>
+          <input type="email" id="pm-email" placeholder="tucorreo@ejemplo.cl">
+          <div class="pm-actions">
+            <button class="pm-btn secondary" type="button" onclick="cerrarPerfil()">Cancelar</button>
+            <button class="pm-btn primary" type="button" onclick="guardarPerfilHome()">Guardar</button>
+          </div>
+        </div>
+      </div>
+      <div class="home-toast" id="homeToast"></div>`;
+    document.body.appendChild(wrap);
+  }
+  document.addEventListener('DOMContentLoaded', initPerfilModal);
+
+  function homeToast(msg) {
+    const t = document.getElementById('homeToast');
+    if (!t) return;
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(window._htTo);
+    window._htTo = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  async function aplicarFotoModal() {
+    try {
+      const u = await urlFotoPerfil();
+      const a = document.getElementById('pm-avatar');
+      if (u && a) { a.style.backgroundImage = 'url("' + u + '")'; a.style.color = 'transparent'; }
+    } catch (e) {}
+  }
+
+  async function abrirPerfil() {
+    const menu = document.getElementById('userMenu');
+    if (menu) menu.classList.remove('open');
+    let c = window._cuentaHome;
+    if (!c) { try { c = await obtenerCuenta(); } catch(e) {} window._cuentaHome = c || {}; }
+    const nombre = (c && c.nombre) || '';
+    document.getElementById('pm-nombre').value = nombre;
+    document.getElementById('pm-email').value  = (c && c.email) || '';
+    document.getElementById('pm-avatar').textContent = inicialesUsuario(nombre || '?');
+    aplicarFotoModal();
+    document.getElementById('perfilModal').classList.add('open');
+  }
+  function cerrarPerfil() {
+    const m = document.getElementById('perfilModal');
+    if (m) m.classList.remove('open');
+  }
+
+  async function guardarPerfilHome() {
+    const nombre = document.getElementById('pm-nombre').value.trim();
+    const email  = document.getElementById('pm-email').value.trim();
+    if (!nombre) { homeToast('El nombre no puede quedar vacío'); return; }
+    try {
+      const user = await nexoUsuarioActual();
+      if (!user) { homeToast('Debes iniciar sesión'); return; }
+      await guardarCuenta({ nombre, email });
+      window._cuentaHome = Object.assign(window._cuentaHome || {}, { nombre, email });
+      // Refrescar el saludo del chip de usuario
+      const av = document.querySelector('.user-badge .u-av');
+      if (av) av.textContent = inicialesUsuario(nombre);
+      const badge = document.querySelector('.user-badge');
+      if (badge) {
+        const span = badge.querySelector('span:not(.u-av)');
+        if (span) span.textContent = 'Hola, ' + primerNombre(nombre);
+      }
+      cerrarPerfil();
+      homeToast('Perfil actualizado');
+    } catch (e) {
+      console.error(e);
+      homeToast('Error guardando: ' + e.message);
+    }
+  }
+
+  async function cambiarFotoPerfilHome(input) {
+    if (!input.files.length) return;
+    const file = input.files[0];
+    try {
+      const user = await nexoUsuarioActual();
+      if (!user) { homeToast('Debes iniciar sesión'); return; }
+      homeToast('Subiendo foto…');
+      await subirDocumento({ tipo: 'foto', file });
+      await aplicarFotoPerfil();   // avatar del chip
+      await aplicarFotoModal();    // avatar del modal
+      homeToast('Foto de perfil actualizada');
+    } catch (e) {
+      console.error(e);
+      homeToast('Error subiendo la foto: ' + e.message);
+    }
+    input.value = '';
+  }
+
+  // Exponer al scope global para los onclick inline
+  Object.assign(window, { abrirPerfil, cerrarPerfil, guardarPerfilHome, cambiarFotoPerfilHome });
 </script>
 
 <script>
