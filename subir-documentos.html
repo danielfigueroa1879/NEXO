@@ -436,6 +436,8 @@
         <path d="M9 13.5 L12 17 L15 13.5 L15 21 L9 21 Z" fill="#0a0a0a"/>
       </svg>Guardia OS10</button>
     <button class="ptab" id="ptab-conductor" onclick="switchTab('conductor', this)">🚗 Vehículo</button>
+    <button class="ptab" id="ptab-comerciante" onclick="switchTab('comerciante', this)" style="display:none;">🏪 Comerciante</button>
+    <button class="ptab" id="ptab-empresa" onclick="switchTab('empresa', this)" style="display:none;">🏢 Empresa</button>
   </div>
 
   <!-- ===== DOCUMENTOS GUARDIA ===== -->
@@ -892,6 +894,250 @@
 
   </div><!-- /tab-conductor -->
 
+  <!-- ===== DOCUMENTOS COMERCIANTE ===== -->
+  <div id="tab-comerciante" style="display:none">
+    <div class="section-title">Documentos comerciales <span class="section-count">Comerciante</span></div>
+
+    <!-- Patente de Alcoholes -->
+    <div class="doc-card missing" id="card-patente_alcoholes">
+      <div class="doc-row" onclick="togglePanel('patente_alcoholes')">
+        <div class="doc-icon-wrap">🍷</div>
+        <div class="doc-info">
+          <h4>Patente de Alcoholes</h4>
+          <p>Autorización municipal de venta · No subido</p>
+        </div>
+        <span class="doc-badge miss">Pendiente</span>
+        <span class="doc-chevron" id="chev-patente_alcoholes">›</span>
+      </div>
+      <div class="upload-panel" id="panel-patente_alcoholes">
+        <div class="vence-row">
+          <label>Vencimiento</label>
+          <input type="date">
+        </div>
+        <div class="upload-zone" onclick="triggerUpload('patente_alcoholes-input')">
+          <div class="icon">📁</div>
+          <h5>Arrastra aquí o toca para subir</h5>
+          <p>PDF, JPG o PNG · Máximo 10 MB</p>
+          <input type="file" class="upload-input" id="patente_alcoholes-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'patente_alcoholes')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('patente_alcoholes-input')">↑ Subir</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Patente Comercial -->
+    <div class="doc-card missing" id="card-patente_comercial">
+      <div class="doc-row" onclick="togglePanel('patente_comercial')">
+        <div class="doc-icon-wrap">📃</div>
+        <div class="doc-info">
+          <h4>Patente Comercial</h4>
+          <p>Patente municipal del negocio · No subido</p>
+        </div>
+        <span class="doc-badge miss">Pendiente</span>
+        <span class="doc-chevron" id="chev-patente_comercial">›</span>
+      </div>
+      <div class="upload-panel" id="panel-patente_comercial">
+        <div class="vence-row">
+          <label>Vencimiento</label>
+          <input type="date">
+        </div>
+        <div class="upload-zone" onclick="triggerUpload('patente_comercial-input')">
+          <div class="icon">📁</div>
+          <h5>Arrastra aquí o toca para subir</h5>
+          <p>PDF, JPG o PNG · Máximo 10 MB</p>
+          <input type="file" class="upload-input" id="patente_comercial-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'patente_comercial')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('patente_comercial-input')">↑ Subir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Otros documentos <span class="section-count">Nombre editable</span></div>
+
+    <!-- Slots comerciante renombrables -->
+    <div class="doc-card missing" id="card-com_extra1">
+      <div class="doc-row" onclick="togglePanel('com_extra1')">
+        <div class="doc-icon-wrap">🖼️</div>
+        <div class="doc-info">
+          <h4 class="doc-title" contenteditable="true" spellcheck="false" data-tipo="com_extra1" onblur="guardarTitulo(this)">Documento (toca para renombrar)</h4>
+          <p>Ponle el nombre que quieras · Toca el título</p>
+        </div>
+        <span class="doc-badge miss">Vacío</span>
+        <span class="doc-chevron" id="chev-com_extra1">›</span>
+      </div>
+      <div class="upload-panel" id="panel-com_extra1">
+        <div class="upload-zone" onclick="triggerUpload('com_extra1-input')">
+          <div class="icon">📁</div>
+          <h5>Sube tu documento</h5>
+          <p>PDF, JPG o PNG</p>
+          <input type="file" class="upload-input" id="com_extra1-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'com_extra1')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('com_extra1-input')">↑ Subir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-card missing" id="card-com_extra2">
+      <div class="doc-row" onclick="togglePanel('com_extra2')">
+        <div class="doc-icon-wrap">🖼️</div>
+        <div class="doc-info">
+          <h4 class="doc-title" contenteditable="true" spellcheck="false" data-tipo="com_extra2" onblur="guardarTitulo(this)">Documento (toca para renombrar)</h4>
+          <p>Ponle el nombre que quieras · Toca el título</p>
+        </div>
+        <span class="doc-badge miss">Vacío</span>
+        <span class="doc-chevron" id="chev-com_extra2">›</span>
+      </div>
+      <div class="upload-panel" id="panel-com_extra2">
+        <div class="upload-zone" onclick="triggerUpload('com_extra2-input')">
+          <div class="icon">📁</div>
+          <h5>Sube tu documento</h5>
+          <p>PDF, JPG o PNG</p>
+          <input type="file" class="upload-input" id="com_extra2-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'com_extra2')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('com_extra2-input')">↑ Subir</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /tab-comerciante -->
+
+  <!-- ===== DOCUMENTOS EMPRESA ===== -->
+  <div id="tab-empresa" style="display:none">
+    <div class="section-title">Documentos de la empresa <span class="section-count">Empresa</span></div>
+
+    <!-- Directiva de Funcionamiento -->
+    <div class="doc-card missing" id="card-directiva">
+      <div class="doc-row" onclick="togglePanel('directiva')">
+        <div class="doc-icon-wrap">📋</div>
+        <div class="doc-info">
+          <h4>Directiva de Funcionamiento</h4>
+          <p>Autorización o resolución de operación · No subido</p>
+        </div>
+        <span class="doc-badge miss">Pendiente</span>
+        <span class="doc-chevron" id="chev-directiva">›</span>
+      </div>
+      <div class="upload-panel" id="panel-directiva">
+        <div class="vence-row">
+          <label>Vencimiento</label>
+          <input type="date">
+        </div>
+        <div class="upload-zone" onclick="triggerUpload('directiva-input')">
+          <div class="icon">📁</div>
+          <h5>Arrastra aquí o toca para subir</h5>
+          <p>PDF, JPG o PNG · Máximo 10 MB</p>
+          <input type="file" class="upload-input" id="directiva-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'directiva')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('directiva-input')">↑ Subir</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contratos de Trabajo -->
+    <div class="doc-card missing" id="card-contratos_empresa">
+      <div class="doc-row" onclick="togglePanel('contratos_empresa')">
+        <div class="doc-icon-wrap">📝</div>
+        <div class="doc-info">
+          <h4>Contratos de Trabajo</h4>
+          <p>Contratos vigentes del personal · No subido</p>
+        </div>
+        <span class="doc-badge miss">Pendiente</span>
+        <span class="doc-chevron" id="chev-contratos_empresa">›</span>
+      </div>
+      <div class="upload-panel" id="panel-contratos_empresa">
+        <div class="upload-zone" onclick="triggerUpload('contratos_empresa-input')">
+          <div class="icon">📁</div>
+          <h5>Arrastra aquí o toca para subir</h5>
+          <p>PDF · Máximo 10 MB</p>
+          <input type="file" class="upload-input" id="contratos_empresa-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'contratos_empresa')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('contratos_empresa-input')">↑ Subir</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seguro de la empresa -->
+    <div class="doc-card missing" id="card-seguro_empresa">
+      <div class="doc-row" onclick="togglePanel('seguro_empresa')">
+        <div class="doc-icon-wrap">🛡️</div>
+        <div class="doc-info">
+          <h4>Seguro de la Empresa</h4>
+          <p>Póliza de seguro vigente · No subido</p>
+        </div>
+        <span class="doc-badge miss">Pendiente</span>
+        <span class="doc-chevron" id="chev-seguro_empresa">›</span>
+      </div>
+      <div class="upload-panel" id="panel-seguro_empresa">
+        <div class="vence-row">
+          <label>Vencimiento</label>
+          <input type="date">
+        </div>
+        <div class="upload-zone" onclick="triggerUpload('seguro_empresa-input')">
+          <div class="icon">📁</div>
+          <h5>Arrastra aquí o toca para subir</h5>
+          <p>PDF, JPG o PNG · Máximo 10 MB</p>
+          <input type="file" class="upload-input" id="seguro_empresa-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'seguro_empresa')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('seguro_empresa-input')">↑ Subir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Otros documentos <span class="section-count">Nombre editable</span></div>
+
+    <!-- Slots empresa renombrables -->
+    <div class="doc-card missing" id="card-emp_extra1">
+      <div class="doc-row" onclick="togglePanel('emp_extra1')">
+        <div class="doc-icon-wrap">🖼️</div>
+        <div class="doc-info">
+          <h4 class="doc-title" contenteditable="true" spellcheck="false" data-tipo="emp_extra1" onblur="guardarTitulo(this)">Documento (toca para renombrar)</h4>
+          <p>Ponle el nombre que quieras · Toca el título</p>
+        </div>
+        <span class="doc-badge miss">Vacío</span>
+        <span class="doc-chevron" id="chev-emp_extra1">›</span>
+      </div>
+      <div class="upload-panel" id="panel-emp_extra1">
+        <div class="upload-zone" onclick="triggerUpload('emp_extra1-input')">
+          <div class="icon">📁</div>
+          <h5>Sube tu documento</h5>
+          <p>PDF, JPG o PNG</p>
+          <input type="file" class="upload-input" id="emp_extra1-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'emp_extra1')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('emp_extra1-input')">↑ Subir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-card missing" id="card-emp_extra2">
+      <div class="doc-row" onclick="togglePanel('emp_extra2')">
+        <div class="doc-icon-wrap">🖼️</div>
+        <div class="doc-info">
+          <h4 class="doc-title" contenteditable="true" spellcheck="false" data-tipo="emp_extra2" onblur="guardarTitulo(this)">Documento (toca para renombrar)</h4>
+          <p>Ponle el nombre que quieras · Toca el título</p>
+        </div>
+        <span class="doc-badge miss">Vacío</span>
+        <span class="doc-chevron" id="chev-emp_extra2">›</span>
+      </div>
+      <div class="upload-panel" id="panel-emp_extra2">
+        <div class="upload-zone" onclick="triggerUpload('emp_extra2-input')">
+          <div class="icon">📁</div>
+          <h5>Sube tu documento</h5>
+          <p>PDF, JPG o PNG</p>
+          <input type="file" class="upload-input" id="emp_extra2-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'emp_extra2')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('emp_extra2-input')">↑ Subir</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /tab-empresa -->
+
 </div><!-- /page -->
 
 <!-- SAVE BAR -->
@@ -971,7 +1217,10 @@
     try {
       const user = await nexoUsuarioActual();
       if (!user) { showToast('Debes iniciar sesión para subir documentos'); return; }
-      await subirDocumento({ tipo: docId, file });
+      // Si es un slot renombrable, incluir el título editado
+      const h = document.querySelector('.doc-title[data-tipo="' + docId + '"]');
+      const titulo = h ? h.textContent.trim() : undefined;
+      await subirDocumento({ tipo: docId, file, titulo });
       marcarCardSubida(docId, file.name, (file.size/1024).toFixed(0));
       updateProgress();
       showToast('Archivo subido: ' + file.name);
@@ -1017,8 +1266,24 @@
   function switchTab(tab, btn) {
     document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById('tab-guardia').style.display = tab === 'guardia' ? 'block' : 'none';
-    document.getElementById('tab-conductor').style.display = tab === 'conductor' ? 'block' : 'none';
+    ['guardia','conductor','comerciante','empresa'].forEach(k => {
+      const el = document.getElementById('tab-' + k);
+      if (el) el.style.display = tab === k ? 'block' : 'none';
+    });
+  }
+
+  // Guardar el título editable de un slot renombrable (com_extraN / emp_extraN)
+  async function guardarTitulo(el) {
+    const tipo = el.dataset.tipo;
+    const titulo = el.textContent.trim();
+    if (!tipo || !titulo) return;
+    try {
+      await guardarTituloDocumento(tipo, titulo);
+      showToast('Título guardado');
+    } catch(e) {
+      console.error(e);
+      showToast('Error guardando el título');
+    }
   }
 
   // Progreso
@@ -1055,14 +1320,25 @@
       document.getElementById('userNombre').textContent = datos.nombre || 'Tu nombre';
       document.getElementById('userRut').textContent    = 'RUT: ' + (datos.rut || '—');
       const perfiles = datos.perfiles || [];
-      const tieneGuardia  = perfiles.includes('guardia');
-      const tieneVehiculo = perfiles.includes('vehiculo');
-      const tabG = document.getElementById('ptab-guardia');
-      const tabV = document.getElementById('ptab-conductor');
-      tabG.style.display = tieneGuardia  ? '' : 'none';
-      tabV.style.display = tieneVehiculo ? '' : 'none';
-      if (tieneVehiculo && datos.patente) tabV.innerHTML = '🚗 ' + datos.patente;
-      if (!tieneGuardia && tieneVehiculo) switchTab('conductor', tabV);
+      const tabs = {
+        guardia:     document.getElementById('ptab-guardia'),
+        conductor:   document.getElementById('ptab-conductor'),
+        comerciante: document.getElementById('ptab-comerciante'),
+        empresa:     document.getElementById('ptab-empresa')
+      };
+      const activos = {
+        guardia:     perfiles.includes('guardia'),
+        conductor:   perfiles.includes('vehiculo'),
+        comerciante: perfiles.includes('comerciante'),
+        empresa:     perfiles.includes('empresa')
+      };
+      Object.keys(tabs).forEach(k => {
+        if (tabs[k]) tabs[k].style.display = activos[k] ? '' : 'none';
+      });
+      if (activos.conductor && datos.patente) tabs.conductor.innerHTML = '🚗 ' + datos.patente;
+      // Activar el primer tab disponible
+      const primero = ['guardia','conductor','comerciante','empresa'].find(k => activos[k]);
+      if (primero && tabs[primero]) switchTab(primero, tabs[primero]);
     }
 
     let datos = null;
@@ -1073,12 +1349,20 @@
     if (!datos) datos = { nombre: 'Tu nombre', rut: '—', perfiles: ['guardia'], patente: '' };
     aplicar(datos);
 
-    // Marcar documentos ya subidos
+    // Marcar documentos ya subidos + restaurar títulos personalizados
     try {
       const docs = await listarDocumentos();
       docs.forEach(d => {
-        marcarCardSubida(d.tipo, d.nombre, Math.round((d.tamano || 0)/1024),
-          'Subido ' + new Date(d.fecha).toLocaleDateString('es-CL'));
+        // Restaurar título personalizado si existe (slots renombrables)
+        if (d.titulo) {
+          const h = document.querySelector('.doc-title[data-tipo="' + d.tipo + '"]');
+          if (h) h.textContent = d.titulo;
+        }
+        // Si tiene archivo subido (path no vacío), marcar visualmente
+        if (d.path && d.nombre) {
+          marcarCardSubida(d.tipo, d.nombre, Math.round((d.tamano || 0)/1024),
+            'Subido ' + new Date(d.fecha).toLocaleDateString('es-CL'));
+        }
       });
       updateProgress();
     } catch (e) { console.warn('No se pudieron cargar documentos previos:', e.message); }

@@ -615,17 +615,17 @@
         <div class="perfil-opt" data-perfil="comerciante" onclick="togglePerfil(this)">
           <div class="p-icon">🏪</div>
           <div class="p-info">
-            <h4>Comerciante / Botillería</h4>
+            <h4>Comerciante</h4>
             <p>Patente comercial, RUT, autorización municipal</p>
           </div>
           <div class="check"></div>
         </div>
 
-        <div class="perfil-opt" data-perfil="profesional" onclick="togglePerfil(this)" style="opacity:0.5;pointer-events:none;">
-          <div class="p-icon">🎓</div>
+        <div class="perfil-opt" data-perfil="empresa" onclick="togglePerfil(this)">
+          <div class="p-icon">🏢</div>
           <div class="p-info">
-            <h4>Profesional Colegiado</h4>
-            <p>Próximamente</p>
+            <h4>Empresa</h4>
+            <p>Razón social, RUT empresa, giro y datos comerciales</p>
           </div>
           <div class="check"></div>
         </div>
@@ -920,7 +920,7 @@
     const rut    = document.getElementById('f-rut').value.trim() || '—';
     const mail   = document.getElementById('f-mail').value.trim() || 'tu correo';
     const pat    = (document.getElementById('f-patente').value || '').trim().toUpperCase();
-    const nombres = { guardia: 'Guardia OS10', vehiculo: 'Vehículo', comerciante: 'Comerciante' };
+    const nombres = { guardia: 'Guardia OS10', vehiculo: 'Vehículo', comerciante: 'Comerciante', empresa: 'Empresa' };
     const lista = perfiles.map(p => nombres[p]).join(' + ');
     const temas = { negro: 'Clásico Negro', rojo: 'Rojo Chile', azul: 'Azul Chile', verde: 'Verde' };
 
@@ -1004,7 +1004,8 @@
     const nombres = {
       guardia: 'Guardia OS10',
       vehiculo: 'Vehículo',
-      comerciante: 'Comerciante'
+      comerciante: 'Comerciante',
+      empresa: 'Empresa'
     };
     const lista = perfiles.map(p => nombres[p]).join(', ');
     document.getElementById('r-perfiles').textContent = lista || '—';

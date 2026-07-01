@@ -135,7 +135,7 @@ async function listarCuentas() {
 /* ------------------------------------------------------------
    DOCUMENTOS  (Storage + tabla `public.documentos`)
    ------------------------------------------------------------ */
-async function subirDocumento({ tipo, file }) {
+async function subirDocumento({ tipo, file, titulo }) {
   const user = await nexoUsuarioActual();
   if (!user) throw new Error('Debes iniciar sesión para subir documentos');
 
@@ -146,15 +146,31 @@ async function subirDocumento({ tipo, file }) {
     .upload(path, file, { upsert: true, contentType: file.type || undefined });
   if (eUp) throw eUp;
 
-  const { data, error } = await sb.from('documentos').upsert({
-    cuenta_id: user.id,
-    tipo,
-    nombre:  file.name,
-    path,
-    tamano:  file.size
-  }, { onConflict: 'cuenta_id,tipo' }).select().single();
+  const payload = { cuenta_id: user.id, tipo, nombre: file.name, path, tamano: file.size };
+  if (titulo) payload.titulo = titulo;
+  const { data, error } = await sb.from('documentos')
+    .upsert(payload, { onConflict: 'cuenta_id,tipo' })
+    .select().single();
   if (error) throw error;
   return data;
+}
+
+// Guardar solo el título personalizado (sin subir archivo)
+async function guardarTituloDocumento(tipo, titulo) {
+  const user = await nexoUsuarioActual();
+  if (!user) throw new Error('Sin sesión');
+  // Si ya existe la fila, actualiza. Si no, la crea con path vacío (aún no subió archivo)
+  const { data: existente } = await sb.from('documentos')
+    .select('id').eq('cuenta_id', user.id).eq('tipo', tipo).maybeSingle();
+  if (existente) {
+    const { error } = await sb.from('documentos').update({ titulo }).eq('id', existente.id);
+    if (error) throw error;
+  } else {
+    const { error } = await sb.from('documentos').insert({
+      cuenta_id: user.id, tipo, nombre: '', path: '', titulo
+    });
+    if (error) throw error;
+  }
 }
 
 async function listarDocumentos() {
@@ -187,5 +203,5 @@ async function urlDocumento(path) {
 Object.assign(window, {
   nexoSignUp, nexoSignIn, nexoSignOut, nexoUsuarioActual,
   guardarCuenta, obtenerCuenta, listarCuentas,
-  subirDocumento, listarDocumentos, eliminarDocumento, urlDocumento
+  subirDocumento, guardarTituloDocumento, listarDocumentos, eliminarDocumento, urlDocumento
 });

@@ -42,13 +42,21 @@ create table if not exists public.documentos (
   id         uuid primary key default gen_random_uuid(),
   cuenta_id  uuid not null references public.cuentas(id) on delete cascade,
   tipo       text not null,      -- cedula | foto | curso | credencial |
-                                  -- contrato | examen | licencia | permiso | soap
+                                  -- contrato | examen | licencia | permiso | soap |
+                                  -- antecedentes | revision | padron |
+                                  -- patente_alcoholes | patente_comercial |
+                                  -- directiva | contratos_empresa | seguro_empresa |
+                                  -- extra1..N | com_extra1..N | emp_extra1..N
   nombre     text not null,      -- nombre original del archivo
+  titulo     text,               -- nombre personalizado (para slots renombrables)
   path       text not null,      -- ruta dentro del bucket 'documentos'
   tamano     integer,            -- bytes
   fecha      timestamptz default now(),
   unique (cuenta_id, tipo)       -- un solo documento por tipo por cuenta
 );
+
+-- Migración: si la tabla ya existe sin la columna titulo, la agrega
+alter table public.documentos add column if not exists titulo text;
 
 create index if not exists documentos_cuenta_idx on public.documentos (cuenta_id);
 

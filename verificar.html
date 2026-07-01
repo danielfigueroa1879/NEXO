@@ -648,6 +648,12 @@
     <button class="profile-tab" id="tab-conductor" onclick="switchPanel('conductor', this)">
       <span class="dot"></span> <span id="patenteLabel">🚗 Vehículo</span>
     </button>
+    <button class="profile-tab" id="tab-comerciante" onclick="switchPanel('comerciante', this)" style="display:none;">
+      <span class="dot"></span> 🏪 Comerciante
+    </button>
+    <button class="profile-tab" id="tab-empresa" onclick="switchPanel('empresa', this)" style="display:none;">
+      <span class="dot"></span> 🏢 Empresa
+    </button>
   </div>
 
   <!-- ===== PANEL GUARDIA ===== -->
@@ -813,6 +819,58 @@
   </div>
   <!-- FIN PANEL CONDUCTOR -->
 
+  <!-- ===== PANEL COMERCIANTE ===== -->
+  <div class="panel" id="panel-comerciante">
+    <div class="id-card">
+      <div class="card-header">
+        <div class="avatar" id="avC">??</div>
+        <div class="card-identity">
+          <h2 id="nameC">Cargando…</h2>
+          <div class="rut" id="rutC">RUT: —</div>
+          <div class="card-type-badge">
+            <span class="dot"></span>
+            <span>🏪 Comerciante</span>
+          </div>
+        </div>
+      </div>
+      <div class="flag-strip">
+        <div class="fl-blue">★</div><div class="fl-red"></div><div class="fl-white"></div><div class="fl-white2"></div>
+      </div>
+      <div class="card-body">
+        <div class="docs-grid" id="gridComerciante">
+          <p style="text-align:center;color:var(--ink-mute);font-size:13px;padding:24px 12px;">Aún no has subido documentos de comerciante. Ve a "Mis documentos" para subir tu Patente, Patente de Alcoholes y otros.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- FIN PANEL COMERCIANTE -->
+
+  <!-- ===== PANEL EMPRESA ===== -->
+  <div class="panel" id="panel-empresa">
+    <div class="id-card">
+      <div class="card-header">
+        <div class="avatar" id="avE">??</div>
+        <div class="card-identity">
+          <h2 id="nameE">Cargando…</h2>
+          <div class="rut" id="rutE">RUT: —</div>
+          <div class="card-type-badge">
+            <span class="dot"></span>
+            <span>🏢 Empresa</span>
+          </div>
+        </div>
+      </div>
+      <div class="flag-strip">
+        <div class="fl-blue">★</div><div class="fl-red"></div><div class="fl-white"></div><div class="fl-white2"></div>
+      </div>
+      <div class="card-body">
+        <div class="docs-grid" id="gridEmpresa">
+          <p style="text-align:center;color:var(--ink-mute);font-size:13px;padding:24px 12px;">Aún no has subido documentos de empresa. Ve a "Mis documentos" para subir la Directiva, Contratos y Seguro.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- FIN PANEL EMPRESA -->
+
   <!-- ACCIONES -->
   <div class="actions">
     <button class="btn btn-primary" onclick="registrarFiscalizacion()">
@@ -871,49 +929,111 @@
     const rut    = datos.rut    || '—';
     const ini    = iniciales(nombre);
 
-    document.getElementById('avG').textContent   = ini;
-    document.getElementById('nameG').textContent = nombre;
-    document.getElementById('rutG').textContent  = 'RUT: ' + rut;
-
-    document.getElementById('avV').textContent   = ini;
-    document.getElementById('nameV').textContent = nombre;
-    document.getElementById('rutV').textContent  = 'RUT: ' + rut;
+    ['avG','avV','avC','avE'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = ini; });
+    ['nameG','nameV','nameC','nameE'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = nombre; });
+    ['rutG','rutV','rutC','rutE'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = 'RUT: ' + rut; });
 
     const perfiles = datos.perfiles || [];
-    const tieneGuardia  = perfiles.includes('guardia');
-    const tieneVehiculo = perfiles.includes('vehiculo');
-    const tabG = document.getElementById('tab-guardia');
-    const tabV = document.getElementById('tab-conductor');
-    tabG.style.display = tieneGuardia  ? '' : 'none';
-    tabV.style.display = tieneVehiculo ? '' : 'none';
+    const activos = {
+      guardia:     perfiles.includes('guardia'),
+      conductor:   perfiles.includes('vehiculo'),
+      comerciante: perfiles.includes('comerciante'),
+      empresa:     perfiles.includes('empresa')
+    };
+    const tabs = {
+      guardia:     document.getElementById('tab-guardia'),
+      conductor:   document.getElementById('tab-conductor'),
+      comerciante: document.getElementById('tab-comerciante'),
+      empresa:     document.getElementById('tab-empresa')
+    };
+    Object.keys(tabs).forEach(k => {
+      if (tabs[k]) tabs[k].style.display = activos[k] ? '' : 'none';
+    });
 
-    const totalActivos = (tieneGuardia ? 1 : 0) + (tieneVehiculo ? 1 : 0);
+    const totalActivos = Object.values(activos).filter(Boolean).length;
     if (totalActivos <= 1) {
       document.getElementById('profileSelector').style.display = 'none';
     }
 
-    if (tieneVehiculo && datos.patente) {
+    if (activos.conductor && datos.patente) {
       document.getElementById('patenteLabel').textContent = '🚗 ' + datos.patente;
       document.getElementById('vehLabel').textContent = 'Vehículo · ' + datos.patente;
     }
 
-    if (!tieneGuardia && tieneVehiculo) {
-      document.getElementById('panel-guardia').classList.remove('active');
-      document.getElementById('panel-conductor').classList.add('active');
-      tabV.classList.add('active');
-      tabG.classList.remove('active');
+    // Activar el primer panel disponible
+    const primero = ['guardia','conductor','comerciante','empresa'].find(k => activos[k]);
+    if (primero) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+      const panelId = primero === 'guardia' ? 'panel-guardia' : 'panel-' + primero;
+      const panel = document.getElementById(panelId);
+      if (panel) panel.classList.add('active');
+      if (tabs[primero]) tabs[primero].classList.add('active');
     }
   }
   document.addEventListener('DOMContentLoaded', cargarDatosUsuario);
+
+  // Nombres bonitos para tipos de documento
+  const NOMBRES_DOC = {
+    patente_alcoholes: 'Patente de Alcoholes',
+    patente_comercial: 'Patente Comercial',
+    directiva: 'Directiva de Funcionamiento',
+    contratos_empresa: 'Contratos de Trabajo',
+    seguro_empresa: 'Seguro de la Empresa'
+  };
+
+  // Renderiza una lista de documentos dentro de un grid contenedor
+  async function renderizarGridDinamico(contId, docs) {
+    const cont = document.getElementById(contId);
+    if (!cont) return;
+    if (!docs.length) return; // deja el mensaje "Aún no has subido"
+    cont.innerHTML = '';
+    for (const d of docs) {
+      let url;
+      try { url = await urlDocumento(d.path); } catch(e) { continue; }
+      const titulo = d.titulo || NOMBRES_DOC[d.tipo] || d.tipo;
+      const sub = d.nombre || '';
+      const div = document.createElement('div');
+      div.className = 'doc-img-card';
+      div.setAttribute('onclick',
+        "abrirDoc('" + url.replace(/'/g, "\\'") + "','" +
+        titulo.replace(/'/g, "\\'") + "','" + sub.replace(/'/g, "\\'") + "')");
+      div.innerHTML = `
+        <div class="doc-img-thumb">
+          <img src="${url}" alt="${titulo}" loading="lazy">
+          <span class="status-pill">Subido</span>
+        </div>
+        <div class="doc-img-info">
+          <div>
+            <div class="nombre">${titulo}</div>
+            <div class="vence">${sub}</div>
+          </div>
+          <span class="chev">›</span>
+        </div>`;
+      cont.appendChild(div);
+    }
+  }
 
   // Reemplazar imágenes de demo por los archivos que el usuario subió a Supabase
   async function cargarDocumentosUsuario() {
     try {
       const docs = await listarDocumentos();
       const extras = [];
+      const comerciante = [];
+      const empresa = [];
       for (const d of docs) {
-        // Documento extra sin card fija → guardar para renderizar aparte
+        if (!d.path) continue; // solo título guardado, sin archivo aún
+
+        // Documento extra guardia sin card fija
         if (/^extra\d+$/.test(d.tipo)) { extras.push(d); continue; }
+        // Documentos comerciante
+        if (d.tipo === 'patente_alcoholes' || d.tipo === 'patente_comercial' || /^com_extra\d+$/.test(d.tipo)) {
+          comerciante.push(d); continue;
+        }
+        // Documentos empresa
+        if (d.tipo === 'directiva' || d.tipo === 'contratos_empresa' || d.tipo === 'seguro_empresa' || /^emp_extra\d+$/.test(d.tipo)) {
+          empresa.push(d); continue;
+        }
 
         const card = document.querySelector('.doc-img-card[data-tipo="' + d.tipo + '"]');
         if (!card) continue;
@@ -929,6 +1049,9 @@
           sub.replace(/'/g, "\\'") + "')"
         );
       }
+
+      await renderizarGridDinamico('gridComerciante', comerciante);
+      await renderizarGridDinamico('gridEmpresa', empresa);
 
       // Renderizar documentos extras (si hay)
       const cont = document.getElementById('extrasGuardia');
