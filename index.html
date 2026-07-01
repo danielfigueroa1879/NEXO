@@ -1477,7 +1477,7 @@
                 </div>
                 <div>
                   <h3>Juan Pérez S.</h3>
-                  <span class="profile-badge badge-conductor">🚗 PKMB-26</span>
+                  <span class="profile-badge badge-conductor">🚗 Vehículo</span>
                 </div>
               </div>
 
@@ -1586,7 +1586,7 @@
       <!-- Simulator Selector Buttons -->
       <div class="simulator-controls">
         <button class="sim-btn active" data-profile="guardia">👮 Guardia</button>
-        <button class="sim-btn" data-profile="conductor">🚗 PKMB-26</button>
+        <button class="sim-btn" data-profile="conductor">🚗 Vehículo</button>
         <button class="sim-btn" data-profile="empresa">🏢 Empresa</button>
       </div>
     </div>
@@ -1621,7 +1621,7 @@
     <div class="section-eyebrow">Una tarjeta. Varias identidades.</div>
     <h2 class="section-title">Configura los perfiles que necesites.</h2>
     <p class="section-lede">
-      Empezamos con dos perfiles activos. A medida que crezca la plataforma, agregaremos nuevos universos profesionales. Tu tarjeta se expande contigo.
+      Cuatro perfiles ya disponibles. A medida que crezca la plataforma, agregaremos nuevos universos profesionales. Tu tarjeta se expande contigo.
     </p>
 
     <div class="perfiles-grid">
@@ -1672,18 +1672,19 @@
         <div class="perfil-status status-live" style="color: var(--teal-greek);">— Probar en simulador</div>
       </div>
 
-      <div class="perfil-card coming">
-        <div class="perfil-num">004 / Próximamente</div>
+      <div class="perfil-card active" data-grid-profile="comerciante">
+        <div class="perfil-num">004 / Activo</div>
         <div class="perfil-icon-wrap">
           <div class="perfil-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M20 7h-9l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+              <path d="M3 9h18l-1.5 10.5a2 2 0 0 1-2 1.5H6.5a2 2 0 0 1-2-1.5L3 9z"/>
+              <path d="M8 9V6a4 4 0 0 1 8 0v3"/>
             </svg>
           </div>
         </div>
-        <div class="perfil-name">Trabajador Dependiente</div>
-        <div class="perfil-desc">Contrato laboral, AFP, salud, antecedentes y certificados de capacitación verificables.</div>
-        <div class="perfil-status status-soon">— En desarrollo</div>
+        <div class="perfil-name">Comerciante</div>
+        <div class="perfil-desc">Patente comercial, patente de alcoholes, autorización municipal y documentos del negocio verificables al escanear.</div>
+        <div class="perfil-status status-live">— Disponible en Demo</div>
       </div>
 
       <div class="perfil-card coming">
@@ -1756,13 +1757,16 @@
     <div class="pricing-grid">
       <div class="pricing-card">
         <div class="price-name">Tarjeta</div>
-        <div><span class="price-amount">$8.000</span><span class="price-period">/ única vez</span></div>
-        <div class="price-tagline">La tarjeta NFC física, lista para usar.</div>
+        <div><span class="price-amount">Desde $10.000</span><span class="price-period">/ única vez</span></div>
+        <div class="price-tagline">La tarjeta NFC física, lista para usar. Precio según los perfiles que elijas.</div>
         <ul class="price-features">
           <li>Tarjeta PVC con chip NFC y QR</li>
-          <li>Perfil web verificable</li>
-          <li>Hasta 2 identidades configurables</li>
-          <li>Verificación pública en tiempo real</li>
+          <li>Guardia · $10.000</li>
+          <li>Vehículo · $10.000</li>
+          <li>Comerciante · $10.000</li>
+          <li>Empresa · $30.000</li>
+          <li>Todos los perfiles · $60.000</li>
+          <li>Perfil web verificable y en tiempo real</li>
         </ul>
       </div>
 
@@ -1901,7 +1905,7 @@
         let labelText = "Perfil: Guardia";
         let metaText = "NFC·NX 0001 · CL · OS10";
         if (profile === 'conductor') {
-          labelText = "Perfil: PKMB-26";
+          labelText = "Perfil: Vehículo";
           metaText = "NFC·NX 0001 · CL · TRANSITO";
         } else if (profile === 'empresa') {
           labelText = "Perfil: Empresa";

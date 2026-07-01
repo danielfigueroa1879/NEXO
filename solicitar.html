@@ -680,7 +680,7 @@
       </div>
       <div class="resumen-row total">
         <span>Total</span>
-        <span class="val">$8.000 CLP</span>
+        <span class="val" id="r-total">$10.000 CLP</span>
       </div>
     </div>
 
@@ -728,7 +728,7 @@
           <div class="info-line"><span class="lbl">Perfiles</span><span class="val" id="sPerf">—</span></div>
           <div class="info-line patente-line" id="sPatLine" style="display:none;"><span class="lbl">Patente</span><span class="val" id="sPat">—</span></div>
           <div class="info-line"><span class="lbl">Diseño</span><span class="val" id="sTema">—</span></div>
-          <div class="info-line"><span class="lbl">Total pagado</span><span class="val" style="color:var(--green);font-weight:700;">$8.000 CLP</span></div>
+          <div class="info-line"><span class="lbl">Total pagado</span><span class="val" id="s-total" style="color:var(--green);font-weight:700;">$10.000 CLP</span></div>
         </div>
         <div class="summary-card-wrap">
           <div class="nfc-card-mini" id="successCard">
@@ -775,7 +775,7 @@
   <div class="inner">
     <div class="price-tag">
       <span>Total</span>
-      <strong>$8.000 CLP</strong>
+      <strong>$10.000 CLP</strong>
     </div>
     <button class="btn-action secondary" id="btnBack" onclick="prev()" style="display:none;">← Atrás</button>
     <button class="btn-action primary" id="btnNext" onclick="next()">
@@ -824,7 +824,7 @@
     // Botones
     document.getElementById('btnBack').style.display = n > 1 ? 'inline-flex' : 'none';
     if (n === TOTAL_PASOS) {
-      document.getElementById('btnNext').innerHTML = '🔒 Pagar $8.000 <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>';
+      document.getElementById('btnNext').innerHTML = '🔒 Pagar ' + formatoCLP(calcularTotal()).replace(' CLP','') + ' <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>';
     } else {
       document.getElementById('btnNext').innerHTML = 'Continuar <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>';
     }
@@ -858,7 +858,7 @@
       btn.style.opacity = '0.7';
       const ok = await guardarDatos();
       if (!ok) {
-        btn.innerHTML = '🔒 Pagar $8.000';
+        btn.innerHTML = '🔒 Pagar ' + formatoCLP(calcularTotal()).replace(' CLP','');
         btn.style.opacity = '1';
         return;
       }
@@ -999,6 +999,15 @@
     pago = el.querySelector('.name').textContent.toLowerCase();
   }
 
+  // Precios por perfil (CLP)
+  const PRECIOS = { guardia: 10000, vehiculo: 10000, comerciante: 10000, empresa: 30000 };
+  function calcularTotal() {
+    return perfiles.reduce((s, p) => s + (PRECIOS[p] || 0), 0);
+  }
+  function formatoCLP(n) {
+    return '$' + n.toLocaleString('es-CL').replace(/,/g, '.') + ' CLP';
+  }
+
   // Actualizar resumen
   function actualizarResumen() {
     const nombres = {
@@ -1011,6 +1020,11 @@
     document.getElementById('r-perfiles').textContent = lista || '—';
     const temas = { negro: 'Clásico Negro', rojo: 'Rojo Chile', azul: 'Azul Chile', verde: 'Verde' };
     document.getElementById('r-tema').textContent = temas[tema];
+    const total = calcularTotal();
+    const rTotal = document.getElementById('r-total');
+    if (rTotal) rTotal.textContent = formatoCLP(total);
+    const sTotal = document.getElementById('s-total');
+    if (sTotal) sTotal.textContent = formatoCLP(total);
   }
 
   // Toast
