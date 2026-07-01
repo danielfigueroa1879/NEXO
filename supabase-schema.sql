@@ -32,6 +32,10 @@ create table if not exists public.cuentas (
 -- Si la tabla ya existía, agregar la columna
 alter table public.cuentas add column if not exists codigo_publico text unique;
 
+-- Hasta 3 patentes por cuenta (el vehículo 1 se mantiene también en `patente`
+-- para compatibilidad con lo ya existente). patentes[1]=vehículo 1, etc.
+alter table public.cuentas add column if not exists patentes text[] default '{}';
+
 -- Trigger: auto-generar codigo_publico en cada insert si viene NULL
 create or replace function public.generar_codigo_publico() returns trigger
   language plpgsql as $$
@@ -66,6 +70,7 @@ returns json language sql stable security definer set search_path = public as $$
     'perfiles',  c.perfiles,
     'tema',      c.tema,
     'patente',   c.patente,
+    'patentes',  c.patentes,
     'estado',    c.estado,
     'codigo',    c.codigo_publico,
     'documentos', coalesce(

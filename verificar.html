@@ -518,12 +518,32 @@
     color: #CC0000;
     background: linear-gradient(135deg,#FFF0F0,#FDE3E3);
   }
+  /* Canvas con la 1ª página del PDF (se revela al terminar de renderizar) */
+  .doc-img-thumb canvas.pdf-thumb {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: auto;
+    display: none;
+  }
+  .doc-img-thumb canvas.pdf-thumb.ok { display: block; }
   /* Estado vacío dentro de un grid */
   .docs-empty {
     grid-column: 1 / -1;
     text-align: center; color: var(--ink-mute);
     font-size: 13px; font-weight: 500;
     padding: 24px 12px;
+  }
+  /* Sección por vehículo (hasta 3) */
+  .vehiculo-sec { margin-bottom: 18px; }
+  .vehiculo-sec:last-child { margin-bottom: 0; }
+  .veh-sec-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; margin-bottom: 10px;
+    font-size: 14px; font-weight: 800; color: var(--ink);
+  }
+  .veh-sec-head .veh-plate {
+    font-size: 13px; font-weight: 800; letter-spacing: 1px;
+    background: var(--ink); color: #fff;
+    padding: 4px 12px; border-radius: 8px;
   }
   .doc-img-info {
     padding: 14px 16px;
@@ -820,63 +840,10 @@
         <div class="fl-white2"></div>
       </div>
       <div class="card-body">
-        <!-- Documentos del vehículo como imágenes -->
-        <div class="docs-grid">
-          <div class="doc-img-card" data-tipo="permiso" data-titulo="Permiso de Circulación" data-sub="Válido hasta Dic 2025" onclick="abrirDoc('images/PermisoCirculacion.png','Permiso de Circulación','Válido hasta Dic 2025')">
-            <div class="doc-img-thumb">
-              <img src="images/PermisoCirculacion.png" alt="Permiso de Circulación" loading="lazy">
-              <span class="status-pill">Vigente</span>
-            </div>
-            <div class="doc-img-info">
-              <div>
-                <div class="nombre">Permiso de Circulación</div>
-                <div class="vence">Vence Dic 2025</div>
-              </div>
-              <span class="chev">›</span>
-            </div>
-          </div>
-
-          <div class="doc-img-card" data-tipo="revision" data-titulo="Revisión Técnica" data-sub="Vence: Nov 2025" onclick="abrirDoc('images/Revisiontecnica.png','Revisión Técnica','Vence: Nov 2025')">
-            <div class="doc-img-thumb">
-              <img src="images/Revisiontecnica.png" alt="Revisión Técnica" loading="lazy">
-              <span class="status-pill">Vigente</span>
-            </div>
-            <div class="doc-img-info">
-              <div>
-                <div class="nombre">Revisión Técnica</div>
-                <div class="vence">Vence Nov 2025</div>
-              </div>
-              <span class="chev">›</span>
-            </div>
-          </div>
-
-          <div class="doc-img-card" data-tipo="soap" data-titulo="SOAP" data-sub="Vence: Ene 2026" onclick="abrirDoc('images/seguro.png','SOAP','Vence: Ene 2026')">
-            <div class="doc-img-thumb">
-              <img src="images/seguro.png" alt="SOAP" loading="lazy">
-              <span class="status-pill">Vigente</span>
-            </div>
-            <div class="doc-img-info">
-              <div>
-                <div class="nombre">SOAP</div>
-                <div class="vence">Vence Ene 2026</div>
-              </div>
-              <span class="chev">›</span>
-            </div>
-          </div>
-
-          <div class="doc-img-card" data-tipo="padron" data-titulo="Padrón del Vehículo" data-sub="PKMB-26 · Nissan Versa 2021" onclick="abrirDoc('images/padron.png','Padrón del Vehículo','PKMB-26 · Nissan Versa 2021')">
-            <div class="doc-img-thumb">
-              <img src="images/padron.png" alt="Padrón" loading="lazy">
-              <span class="status-pill">Vigente</span>
-            </div>
-            <div class="doc-img-info">
-              <div>
-                <div class="nombre">Padrón Vehículo</div>
-                <div class="vence">PKMB-26</div>
-              </div>
-              <span class="chev">›</span>
-            </div>
-          </div>
+        <!-- Vehículos (hasta 3): cada uno con su patente y sus documentos.
+             Se generan dinámicamente desde los documentos subidos. -->
+        <div id="vehiculosVerif">
+          <p class="docs-empty">Cargando vehículos…</p>
         </div>
       </div>
     </div>
@@ -967,6 +934,15 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
 
+<!-- ===== PDF.js: renderiza la 1ª página de los PDF como miniatura ===== -->
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script>
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+  }
+</script>
+
 <script>
   // Timestamp
   function updateTime() {
@@ -1005,6 +981,11 @@
       try { datos = JSON.parse(localStorage.getItem('nexo_cuenta') || 'null'); } catch(e) {}
     }
     if (!datos) datos = { nombre: 'Tu nombre', rut: '—', perfiles: ['guardia'], patente: '' };
+
+    // Patentes de los vehículos (arreglo nuevo o el campo `patente` antiguo)
+    window._patentes = (datos.patentes && datos.patentes.length)
+      ? datos.patentes
+      : (datos.patente ? [datos.patente] : []);
 
     const nombre = datos.nombre || 'Tu nombre';
     const rut    = datos.rut    || '—';
@@ -1082,8 +1063,37 @@
     const esPdf = /\.pdf$/i.test(nombre || '');
     const pill = '<span class="status-pill">Subido</span>';
     if (esImg) return '<img src="' + url + '" loading="lazy" alt="">' + pill;
-    if (esPdf) return '<div class="doc-file-thumb pdf">PDF</div>' + pill;
+    if (esPdf) {
+      // Fondo "PDF" visible mientras carga; encima, un canvas con la 1ª página real
+      return '<div class="doc-file-thumb pdf">PDF</div>' +
+             '<canvas class="pdf-thumb" data-pdf="' + url + '"></canvas>' + pill;
+    }
     return '<div class="doc-file-thumb">📄</div>' + pill;
+  }
+
+  // Pinta la primera página de cada PDF (canvas.pdf-thumb) que aún no se haya renderizado
+  async function renderizarPdfThumbs() {
+    if (!window.pdfjsLib) return;
+    const canvases = document.querySelectorAll('canvas.pdf-thumb:not([data-rendered])');
+    for (const canvas of canvases) {
+      canvas.setAttribute('data-rendered', '1');
+      const url = canvas.getAttribute('data-pdf');
+      if (!url) continue;
+      try {
+        const pdf  = await pdfjsLib.getDocument(url).promise;
+        const page = await pdf.getPage(1);
+        const base = page.getViewport({ scale: 1 });
+        const anchoObjetivo = (canvas.parentElement && canvas.parentElement.clientWidth) || 260;
+        const escala   = Math.max(1, (anchoObjetivo * 2) / base.width); // x2 para nitidez
+        const viewport = page.getViewport({ scale: escala });
+        canvas.width  = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+        canvas.classList.add('ok'); // revela el canvas por encima del fondo "PDF"
+      } catch (e) {
+        console.warn('No se pudo previsualizar el PDF:', e && e.message);
+      }
+    }
   }
 
   // Actualiza una tarjeta demo estática con el documento REAL subido por el usuario
@@ -1103,8 +1113,9 @@
   }
 
   // Muestra un mensaje en los grids estáticos que quedaron sin documentos
+  // (el panel conductor usa secciones por vehículo con su propio estado vacío)
   function mostrarVacios() {
-    document.querySelectorAll('#panel-guardia .docs-grid, #panel-conductor .docs-grid').forEach(grid => {
+    document.querySelectorAll('#panel-guardia .docs-grid').forEach(grid => {
       if (grid.id === 'extrasGuardia') return;
       const hayVisibles = [...grid.querySelectorAll('.doc-img-card')].some(c => c.style.display !== 'none');
       let msg = grid.querySelector('.docs-empty');
@@ -1151,6 +1162,75 @@
     }
   }
 
+  // Nombres visibles de los documentos de vehículo
+  const VEH_DOC_NOMBRE = {
+    permiso:  'Permiso de Circulación',
+    revision: 'Revisión Técnica',
+    soap:     'SOAP',
+    padron:   'Padrón del Vehículo'
+  };
+
+  // Construye una tarjeta de documento (imagen/PDF) como elemento DOM
+  function crearDocCard(url, titulo, sub) {
+    const div = document.createElement('div');
+    div.className = 'doc-img-card';
+    div.setAttribute('onclick',
+      "abrirDoc('" + url.replace(/'/g, "\\'") + "','" +
+      titulo.replace(/'/g, "\\'") + "','" + (sub || '').replace(/'/g, "\\'") + "')");
+    div.innerHTML =
+      '<div class="doc-img-thumb">' + thumbHTML(url, sub) + '</div>' +
+      '<div class="doc-img-info"><div><div class="nombre">' + titulo + '</div>' +
+      '<div class="vence">' + (sub || '') + '</div></div><span class="chev">›</span></div>';
+    return div;
+  }
+
+  // Renderiza las secciones de vehículo (hasta 3), cada una con su patente y documentos
+  async function renderVehiculosVerif(vehiculos) {
+    const cont = document.getElementById('vehiculosVerif');
+    if (!cont) return;
+    const patentes = window._patentes || [];
+    // Índices a mostrar: los que tengan documentos o una patente registrada
+    const indices = new Set();
+    Object.keys(vehiculos).forEach(k => indices.add(parseInt(k, 10)));
+    patentes.forEach((p, i) => { if (p) indices.add(i + 1); });
+    const orden = [...indices].sort((a, b) => a - b);
+
+    if (!orden.length) {
+      cont.innerHTML = '<p class="docs-empty">Aún no hay vehículos registrados.</p>';
+      return;
+    }
+
+    cont.innerHTML = '';
+    for (const i of orden) {
+      const lista   = vehiculos[i] || [];
+      const patente = patentes[i - 1] || '';
+      const sec = document.createElement('div');
+      sec.className = 'vehiculo-sec';
+
+      const head = document.createElement('div');
+      head.className = 'veh-sec-head';
+      head.innerHTML = '<span>🚗 Vehículo ' + i + '</span>' +
+        (patente ? '<span class="veh-plate">' + patente + '</span>' : '');
+      sec.appendChild(head);
+
+      const grid = document.createElement('div');
+      grid.className = 'docs-grid';
+      let algo = false;
+      for (const d of lista) {
+        let url;
+        try { url = codigoPublico ? urlPublicaDocumento(d.path) : await urlDocumento(d.path); } catch(e) { continue; }
+        grid.appendChild(crearDocCard(url, VEH_DOC_NOMBRE[d.base] || d.tipo, d.nombre || ''));
+        algo = true;
+      }
+      if (!algo) {
+        grid.innerHTML = '<p class="docs-empty">Sin documentos subidos para este vehículo.</p>';
+      }
+      sec.appendChild(grid);
+      cont.appendChild(sec);
+    }
+    renderizarPdfThumbs();
+  }
+
   // Reemplazar imágenes de demo por los archivos que el usuario subió a Supabase
   async function cargarDocumentosUsuario() {
     try {
@@ -1165,8 +1245,17 @@
       const extras = [];
       const comerciante = [];
       const empresa = [];
+      const vehiculos = {}; // { 1:[docs], 2:[docs], 3:[docs] }
       for (const d of docs) {
         if (!d.path) continue; // solo título guardado, sin archivo aún
+
+        // Documentos de vehículo: permiso/revision/soap/padron (+ sufijo _v2 / _v3)
+        const vm = /^(permiso|revision|soap|padron)(?:_v([23]))?$/.exec(d.tipo || '');
+        if (vm) {
+          const idx = vm[2] ? parseInt(vm[2], 10) : 1;
+          (vehiculos[idx] = vehiculos[idx] || []).push({ ...d, base: vm[1] });
+          continue;
+        }
 
         // Documento extra guardia sin card fija
         if (/^extra\d+$/.test(d.tipo)) { extras.push(d); continue; }
@@ -1186,6 +1275,7 @@
         actualizarCard(card, d, url);
       }
 
+      await renderVehiculosVerif(vehiculos);
       await renderizarGridDinamico('gridComerciante', comerciante);
       await renderizarGridDinamico('gridEmpresa', empresa);
 
@@ -1219,6 +1309,8 @@
 
       // Grids estáticos sin documentos → mostrar estado vacío
       mostrarVacios();
+      // Renderizar las miniaturas reales de los PDF (1ª página)
+      renderizarPdfThumbs();
     } catch(e) { console.warn('No se pudieron cargar documentos:', e.message); }
   }
   // Switch perfil

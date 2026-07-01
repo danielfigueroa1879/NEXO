@@ -141,7 +141,7 @@ async function guardarCuenta(datos) {
   // Mapear alias (mail/tel/dir) al nombre real de columna, sin incluir
   // campos que el caller no pasó (para no sobrescribirlos con null).
   const alias = { mail: 'email', tel: 'telefono', dir: 'direccion' };
-  const columnas = ['rut','nombre','email','telefono','direccion','patente',
+  const columnas = ['rut','nombre','email','telefono','direccion','patente','patentes',
                     'perfiles','tema','pago','tipo','empresa','estado'];
   const payload = { id: user.id };
   for (const [k, v] of Object.entries(datos || {})) {

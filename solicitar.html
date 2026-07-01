@@ -605,12 +605,18 @@
           <div class="check"></div>
         </div>
 
-        <!-- Campo patente — visible solo si elige Vehículo -->
+        <!-- Campo patente — visible solo si elige Vehículo (hasta 3 vehículos) -->
         <div id="patenteWrap" style="display:none; padding:16px; background:#FAFAFA; border:1.5px dashed var(--line); border-radius:12px; margin-top:-2px;">
-          <label style="display:block;font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">🚗 Patente de tu vehículo</label>
-          <input type="text" id="f-patente" placeholder="PKMB-26" maxlength="8"
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">🚗 Patentes de tus vehículos (hasta 3)</label>
+          <input type="text" id="f-patente" class="pat-input" placeholder="PATENTE 1" maxlength="8"
                  style="width:100%;padding:14px 18px;border:1.5px solid var(--line);border-radius:11px;font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;text-align:center;background:#fff;color:var(--ink);outline:none;">
-          <p style="font-size:11px;color:var(--ink-mute);margin-top:8px;line-height:1.4;text-align:center;">Aparecerá en tu tarjeta como el segundo perfil al escanear.</p>
+          <input type="text" id="f-patente2" class="pat-input" placeholder="PATENTE 2" maxlength="8"
+                 style="display:none;width:100%;margin-top:8px;padding:14px 18px;border:1.5px solid var(--line);border-radius:11px;font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;text-align:center;background:#fff;color:var(--ink);outline:none;">
+          <input type="text" id="f-patente3" class="pat-input" placeholder="PATENTE 3" maxlength="8"
+                 style="display:none;width:100%;margin-top:8px;padding:14px 18px;border:1.5px solid var(--line);border-radius:11px;font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;text-align:center;background:#fff;color:var(--ink);outline:none;">
+          <button type="button" id="addPatBtn" onclick="mostrarOtraPatente()"
+                  style="width:100%;margin-top:10px;padding:11px;border:1.5px dashed var(--line);border-radius:10px;background:#fff;color:var(--ink);font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">＋ Agregar otra patente</button>
+          <p style="font-size:11px;color:var(--ink-mute);margin-top:8px;line-height:1.4;text-align:center;">Cada vehículo aparecerá con su patente y documentos al escanear tu tarjeta.</p>
         </div>
 
         <div class="perfil-opt" data-perfil="comerciante" onclick="togglePerfil(this)">
@@ -879,15 +885,33 @@
     }
   }
 
+  // Muestra el siguiente campo de patente oculto (hasta 3)
+  function mostrarOtraPatente() {
+    const p2 = document.getElementById('f-patente2');
+    const p3 = document.getElementById('f-patente3');
+    const btn = document.getElementById('addPatBtn');
+    if (p2.style.display === 'none') { p2.style.display = 'block'; p2.focus(); }
+    else if (p3.style.display === 'none') { p3.style.display = 'block'; p3.focus(); btn.style.display = 'none'; }
+  }
+
+  // Devuelve el arreglo de patentes escritas (sin vacíos, en mayúsculas)
+  function patentesArray() {
+    return ['f-patente','f-patente2','f-patente3']
+      .map(id => (document.getElementById(id).value || '').trim().toUpperCase())
+      .filter(Boolean);
+  }
+
   // Guardar la solicitud en Supabase (y en localStorage como respaldo local)
   async function guardarDatos() {
+    const patentes = patentesArray();
     const datos = {
       nombre:   document.getElementById('f-nombre').value.trim(),
       rut:      document.getElementById('f-rut').value.trim(),
       telefono: document.getElementById('f-tel').value.trim(),
       email:    document.getElementById('f-mail').value.trim(),
       direccion:document.getElementById('f-dir').value.trim(),
-      patente:  (document.getElementById('f-patente').value || '').trim().toUpperCase(),
+      patente:  patentes[0] || '',
+      patentes: patentes,
       perfiles: [...perfiles],
       tema:     tema,
       pago:     pago,
@@ -920,7 +944,7 @@
     const nombre = document.getElementById('f-nombre').value.trim() || 'Tu nombre';
     const rut    = document.getElementById('f-rut').value.trim() || '—';
     const mail   = document.getElementById('f-mail').value.trim() || 'tu correo';
-    const pat    = (document.getElementById('f-patente').value || '').trim().toUpperCase();
+    const pats   = patentesArray();
     const nombres = { guardia: 'Guardia OS10', vehiculo: 'Vehículo', comerciante: 'Comerciante', empresa: 'Empresa' };
     const lista = perfiles.map(p => nombres[p]).join(' + ');
     const temas = { negro: 'Clásico Negro', rojo: 'Rojo Chile', azul: 'Azul Chile', verde: 'Verde' };
@@ -931,9 +955,9 @@
     document.getElementById('sTema').textContent   = temas[tema];
     document.getElementById('sMail').textContent   = mail;
 
-    if (perfiles.includes('vehiculo') && pat) {
+    if (perfiles.includes('vehiculo') && pats.length) {
       document.getElementById('sPatLine').style.display = 'flex';
-      document.getElementById('sPat').textContent = pat;
+      document.getElementById('sPat').textContent = pats.join(' · ');
     }
 
     // Tarjeta del resumen con el tema elegido
@@ -1053,7 +1077,13 @@
       set('f-tel',    cuenta.telefono);
       set('f-mail',   cuenta.email);
       set('f-dir',    cuenta.direccion);
-      set('f-patente',cuenta.patente);
+      // Precargar patentes (arreglo nuevo o el campo `patente` antiguo)
+      const pats = (cuenta.patentes && cuenta.patentes.length)
+        ? cuenta.patentes
+        : (cuenta.patente ? [cuenta.patente] : []);
+      set('f-patente',  pats[0]);
+      if (pats[1]) { const el = document.getElementById('f-patente2'); el.value = pats[1]; el.style.display = 'block'; }
+      if (pats[2]) { const el = document.getElementById('f-patente3'); el.value = pats[2]; el.style.display = 'block'; document.getElementById('addPatBtn').style.display = 'none'; }
     } catch (e) { console.warn('No se pudo cargar la cuenta:', e.message); }
   });
 </script>

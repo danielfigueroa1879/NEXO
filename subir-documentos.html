@@ -291,6 +291,46 @@
     font-size: 11px; font-weight: 700; color: var(--ink);
   }
 
+  /* ===== BLOQUE DE VEHÍCULO (multi-vehículo) ===== */
+  .vehiculo-block {
+    border: 1.5px solid var(--line); border-radius: 16px;
+    padding: 12px; margin-bottom: 14px; background: #fff;
+  }
+  .vehiculo-head {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  }
+  .vehiculo-head .veh-title {
+    font-size: 14px; font-weight: 800; flex-shrink: 0;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .veh-patente {
+    flex: 1; min-width: 0; text-transform: uppercase;
+    padding: 9px 12px; border-radius: 10px;
+    border: 1.5px solid var(--line); background: #FAFAFA;
+    font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700;
+    letter-spacing: 1px; color: var(--ink); outline: none; text-align: center;
+  }
+  .veh-patente:focus { border-color: var(--blue); background: #fff; }
+  .veh-patente::placeholder { letter-spacing: normal; font-weight: 500; color: var(--ink-mute); }
+  .veh-remove {
+    flex-shrink: 0; background: none; border: none; cursor: pointer;
+    color: #CC0000; font-size: 20px; line-height: 1; padding: 4px 6px;
+  }
+  .btn-add-veh {
+    width: 100%; padding: 13px;
+    border-radius: 12px; border: 1.5px dashed var(--line);
+    background: #FAFAFA; color: var(--ink);
+    font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700;
+    cursor: pointer; margin-bottom: 20px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: border-color .2s, background .2s;
+  }
+  .btn-add-veh:hover { border-color: var(--blue); background: #EEF3FF; }
+  .btn-add-veh:active { transform: scale(0.99); }
+  .btn-add-veh .plus { font-size: 18px; line-height: 1; }
+  .btn-add-veh[disabled] { display: none; }
+  .vehiculo-block .doc-card { margin-top: 8px; }
+
   /* ===== VENCE DATE ===== */
   .vence-row {
     display: flex; align-items: center; gap: 8px; margin-top: 10px;
@@ -711,7 +751,7 @@
   <!-- ===== DOCUMENTOS CONDUCTOR ===== -->
   <div id="tab-conductor">
 
-    <div class="section-title">Licencia y datos <span class="section-count">0 / 3</span></div>
+    <div class="section-title">Licencia de conducir <span class="section-count">Personal</span></div>
 
     <!-- Licencia -->
     <div class="doc-card missing" id="card-licencia">
@@ -745,125 +785,16 @@
       </div>
     </div>
 
-    <!-- Permiso circulación -->
-    <div class="doc-card missing" id="card-permiso">
-      <div class="doc-row" onclick="togglePanel('permiso')">
-        <div class="doc-icon-wrap">📝</div>
-        <div class="doc-info">
-          <h4>Permiso de circulación</h4>
-          <p>Año en curso · No subido</p>
-        </div>
-        <span class="doc-badge miss">Pendiente</span>
-        <span class="doc-chevron" id="chev-permiso">›</span>
-      </div>
-      <div class="upload-panel" id="panel-permiso">
-        <div class="vence-row">
-          <label>Válido hasta</label>
-          <input type="date">
-        </div>
-        <div class="upload-zone" onclick="triggerUpload('permiso-input')">
-          <div class="icon">📁</div>
-          <h5>Arrastra aquí o toca para subir</h5>
-          <p>PDF, JPG o PNG · Máximo 10 MB</p>
-          <input type="file" class="upload-input" id="permiso-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'permiso')">
-        </div>
-        <div class="upload-actions">
-          <button class="btn-upload primary" onclick="triggerUpload('permiso-input')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
-            Subir archivo
-          </button>
-        </div>
-      </div>
-    </div>
+    <div class="section-title">Vehículos <span class="section-count">Hasta 3</span></div>
 
-    <!-- SOAP -->
-    <div class="doc-card missing" id="card-soap">
-      <div class="doc-row" onclick="togglePanel('soap')">
-        <div class="doc-icon-wrap">🛡️</div>
-        <div class="doc-info">
-          <h4>SOAP vigente</h4>
-          <p>Seguro obligatorio · No subido</p>
-        </div>
-        <span class="doc-badge miss">Pendiente</span>
-        <span class="doc-chevron" id="chev-soap">›</span>
-      </div>
-      <div class="upload-panel" id="panel-soap">
-        <div class="vence-row">
-          <label>Vencimiento SOAP</label>
-          <input type="date">
-        </div>
-        <div class="upload-zone" onclick="triggerUpload('soap-input')">
-          <div class="icon">📁</div>
-          <h5>Arrastra aquí o toca para subir</h5>
-          <p>PDF, JPG o PNG · Máximo 10 MB</p>
-          <input type="file" class="upload-input" id="soap-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'soap')">
-        </div>
-        <div class="upload-actions">
-          <button class="btn-upload primary" onclick="triggerUpload('soap-input')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
-            Subir archivo
-          </button>
-        </div>
-      </div>
-    </div>
+    <!-- Bloques de vehículo (patente + permiso, revisión, SOAP, padrón).
+         Se generan dinámicamente con JS: vehículo 1 usa los tipos permiso/soap/
+         revision/padron; vehículo 2 y 3 usan el sufijo _v2 / _v3. -->
+    <div id="vehiculos-cont"></div>
 
-    <!-- Revisión Técnica -->
-    <div class="doc-card missing" id="card-revision">
-      <div class="doc-row" onclick="togglePanel('revision')">
-        <div class="doc-icon-wrap">🔧</div>
-        <div class="doc-info">
-          <h4>Revisión Técnica</h4>
-          <p>Certificado de revisión técnica · No subido</p>
-        </div>
-        <span class="doc-badge miss">Pendiente</span>
-        <span class="doc-chevron" id="chev-revision">›</span>
-      </div>
-      <div class="upload-panel" id="panel-revision">
-        <div class="vence-row">
-          <label>Vencimiento</label>
-          <input type="date">
-        </div>
-        <div class="upload-zone" onclick="triggerUpload('revision-input')">
-          <div class="icon">📁</div>
-          <h5>Arrastra aquí o toca para subir</h5>
-          <p>PDF, JPG o PNG · Máximo 10 MB</p>
-          <input type="file" class="upload-input" id="revision-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'revision')">
-        </div>
-        <div class="upload-actions">
-          <button class="btn-upload primary" onclick="triggerUpload('revision-input')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
-            Subir archivo
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Padrón -->
-    <div class="doc-card missing" id="card-padron">
-      <div class="doc-row" onclick="togglePanel('padron')">
-        <div class="doc-icon-wrap">📘</div>
-        <div class="doc-info">
-          <h4>Padrón del vehículo</h4>
-          <p>Documento de inscripción · No subido</p>
-        </div>
-        <span class="doc-badge miss">Pendiente</span>
-        <span class="doc-chevron" id="chev-padron">›</span>
-      </div>
-      <div class="upload-panel" id="panel-padron">
-        <div class="upload-zone" onclick="triggerUpload('padron-input')">
-          <div class="icon">📁</div>
-          <h5>Arrastra aquí o toca para subir</h5>
-          <p>PDF, JPG o PNG · Máximo 10 MB</p>
-          <input type="file" class="upload-input" id="padron-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'padron')">
-        </div>
-        <div class="upload-actions">
-          <button class="btn-upload primary" onclick="triggerUpload('padron-input')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
-            Subir archivo
-          </button>
-        </div>
-      </div>
-    </div>
+    <button class="btn-add-veh" id="btnAddVeh" onclick="agregarVehiculo()">
+      <span class="plus">＋</span> Agregar otro vehículo
+    </button>
 
     <div class="section-title">Otros documentos <span class="section-count">Opcional</span></div>
 
@@ -1224,6 +1155,126 @@
     document.getElementById(inputId).click();
   }
 
+  /* ===================== MULTI-VEHÍCULO (hasta 3) ===================== */
+  const MAX_VEH = 3;
+  let numVehiculos = 1;
+  // Documentos que tiene cada vehículo (el vehículo 1 usa el tipo sin sufijo)
+  const DOCS_VEH = [
+    { base: 'permiso',  icon: '📝', titulo: 'Permiso de circulación', sub: 'Año en curso',                 vence: 'Válido hasta' },
+    { base: 'revision', icon: '🔧', titulo: 'Revisión Técnica',       sub: 'Certificado de revisión técnica', vence: 'Vencimiento' },
+    { base: 'soap',     icon: '🛡️', titulo: 'SOAP vigente',           sub: 'Seguro obligatorio',            vence: 'Vencimiento SOAP' },
+    { base: 'padron',   icon: '📘', titulo: 'Padrón del vehículo',    sub: 'Documento de inscripción',      vence: null }
+  ];
+  // Sufijo de tipo por índice de vehículo: 1→'', 2→'_v2', 3→'_v3'
+  function sufVeh(i) { return i === 1 ? '' : '_v' + i; }
+
+  // HTML de una tarjeta de documento (estado "pendiente")
+  function docCardHTML(docId, icon, titulo, sub, venceLabel) {
+    const vence = venceLabel
+      ? `<div class="vence-row"><label>${venceLabel}</label><input type="date"></div>` : '';
+    return `
+      <div class="doc-card missing" id="card-${docId}">
+        <div class="doc-row" onclick="togglePanel('${docId}')">
+          <div class="doc-icon-wrap">${icon}</div>
+          <div class="doc-info">
+            <h4>${titulo}</h4>
+            <p>${sub} · No subido</p>
+          </div>
+          <span class="doc-badge miss">Pendiente</span>
+          <span class="doc-chevron" id="chev-${docId}">›</span>
+        </div>
+        <div class="upload-panel" id="panel-${docId}">
+          ${vence}
+          <div class="upload-zone" onclick="triggerUpload('${docId}-input')"
+               ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="dropFile(event,'${docId}')">
+            <div class="icon">📁</div>
+            <h5>Arrastra aquí o toca para subir</h5>
+            <p>PDF, JPG o PNG · Máximo 10 MB</p>
+            <input type="file" class="upload-input" id="${docId}-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'${docId}')">
+          </div>
+          <div class="upload-actions">
+            <button class="btn-upload primary" onclick="triggerUpload('${docId}-input')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+              Subir archivo
+            </button>
+            <button class="btn-upload secondary">📷 Cámara</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // Construye un bloque de vehículo completo (patente + 4 documentos)
+  function vehiculoBlockHTML(i, patente) {
+    const suf = sufVeh(i);
+    const cards = DOCS_VEH.map(d => docCardHTML(d.base + suf, d.icon, d.titulo, d.sub, d.vence)).join('');
+    const quitar = i > 1
+      ? `<button class="veh-remove" title="Quitar vehículo" onclick="quitarVehiculo(${i})">✕</button>` : '';
+    return `
+      <div class="vehiculo-block" data-veh="${i}">
+        <div class="vehiculo-head">
+          <span class="veh-title">🚗 Vehículo ${i}</span>
+          <input class="veh-patente" data-veh="${i}" maxlength="8" placeholder="Patente"
+                 value="${patente || ''}" oninput="this.value=this.value.toUpperCase()" onchange="guardarPatentes()">
+          ${quitar}
+        </div>
+        ${cards}
+      </div>`;
+  }
+
+  // Renderiza n bloques de vehículo con sus patentes (reemplaza el contenido)
+  function renderVehiculos(n, patentes) {
+    n = Math.min(MAX_VEH, Math.max(1, n));
+    numVehiculos = n;
+    const cont = document.getElementById('vehiculos-cont');
+    if (!cont) return;
+    let html = '';
+    for (let i = 1; i <= n; i++) html += vehiculoBlockHTML(i, (patentes || [])[i - 1] || '');
+    cont.innerHTML = html;
+    const btn = document.getElementById('btnAddVeh');
+    if (btn) btn.disabled = (n >= MAX_VEH);
+  }
+
+  // Agrega un vehículo más (sin borrar los ya renderizados)
+  function agregarVehiculo() {
+    if (numVehiculos >= MAX_VEH) return;
+    numVehiculos++;
+    const cont = document.getElementById('vehiculos-cont');
+    const wrap = document.createElement('div');
+    wrap.innerHTML = vehiculoBlockHTML(numVehiculos, '');
+    cont.appendChild(wrap.firstElementChild);
+    const btn = document.getElementById('btnAddVeh');
+    if (btn) btn.disabled = (numVehiculos >= MAX_VEH);
+    updateProgress();
+  }
+
+  // Quita el último vehículo (borra sus documentos subidos en Supabase)
+  async function quitarVehiculo(i) {
+    if (i <= 1 || i !== numVehiculos) return; // solo el último
+    if (!confirm('¿Quitar el Vehículo ' + i + '? Se eliminarán sus documentos subidos.')) return;
+    const suf = sufVeh(i);
+    for (const d of DOCS_VEH) {
+      try { await eliminarDocumento(d.base + suf); } catch (e) { /* puede no existir */ }
+    }
+    const block = document.querySelector('.vehiculo-block[data-veh="' + i + '"]');
+    if (block) block.remove();
+    numVehiculos--;
+    const btn = document.getElementById('btnAddVeh');
+    if (btn) btn.disabled = (numVehiculos >= MAX_VEH);
+    await guardarPatentes();
+    updateProgress();
+    showToast('Vehículo ' + i + ' eliminado');
+  }
+
+  // Guarda el arreglo de patentes en la cuenta (patentes[0] también en `patente`)
+  async function guardarPatentes() {
+    const patentes = [...document.querySelectorAll('.veh-patente')]
+      .map(inp => (inp.value || '').trim().toUpperCase()).filter(Boolean);
+    try {
+      await guardarCuenta({ patentes, patente: patentes[0] || '' });
+      showToast('Patentes guardadas');
+    } catch (e) { console.error(e); showToast('Error guardando patentes'); }
+  }
+
   // Construye el HTML de la miniatura + datos del archivo (imagen o PDF)
   function construirPreview(docId, nombreArchivo, tamanoKB, cuando, previewUrl, subiendo) {
     const esImg = /\.(jpe?g|png|gif|webp|avif|bmp|svg)$/i.test(nombreArchivo);
@@ -1373,7 +1424,15 @@
   }
 
   // Guardar
-  function guardar() {
+  async function guardar() {
+    // Persistir patentes de todos los vehículos junto con el resto
+    if (document.querySelector('.veh-patente')) {
+      try {
+        const patentes = [...document.querySelectorAll('.veh-patente')]
+          .map(inp => (inp.value || '').trim().toUpperCase()).filter(Boolean);
+        await guardarCuenta({ patentes, patente: patentes[0] || '' });
+      } catch (e) { console.error(e); }
+    }
     showToast('¡Cambios guardados exitosamente!');
   }
 
@@ -1426,9 +1485,23 @@
     if (!datos) datos = { nombre: 'Tu nombre', rut: '—', perfiles: ['guardia'], patente: '' };
     aplicar(datos);
 
+    // Patentes guardadas (arreglo nuevo, o el campo `patente` antiguo como fallback)
+    const patentesGuardadas = (datos.patentes && datos.patentes.length)
+      ? datos.patentes
+      : (datos.patente ? [datos.patente] : []);
+
     // Marcar documentos ya subidos + restaurar títulos personalizados
     try {
       const docs = await listarDocumentos();
+
+      // Determinar cuántos vehículos mostrar: por patentes o por documentos _v2/_v3
+      let maxVeh = patentesGuardadas.length;
+      docs.forEach(d => {
+        const m = /_v([23])$/.exec(d.tipo || '');
+        if (m) maxVeh = Math.max(maxVeh, parseInt(m[1], 10));
+      });
+      renderVehiculos(Math.max(1, maxVeh), patentesGuardadas);
+
       for (const d of docs) {
         // Restaurar título personalizado si existe (slots renombrables)
         if (d.titulo) {
