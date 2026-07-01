@@ -704,7 +704,7 @@
             </div>
           </div>
 
-          <div class="doc-img-card" onclick="abrirDoc('images/CertifficadoAnteceddentes.png','Certificado de Antecedentes','Emitido: 15 Mar 2025')">
+          <div class="doc-img-card" data-tipo="antecedentes" data-titulo="Certificado de Antecedentes" data-sub="Emitido: 15 Mar 2025" onclick="abrirDoc('images/CertifficadoAnteceddentes.png','Certificado de Antecedentes','Emitido: 15 Mar 2025')">
             <div class="doc-img-thumb">
               <img src="images/CertifficadoAnteceddentes.png" alt="Certificado de Antecedentes" loading="lazy">
               <span class="status-pill">Vigente</span>
@@ -718,6 +718,9 @@
             </div>
           </div>
         </div>
+
+        <!-- Contenedor donde aparecerán los documentos extras del usuario -->
+        <div class="docs-grid" id="extrasGuardia" style="display:none; margin-top:12px;"></div>
       </div>
     </div>
 
@@ -762,7 +765,7 @@
             </div>
           </div>
 
-          <div class="doc-img-card" onclick="abrirDoc('images/Revisiontecnica.png','Revisión Técnica','Vence: Nov 2025')">
+          <div class="doc-img-card" data-tipo="revision" data-titulo="Revisión Técnica" data-sub="Vence: Nov 2025" onclick="abrirDoc('images/Revisiontecnica.png','Revisión Técnica','Vence: Nov 2025')">
             <div class="doc-img-thumb">
               <img src="images/Revisiontecnica.png" alt="Revisión Técnica" loading="lazy">
               <span class="status-pill">Vigente</span>
@@ -790,7 +793,7 @@
             </div>
           </div>
 
-          <div class="doc-img-card" onclick="abrirDoc('images/padron.png','Padrón del Vehículo','PKMB-26 · Nissan Versa 2021')">
+          <div class="doc-img-card" data-tipo="padron" data-titulo="Padrón del Vehículo" data-sub="PKMB-26 · Nissan Versa 2021" onclick="abrirDoc('images/padron.png','Padrón del Vehículo','PKMB-26 · Nissan Versa 2021')">
             <div class="doc-img-thumb">
               <img src="images/padron.png" alt="Padrón" loading="lazy">
               <span class="status-pill">Vigente</span>
@@ -907,14 +910,17 @@
   async function cargarDocumentosUsuario() {
     try {
       const docs = await listarDocumentos();
+      const extras = [];
       for (const d of docs) {
+        // Documento extra sin card fija → guardar para renderizar aparte
+        if (/^extra\d+$/.test(d.tipo)) { extras.push(d); continue; }
+
         const card = document.querySelector('.doc-img-card[data-tipo="' + d.tipo + '"]');
         if (!card) continue;
         let url;
         try { url = await urlDocumento(d.path); } catch(e) { continue; }
         const img = card.querySelector('img');
         if (img) img.src = url;
-        // Reemplazar el onclick para que abra la URL real en el modal
         const titulo = card.dataset.titulo || d.nombre;
         const sub    = card.dataset.sub    || '';
         card.setAttribute('onclick',
@@ -922,6 +928,37 @@
           titulo.replace(/'/g, "\\'") + "','" +
           sub.replace(/'/g, "\\'") + "')"
         );
+      }
+
+      // Renderizar documentos extras (si hay)
+      const cont = document.getElementById('extrasGuardia');
+      if (cont && extras.length) {
+        cont.style.display = '';
+        cont.innerHTML = '';
+        for (const d of extras) {
+          let url;
+          try { url = await urlDocumento(d.path); } catch(e) { continue; }
+          const num = d.tipo.replace('extra', '');
+          const titulo = 'Documento extra ' + num;
+          const div = document.createElement('div');
+          div.className = 'doc-img-card';
+          div.setAttribute('onclick',
+            "abrirDoc('" + url.replace(/'/g, "\\'") + "','" +
+            titulo.replace(/'/g, "\\'") + "','" + (d.nombre || '').replace(/'/g, "\\'") + "')");
+          div.innerHTML = `
+            <div class="doc-img-thumb">
+              <img src="${url}" alt="${titulo}" loading="lazy">
+              <span class="status-pill">Subido</span>
+            </div>
+            <div class="doc-img-info">
+              <div>
+                <div class="nombre">${titulo}</div>
+                <div class="vence">${d.nombre || ''}</div>
+              </div>
+              <span class="chev">›</span>
+            </div>`;
+          cont.appendChild(div);
+        }
       }
     } catch(e) { console.warn('No se pudieron cargar documentos:', e.message); }
   }

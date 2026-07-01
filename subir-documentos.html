@@ -528,6 +528,39 @@
       </div>
     </div>
 
+    <!-- Certificado de Antecedentes -->
+    <div class="doc-card missing" id="card-antecedentes">
+      <div class="doc-row" onclick="togglePanel('antecedentes')">
+        <div class="doc-icon-wrap">📜</div>
+        <div class="doc-info">
+          <h4>Certificado de Antecedentes</h4>
+          <p>Requerido para acreditar tu situación · No subido</p>
+        </div>
+        <span class="doc-badge miss">Pendiente</span>
+        <span class="doc-chevron" id="chev-antecedentes">›</span>
+      </div>
+      <div class="upload-panel" id="panel-antecedentes">
+        <div class="vence-row">
+          <label>Fecha de emisión</label>
+          <input type="date">
+        </div>
+        <div class="upload-zone" onclick="triggerUpload('antecedentes-input')"
+             ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="dropFile(event,'antecedentes')">
+          <div class="icon">📁</div>
+          <h5>Arrastra aquí o toca para subir</h5>
+          <p>PDF, JPG o PNG · Máximo 10 MB</p>
+          <input type="file" class="upload-input" id="antecedentes-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'antecedentes')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('antecedentes-input')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+            Subir archivo
+          </button>
+          <button class="btn-upload secondary">📷 Cámara</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Credencial OS10 -->
     <div class="doc-card missing" id="card-credencial">
       <div class="doc-row" onclick="togglePanel('credencial')">
@@ -723,6 +756,136 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
             Subir archivo
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Revisión Técnica -->
+    <div class="doc-card missing" id="card-revision">
+      <div class="doc-row" onclick="togglePanel('revision')">
+        <div class="doc-icon-wrap">🔧</div>
+        <div class="doc-info">
+          <h4>Revisión Técnica</h4>
+          <p>Certificado de revisión técnica · No subido</p>
+        </div>
+        <span class="doc-badge miss">Pendiente</span>
+        <span class="doc-chevron" id="chev-revision">›</span>
+      </div>
+      <div class="upload-panel" id="panel-revision">
+        <div class="vence-row">
+          <label>Vencimiento</label>
+          <input type="date">
+        </div>
+        <div class="upload-zone" onclick="triggerUpload('revision-input')">
+          <div class="icon">📁</div>
+          <h5>Arrastra aquí o toca para subir</h5>
+          <p>PDF, JPG o PNG · Máximo 10 MB</p>
+          <input type="file" class="upload-input" id="revision-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'revision')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('revision-input')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+            Subir archivo
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Padrón -->
+    <div class="doc-card missing" id="card-padron">
+      <div class="doc-row" onclick="togglePanel('padron')">
+        <div class="doc-icon-wrap">📘</div>
+        <div class="doc-info">
+          <h4>Padrón del vehículo</h4>
+          <p>Documento de inscripción · No subido</p>
+        </div>
+        <span class="doc-badge miss">Pendiente</span>
+        <span class="doc-chevron" id="chev-padron">›</span>
+      </div>
+      <div class="upload-panel" id="panel-padron">
+        <div class="upload-zone" onclick="triggerUpload('padron-input')">
+          <div class="icon">📁</div>
+          <h5>Arrastra aquí o toca para subir</h5>
+          <p>PDF, JPG o PNG · Máximo 10 MB</p>
+          <input type="file" class="upload-input" id="padron-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'padron')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('padron-input')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+            Subir archivo
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Otros documentos <span class="section-count">Opcional</span></div>
+
+    <!-- 3 slots libres para subir cualquier imagen extra -->
+    <div class="doc-card missing" id="card-extra1">
+      <div class="doc-row" onclick="togglePanel('extra1')">
+        <div class="doc-icon-wrap">🖼️</div>
+        <div class="doc-info">
+          <h4>Documento extra 1</h4>
+          <p>Cualquier imagen o PDF adicional</p>
+        </div>
+        <span class="doc-badge miss">Vacío</span>
+        <span class="doc-chevron" id="chev-extra1">›</span>
+      </div>
+      <div class="upload-panel" id="panel-extra1">
+        <div class="upload-zone" onclick="triggerUpload('extra1-input')">
+          <div class="icon">📁</div>
+          <h5>Sube tu documento</h5>
+          <p>PDF, JPG o PNG</p>
+          <input type="file" class="upload-input" id="extra1-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'extra1')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('extra1-input')">↑ Subir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-card missing" id="card-extra2">
+      <div class="doc-row" onclick="togglePanel('extra2')">
+        <div class="doc-icon-wrap">🖼️</div>
+        <div class="doc-info">
+          <h4>Documento extra 2</h4>
+          <p>Cualquier imagen o PDF adicional</p>
+        </div>
+        <span class="doc-badge miss">Vacío</span>
+        <span class="doc-chevron" id="chev-extra2">›</span>
+      </div>
+      <div class="upload-panel" id="panel-extra2">
+        <div class="upload-zone" onclick="triggerUpload('extra2-input')">
+          <div class="icon">📁</div>
+          <h5>Sube tu documento</h5>
+          <p>PDF, JPG o PNG</p>
+          <input type="file" class="upload-input" id="extra2-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'extra2')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('extra2-input')">↑ Subir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-card missing" id="card-extra3">
+      <div class="doc-row" onclick="togglePanel('extra3')">
+        <div class="doc-icon-wrap">🖼️</div>
+        <div class="doc-info">
+          <h4>Documento extra 3</h4>
+          <p>Cualquier imagen o PDF adicional</p>
+        </div>
+        <span class="doc-badge miss">Vacío</span>
+        <span class="doc-chevron" id="chev-extra3">›</span>
+      </div>
+      <div class="upload-panel" id="panel-extra3">
+        <div class="upload-zone" onclick="triggerUpload('extra3-input')">
+          <div class="icon">📁</div>
+          <h5>Sube tu documento</h5>
+          <p>PDF, JPG o PNG</p>
+          <input type="file" class="upload-input" id="extra3-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'extra3')">
+        </div>
+        <div class="upload-actions">
+          <button class="btn-upload primary" onclick="triggerUpload('extra3-input')">↑ Subir</button>
         </div>
       </div>
     </div>
