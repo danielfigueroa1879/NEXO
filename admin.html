@@ -457,10 +457,10 @@
       <button class="copy-btn" onclick="copyId()">📋 Copiar</button>
     </div>
 
-    <!-- 🔗 URL para grabar físicamente en el chip NFC -->
-    <div style="margin-top:16px;padding:14px;background:#f5f5f7;border-radius:12px;">
-      <label style="font-size:11px;font-weight:600;color:var(--ink-mute);text-transform:uppercase;letter-spacing:0.06em;">
-        🔗 Link para grabar en el chip NFC
+    <!-- 🔗 URL para grabar en el chip NFC — SOLO visible para el admin/dueño -->
+    <div id="nfcSection" style="display:none;margin-top:16px;padding:14px;background:#f5f5f7;border-radius:12px;border:1.5px solid #E82127;">
+      <label style="font-size:11px;font-weight:700;color:#E82127;text-transform:uppercase;letter-spacing:0.06em;">
+        🔒 Link para grabar en el chip NFC · Solo admin
       </label>
       <div style="font-family:'Space Grotesk',monospace;font-size:13px;word-break:break-all;margin:8px 0;color:var(--ink);"
            id="nfcLink">Generando…</div>
@@ -469,8 +469,7 @@
         <button class="copy-btn" onclick="abrirLinkNFC()" style="flex:1;">👁 Previsualizar</button>
       </div>
       <p style="font-size:11px;color:var(--ink-mute);margin-top:8px;line-height:1.4;">
-        Graba este URL en la memoria del chip NFC usando una app como <strong>NFC Tools</strong>.
-        Cualquier persona que escanee la tarjeta verá tu perfil sin necesidad de login.
+        Graba este URL en la memoria del chip NFC del usuario con una app como <strong>NFC Tools</strong>.
       </p>
     </div>
   </div>
@@ -756,6 +755,7 @@
             <th style="padding:8px;">Estado</th>
             <th style="padding:8px;">Docs</th>
             <th style="padding:8px;">Fecha</th>
+            <th style="padding:8px;">🔒 NFC</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -909,12 +909,14 @@
       if (dot) setTheme(datos.tema, dot);
     }
 
-    // Si el usuario es admin, mostrar la lista de TODAS las cuentas
-    if (datos.es_admin) await cargarListaCuentas();
+    // 🔒 Sección NFC visible SOLO para el admin
+    if (datos.es_admin) {
+      document.getElementById('nfcSection').style.display = '';
+      cargarLinkNFC();
+      await cargarListaCuentas();
+    }
     // Aplicar foto de perfil en cualquier avatar
     aplicarFotoPerfil();
-    // Cargar link para grabar en el NFC
-    cargarLinkNFC();
   }
 
   // 🔗 Link para grabar en la tarjeta NFC
@@ -943,13 +945,28 @@
   window.copiarLinkNFC = copiarLinkNFC;
   window.abrirLinkNFC = abrirLinkNFC;
 
+  // Copiar cualquier texto al portapapeles (usado desde la tabla admin)
+  async function copiarTexto(txt) {
+    try {
+      await navigator.clipboard.writeText(txt);
+      showToast('Link copiado');
+    } catch(e) { showToast('No se pudo copiar'); }
+  }
+  window.copiarTexto = copiarTexto;
+
   async function cargarListaCuentas() {
     const cont = document.getElementById('adminList');
     if (!cont) return;
     cont.style.display = 'block';
     try {
       const cuentas = await listarCuentas();
-      const rows = cuentas.map(c => `
+      const base = location.origin + '/verificar.html?id=';
+      const rows = cuentas.map(c => {
+        const url = c.codigo_publico ? base + c.codigo_publico : '';
+        const linkCol = url
+          ? `<button class="copy-btn" onclick="copiarTexto('${url}')" style="padding:4px 8px;font-size:11px;">📋 Copiar NFC</button>`
+          : '<span style="color:#c00;font-size:11px;">Sin código</span>';
+        return `
         <tr>
           <td>${c.nombre || '—'}</td>
           <td>${c.rut || '—'}</td>
@@ -959,10 +976,11 @@
           <td><span class="badge ${c.estado}">${c.estado}</span></td>
           <td>${(c.documentos || []).length}</td>
           <td>${new Date(c.fecha).toLocaleDateString('es-CL')}</td>
-        </tr>
-      `).join('');
+          <td>${linkCol}</td>
+        </tr>`;
+      }).join('');
       cont.querySelector('tbody').innerHTML = rows ||
-        '<tr><td colspan="8" style="text-align:center;color:#888;">Sin cuentas registradas</td></tr>';
+        '<tr><td colspan="9" style="text-align:center;color:#888;">Sin cuentas registradas</td></tr>';
       cont.querySelector('.count').textContent = cuentas.length + ' cuentas';
     } catch (e) {
       console.error(e);

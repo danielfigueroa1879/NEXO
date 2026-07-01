@@ -426,7 +426,8 @@
 
   <!-- TABS PERFIL -->
   <div class="perfil-tabs">
-    <button class="ptab active" id="ptab-guardia" onclick="switchTab('guardia', this)">
+    <button class="ptab active" id="ptab-conductor" onclick="switchTab('conductor', this)">🚗 Vehículo</button>
+    <button class="ptab" id="ptab-guardia" onclick="switchTab('guardia', this)">
       <svg viewBox="0 0 24 24" width="16" height="16" style="vertical-align:-3px;margin-right:3px;">
         <path d="M6 6 Q6 4 12 4 Q18 4 18 6 L18 7 L6 7 Z" fill="#1a1a1a"/>
         <circle cx="12" cy="5.5" r="0.9" fill="#FFC107"/>
@@ -436,13 +437,12 @@
         <path d="M3 24 L3 17 Q3 14.5 5 14 L9 13.5 L12 16 L15 13.5 L19 14 Q21 14.5 21 17 L21 24 Z" fill="#E82127"/>
         <path d="M9 13.5 L12 17 L15 13.5 L15 21 L9 21 Z" fill="#0a0a0a"/>
       </svg>Guardia OS10</button>
-    <button class="ptab" id="ptab-conductor" onclick="switchTab('conductor', this)">🚗 Vehículo</button>
     <button class="ptab" id="ptab-comerciante" onclick="switchTab('comerciante', this)" style="display:none;">🏪 Comerciante</button>
     <button class="ptab" id="ptab-empresa" onclick="switchTab('empresa', this)" style="display:none;">🏢 Empresa</button>
   </div>
 
   <!-- ===== DOCUMENTOS GUARDIA ===== -->
-  <div id="tab-guardia">
+  <div id="tab-guardia" style="display:none">
 
     <div class="section-title">Documentos personales <span class="section-count">2 / 2</span></div>
 
@@ -665,7 +665,7 @@
   </div><!-- /tab-guardia -->
 
   <!-- ===== DOCUMENTOS CONDUCTOR ===== -->
-  <div id="tab-conductor" style="display:none">
+  <div id="tab-conductor">
 
     <div class="section-title">Licencia y datos <span class="section-count">0 / 3</span></div>
 
@@ -1339,8 +1339,8 @@
         if (tabs[k]) tabs[k].style.display = activos[k] ? '' : 'none';
       });
       if (activos.conductor && datos.patente) tabs.conductor.innerHTML = '🚗 ' + datos.patente;
-      // Activar el primer tab disponible
-      const primero = ['guardia','conductor','comerciante','empresa'].find(k => activos[k]);
+      // Activar el primer tab disponible (Vehículo tiene prioridad)
+      const primero = ['conductor','guardia','comerciante','empresa'].find(k => activos[k]);
       if (primero && tabs[primero]) switchTab(primero, tabs[primero]);
     }
 

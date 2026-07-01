@@ -684,11 +684,11 @@
 
   <!-- SELECTOR DE PERFIL — se ajusta según los perfiles activos -->
   <div class="profile-selector" id="profileSelector">
-    <button class="profile-tab active" id="tab-guardia" onclick="switchPanel('guardia', this)">
-      <span class="dot"></span> Guardia OS10
-    </button>
-    <button class="profile-tab" id="tab-conductor" onclick="switchPanel('conductor', this)">
+    <button class="profile-tab active" id="tab-conductor" onclick="switchPanel('conductor', this)">
       <span class="dot"></span> <span id="patenteLabel">🚗 Vehículo</span>
+    </button>
+    <button class="profile-tab" id="tab-guardia" onclick="switchPanel('guardia', this)">
+      <span class="dot"></span> Guardia OS10
     </button>
     <button class="profile-tab" id="tab-comerciante" onclick="switchPanel('comerciante', this)" style="display:none;">
       <span class="dot"></span> 🏪 Comerciante
@@ -699,7 +699,7 @@
   </div>
 
   <!-- ===== PANEL GUARDIA ===== -->
-  <div class="panel active" id="panel-guardia">
+  <div class="panel" id="panel-guardia">
 
     <!-- Tarjeta de identidad -->
     <div class="id-card">
@@ -776,7 +776,7 @@
   <!-- FIN PANEL GUARDIA -->
 
   <!-- ===== PANEL CONDUCTOR ===== -->
-  <div class="panel" id="panel-conductor">
+  <div class="panel active" id="panel-conductor">
 
     <div class="id-card">
       <div class="card-header">
@@ -1031,7 +1031,7 @@
     }
 
     // Activar el primer panel disponible
-    const primero = ['guardia','conductor','comerciante','empresa'].find(k => activos[k]);
+    const primero = ['conductor','guardia','comerciante','empresa'].find(k => activos[k]);
     if (primero) {
       document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
