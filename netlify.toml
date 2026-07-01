@@ -1,5 +1,10 @@
 [build]
   publish = "."
+  functions = "netlify/functions"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
 
 # ===== FORZAR NO-CACHE EN TODOS LOS DISPOSITIVOS =====
 # Cada vez que un usuario abra la página, el navegador descarga la versión nueva.

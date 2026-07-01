@@ -692,28 +692,16 @@
     </div>
 
     <h3 style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;margin:18px 0 10px;">Método de pago</h3>
-    <div class="card" style="padding: 14px;">
-      <div class="pay-methods">
-        <div class="pay-opt selected" onclick="selPay(this)">
-          <div class="icon">💳</div>
-          <div class="name">Tarjeta</div>
-          <div class="desc">Crédito / débito</div>
+    <div class="card" style="padding:16px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:46px;height:46px;border-radius:11px;background:#009EE3;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">💳</div>
+        <div>
+          <div style="font-weight:700;font-size:15px;">Pago con Mercado Pago</div>
+          <div style="font-size:12px;color:var(--ink-mute);">Débito, crédito o saldo de tu cuenta.</div>
         </div>
-        <div class="pay-opt" onclick="selPay(this)">
-          <div class="icon">🏦</div>
-          <div class="name">Transferencia</div>
-          <div class="desc">Banco</div>
-        </div>
-        <div class="pay-opt" onclick="selPay(this)">
-          <div class="icon">📱</div>
-          <div class="name">Mercado Pago</div>
-          <div class="desc">QR o cuenta</div>
-        </div>
-        <div class="pay-opt" onclick="selPay(this)">
-          <div class="icon">🟢</div>
-          <div class="name">Webpay</div>
-          <div class="desc">Plus</div>
-        </div>
+      </div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:11px;color:var(--ink-mute);line-height:1.5;">
+        🔒 Al pagar te llevaremos a la pantalla segura de <strong>Mercado Pago</strong>. Al finalizar volverás automáticamente aquí.
       </div>
     </div>
   </div>
@@ -800,7 +788,7 @@
   const TOTAL_PASOS = 4;
   let perfiles = ['guardia'];
   let tema = 'negro';
-  let pago = 'tarjeta';
+  let pago = 'mercadopago';
 
   // Iniciales del nombre para el avatar
   function iniciales(n) {
@@ -869,20 +857,86 @@
         btn.style.opacity = '1';
         return;
       }
-      btn.innerHTML = 'Procesando pago…';
-      setTimeout(() => {
-        document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
-        document.getElementById('step-success').classList.add('active');
-        document.getElementById('bottomBar').style.display = 'none';
-        document.getElementById('stepNum').textContent = 'COMPLETADO';
-        for (let i = 1; i <= TOTAL_PASOS; i++) {
-          document.getElementById('bar' + i).classList.remove('active');
-          document.getElementById('bar' + i).classList.add('done');
+      // Ir a la pantalla segura de Mercado Pago (Checkout Pro)
+      btn.innerHTML = 'Redirigiendo a Mercado Pago…';
+      try {
+        const resp = await fetch('/.netlify/functions/create-preference', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            titulo:   'Tarjeta NFC NEXO — ' + perfiles.join(', '),
+            monto:    calcularTotal(),
+            cantidad: 1,
+            email:    document.getElementById('f-mail').value.trim(),
+            origin:   location.origin
+          })
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.init_point) {
+          throw new Error(data.error || 'No se pudo iniciar el pago');
         }
-        llenarResumenSuccess();
-        window.scrollTo({top: 0, behavior: 'smooth'});
-      }, 1200);
+        window.location.href = data.init_point;   // → Mercado Pago (débito/crédito/cuenta)
+      } catch (e) {
+        console.error(e);
+        showToast('No se pudo iniciar el pago: ' + e.message);
+        btn.innerHTML = '🔒 Pagar ' + formatoCLP(calcularTotal()).replace(' CLP','');
+        btn.style.opacity = '1';
+      }
     }
+  }
+
+  // Muestra la pantalla de éxito (al volver de Mercado Pago o tras pago aprobado)
+  function mostrarExito() {
+    // Restaurar los datos desde localStorage para llenar el resumen (la página se recargó)
+    try {
+      const c = JSON.parse(localStorage.getItem('nexo_cuenta') || 'null');
+      if (c) {
+        const set = (id, v) => { const e = document.getElementById(id); if (e) e.value = v || ''; };
+        set('f-nombre', c.nombre); set('f-rut', c.rut);
+        set('f-mail', c.mail || c.email); set('f-tel', c.tel || c.telefono);
+        set('f-dir', c.dir || c.direccion);
+        const pats = c.patentes || (c.patente ? [c.patente] : []);
+        set('f-patente', pats[0]);
+        if (pats[1]) { const e = document.getElementById('f-patente2'); if (e) { e.value = pats[1]; e.style.display = 'block'; } }
+        if (pats[2]) { const e = document.getElementById('f-patente3'); if (e) { e.value = pats[2]; e.style.display = 'block'; } }
+        if (Array.isArray(c.perfiles) && c.perfiles.length) perfiles = [...c.perfiles];
+        if (c.tema) tema = c.tema;
+      }
+    } catch (e) {}
+
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('step-success').classList.add('active');
+    const bar = document.getElementById('bottomBar'); if (bar) bar.style.display = 'none';
+    const sn = document.getElementById('stepNum'); if (sn) sn.textContent = 'COMPLETADO';
+    for (let i = 1; i <= TOTAL_PASOS; i++) {
+      const b = document.getElementById('bar' + i);
+      if (b) { b.classList.remove('active'); b.classList.add('done'); }
+    }
+    llenarResumenSuccess();
+    // Marcar la cuenta como pagada/activa (best-effort, requiere sesión)
+    try { guardarCuenta({ estado: 'activa', pago: 'pagado' }); } catch (e) {}
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Al volver de Mercado Pago: ?pago=exito | error | pendiente
+  function manejarRetornoPago() {
+    const params = new URLSearchParams(location.search);
+    const estado = params.get('pago');
+    if (!estado) return;
+    if (estado === 'exito') {
+      mostrarExito();
+    } else if (estado === 'pendiente') {
+      showToast('Tu pago quedó pendiente de confirmación.');
+    } else if (estado === 'error') {
+      showToast('El pago no se completó. Puedes intentarlo nuevamente.');
+    }
+    // Limpiar la URL para que quede prolija
+    history.replaceState(null, '', location.pathname);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', manejarRetornoPago);
+  } else {
+    manejarRetornoPago();
   }
 
   // Muestra el siguiente campo de patente oculto (hasta 3)
