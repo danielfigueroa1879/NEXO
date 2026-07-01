@@ -1297,9 +1297,46 @@
       <a href="#precios">Precios</a>
       <a href="#contacto">Contacto</a>
     </div>
-    <a href="login.html" class="nav-cta" style="text-decoration:none;">Obtener mi tarjeta</a>
+    <!-- Chip de usuario / botón login -->
+    <div id="userChip" style="position:relative;">
+      <a href="login.html" class="nav-cta" style="text-decoration:none;">Obtener mi tarjeta</a>
+    </div>
   </div>
 </nav>
+
+<style>
+  .user-badge {
+    display:inline-flex; align-items:center; gap:8px;
+    background:#0A0A0A; color:#fff;
+    padding:6px 12px 6px 6px; border-radius:24px;
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px;
+    cursor:pointer; user-select:none; border:none;
+  }
+  .user-badge:hover { background:#1c1c1e; }
+  .user-badge .u-av {
+    width:28px; height:28px; border-radius:50%;
+    background:#E82127; color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700;
+  }
+  .user-menu {
+    position:absolute; top:calc(100% + 8px); right:0;
+    background:#fff; border:1px solid #e5e5ea; border-radius:14px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.12);
+    min-width:200px; padding:8px; display:none; z-index:100;
+  }
+  .user-menu.open { display:block; }
+  .user-menu a, .user-menu button {
+    display:flex; align-items:center; gap:10px;
+    padding:10px 12px; border-radius:10px;
+    color:#0A0A0A; text-decoration:none;
+    font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:500;
+    width:100%; background:none; border:none; text-align:left; cursor:pointer;
+  }
+  .user-menu a:hover, .user-menu button:hover { background:#f5f5f7; }
+  .user-menu .logout { color:#E82127; }
+  .user-menu hr { border:none; border-top:1px solid #e5e5ea; margin:6px 4px; }
+</style>
 
 <!-- HERO -->
 <section class="hero">
@@ -1955,6 +1992,55 @@
   window.addEventListener('scroll', () => {
     backToTopBtn.classList.toggle('visible', window.scrollY > 120);
   });
+</script>
+
+<!-- ===== Supabase (mostrar usuario logueado) ===== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script>
+  function inicialesUsuario(n) {
+    return (n || '').trim().split(/\s+/).slice(0,2).map(p => p[0] || '').join('').toUpperCase() || '??';
+  }
+  function primerNombre(n) {
+    return (n || '').trim().split(/\s+/)[0] || 'Usuario';
+  }
+  async function mostrarUsuarioLogueado() {
+    const chip = document.getElementById('userChip');
+    if (!chip) return;
+    let cuenta = null;
+    try { cuenta = await obtenerCuenta(); } catch(e) {}
+    if (!cuenta) {
+      const user = await nexoUsuarioActual();
+      if (!user) return; // no hay sesión → deja el botón "Obtener mi tarjeta"
+      cuenta = { nombre: user.email || 'Usuario' };
+    }
+    const nombre = cuenta.nombre || 'Usuario';
+    chip.innerHTML = `
+      <button class="user-badge" onclick="event.stopPropagation(); document.getElementById('userMenu').classList.toggle('open');">
+        <span class="u-av">${inicialesUsuario(nombre)}</span>
+        <span>Hola, ${primerNombre(nombre)}</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M7 10l5 5 5-5z"/></svg>
+      </button>
+      <div class="user-menu" id="userMenu">
+        <a href="verificar.html">👁 Ver mi tarjeta</a>
+        <a href="solicitar.html">📝 Mi solicitud</a>
+        <a href="subir-documentos.html">📄 Mis documentos</a>
+        <a href="admin.html">⚙️ Configuración</a>
+        <hr>
+        <button class="logout" onclick="cerrarSesion()">🚪 Cerrar sesión</button>
+      </div>
+    `;
+    document.addEventListener('click', () => {
+      const menu = document.getElementById('userMenu');
+      if (menu) menu.classList.remove('open');
+    });
+  }
+  async function cerrarSesion() {
+    try { await nexoSignOut(); } catch(e) {}
+    location.reload();
+  }
+  window.cerrarSesion = cerrarSesion;
+  document.addEventListener('DOMContentLoaded', mostrarUsuarioLogueado);
 </script>
 
 <script>
