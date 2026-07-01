@@ -710,6 +710,40 @@
     </div>
   </div>
 
+  <!-- ===== ADMIN: lista de TODAS las cuentas (solo visible para es_admin=true) ===== -->
+  <div class="section" id="adminList" style="display:none;">
+    <div class="section-head">
+      <span class="icon">📋</span>
+      <h3>Todas las cuentas</h3>
+      <span class="help count">— cuentas</span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <thead>
+          <tr style="background:#f5f5f7; text-align:left;">
+            <th style="padding:8px;">Nombre</th>
+            <th style="padding:8px;">RUT</th>
+            <th style="padding:8px;">Email</th>
+            <th style="padding:8px;">Perfiles</th>
+            <th style="padding:8px;">Patente</th>
+            <th style="padding:8px;">Estado</th>
+            <th style="padding:8px;">Docs</th>
+            <th style="padding:8px;">Fecha</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <style>
+      #adminList tbody tr { border-bottom: 1px solid #eee; }
+      #adminList tbody td { padding: 8px; }
+      #adminList .badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+      #adminList .badge.pendiente { background:#FFF3CD; color:#8A6A00; }
+      #adminList .badge.activa    { background:#D4EDDA; color:#155724; }
+      #adminList .badge.rechazada { background:#F8D7DA; color:#721C24; }
+    </style>
+  </div>
+
 </div>
 
 <!-- SAVE BAR -->
@@ -732,6 +766,10 @@
     <polyline points="18 15 12 9 6 15"></polyline>
   </svg>
 </button>
+
+<!-- ===== Supabase (base de datos) ===== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
 
 <script>
   // Toggle perfiles
@@ -762,9 +800,27 @@
     showToast('ID copiado: ' + id);
   }
 
-  // Guardar
-  function guardar() {
-    showToast('¡Configuración guardada!');
+  // Guardar cambios de perfiles + tema en Supabase
+  async function guardar() {
+    try {
+      // Recolectar perfiles activos desde los switches
+      const perfiles = [];
+      document.querySelectorAll('.perfil-row input[type="checkbox"]').forEach(cb => {
+        if (!cb.checked) return;
+        const oc = cb.getAttribute('onchange') || '';
+        const m = oc.match(/togglePerfil\('([^']+)'/);
+        if (m) perfiles.push(m[1] === 'conductor' ? 'vehiculo' : m[1]);
+      });
+      // Tema activo
+      const dot = document.querySelector('.theme-dot.selected');
+      const tema = dot ? (dot.className.match(/t-(\w+)/) || [])[1] : undefined;
+
+      await guardarCuenta({ perfiles, tema });
+      showToast('¡Configuración guardada!');
+    } catch (e) {
+      console.error(e);
+      showToast('Error guardando: ' + e.message);
+    }
   }
 
   // Confirmaciones zona peligrosa
@@ -788,21 +844,24 @@
     _btt.classList.toggle('show', window.scrollY > 120);
   });
 
-  // ===== CARGAR DATOS DEL USUARIO =====
-  (function() {
-    function iniciales(n) {
-      return (n || '').trim().split(/\s+/).slice(0,2).map(p => p[0] || '').join('').toUpperCase() || '??';
-    }
+  // ===== CARGAR DATOS DEL USUARIO desde Supabase =====
+  function iniciales(n) {
+    return (n || '').trim().split(/\s+/).slice(0,2).map(p => p[0] || '').join('').toUpperCase() || '??';
+  }
+  async function cargarAdmin() {
     let datos = null;
-    try { datos = JSON.parse(localStorage.getItem('nexo_cuenta') || 'null'); } catch(e) {}
+    try { datos = await obtenerCuenta(); } catch(e) { console.warn(e); }
+    if (!datos) {
+      try { datos = JSON.parse(localStorage.getItem('nexo_cuenta') || 'null'); } catch(e) {}
+    }
     if (!datos) datos = { nombre: 'Tu nombre', rut: '—', perfiles: ['guardia'], patente: '', tema: 'negro' };
 
     document.getElementById('adminNombre').textContent       = datos.nombre || 'Tu nombre';
     document.getElementById('adminRut').textContent          = 'RUT: ' + (datos.rut || '—');
     document.getElementById('adminPreviewName').textContent  = datos.nombre || 'Tu nombre';
 
-    // Estado vehículo
-    const tieneVehiculo = datos.perfiles.includes('vehiculo');
+    const perfiles = datos.perfiles || [];
+    const tieneVehiculo = perfiles.includes('vehiculo');
     document.getElementById('vehiculoToggle').checked = tieneVehiculo;
     document.getElementById('vehiculoTitle').textContent = datos.patente
       ? 'Vehículo · ' + datos.patente
@@ -811,12 +870,44 @@
       ? '4 documentos · Activo'
       : 'Sin configurar';
 
-    // Tema seleccionado
     if (datos.tema) {
       const dot = document.querySelector('.theme-dot.t-' + datos.tema);
       if (dot) setTheme(datos.tema, dot);
     }
-  })();
+
+    // Si el usuario es admin, mostrar la lista de TODAS las cuentas
+    if (datos.es_admin) await cargarListaCuentas();
+  }
+
+  async function cargarListaCuentas() {
+    const cont = document.getElementById('adminList');
+    if (!cont) return;
+    cont.style.display = 'block';
+    try {
+      const cuentas = await listarCuentas();
+      const rows = cuentas.map(c => `
+        <tr>
+          <td>${c.nombre || '—'}</td>
+          <td>${c.rut || '—'}</td>
+          <td>${c.email || '—'}</td>
+          <td>${(c.perfiles || []).join(', ') || '—'}</td>
+          <td>${c.patente || '—'}</td>
+          <td><span class="badge ${c.estado}">${c.estado}</span></td>
+          <td>${(c.documentos || []).length}</td>
+          <td>${new Date(c.fecha).toLocaleDateString('es-CL')}</td>
+        </tr>
+      `).join('');
+      cont.querySelector('tbody').innerHTML = rows ||
+        '<tr><td colspan="8" style="text-align:center;color:#888;">Sin cuentas registradas</td></tr>';
+      cont.querySelector('.count').textContent = cuentas.length + ' cuentas';
+    } catch (e) {
+      console.error(e);
+      cont.querySelector('tbody').innerHTML =
+        `<tr><td colspan="8" style="color:#c00;">Error: ${e.message}</td></tr>`;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', cargarAdmin);
 </script>
 
 <script>

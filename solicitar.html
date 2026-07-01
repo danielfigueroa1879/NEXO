@@ -834,7 +834,7 @@
     window.scrollTo({top: 0, behavior: 'smooth'});
   }
 
-  function next() {
+  async function next() {
     // Validaciones por paso
     if (paso === 1) {
       const nombre = document.getElementById('f-nombre').value.trim();
@@ -852,11 +852,17 @@
     if (paso < TOTAL_PASOS) {
       showStep(paso + 1);
     } else {
-      // Guardar datos y procesar pago
-      guardarDatos();
+      // Guardar en Supabase y procesar pago
       const btn = document.getElementById('btnNext');
-      btn.innerHTML = 'Procesando pago…';
+      btn.innerHTML = 'Guardando…';
       btn.style.opacity = '0.7';
+      const ok = await guardarDatos();
+      if (!ok) {
+        btn.innerHTML = '🔒 Pagar $8.000';
+        btn.style.opacity = '1';
+        return;
+      }
+      btn.innerHTML = 'Procesando pago…';
       setTimeout(() => {
         document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
         document.getElementById('step-success').classList.add('active');
@@ -868,27 +874,44 @@
         }
         llenarResumenSuccess();
         window.scrollTo({top: 0, behavior: 'smooth'});
-      }, 1800);
+      }, 1200);
     }
   }
 
-  // Guardar toda la configuración en localStorage para verificar.html / admin.html
-  function guardarDatos() {
+  // Guardar la solicitud en Supabase (y en localStorage como respaldo local)
+  async function guardarDatos() {
     const datos = {
-      nombre: document.getElementById('f-nombre').value.trim(),
-      rut: document.getElementById('f-rut').value.trim(),
-      tel: document.getElementById('f-tel').value.trim(),
-      mail: document.getElementById('f-mail').value.trim(),
-      dir: document.getElementById('f-dir').value.trim(),
-      patente: (document.getElementById('f-patente').value || '').trim().toUpperCase(),
+      nombre:   document.getElementById('f-nombre').value.trim(),
+      rut:      document.getElementById('f-rut').value.trim(),
+      telefono: document.getElementById('f-tel').value.trim(),
+      email:    document.getElementById('f-mail').value.trim(),
+      direccion:document.getElementById('f-dir').value.trim(),
+      patente:  (document.getElementById('f-patente').value || '').trim().toUpperCase(),
       perfiles: [...perfiles],
-      tema: tema,
-      pago: pago,
-      fecha: new Date().toISOString()
+      tema:     tema,
+      pago:     pago,
+      fecha:    new Date().toISOString()
     };
+
+    // Respaldo local (compatibilidad con código existente)
+    try { localStorage.setItem('nexo_cuenta', JSON.stringify({
+      ...datos, tel: datos.telefono, mail: datos.email, dir: datos.direccion
+    })); } catch(e) {}
+
+    // Enviar a Supabase si hay sesión activa
     try {
-      localStorage.setItem('nexo_cuenta', JSON.stringify(datos));
-    } catch(e) { console.warn('No se pudo guardar', e); }
+      const user = await nexoUsuarioActual();
+      if (!user) {
+        showToast('Inicia sesión primero para guardar tu solicitud');
+        return false;
+      }
+      await guardarCuenta(datos);
+      return true;
+    } catch (e) {
+      console.error(e);
+      showToast('Error guardando en la base de datos: ' + e.message);
+      return false;
+    }
   }
 
   // Llenar el resumen lado-a-lado en la pantalla de éxito
@@ -996,6 +1019,27 @@
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2400);
   }
+</script>
+
+<!-- ===== Supabase (base de datos) ===== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+
+<script>
+  // Prellenar el formulario si el usuario ya está autenticado
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const cuenta = await obtenerCuenta();
+      if (!cuenta) return;
+      const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
+      set('f-nombre', cuenta.nombre);
+      set('f-rut',    cuenta.rut);
+      set('f-tel',    cuenta.telefono);
+      set('f-mail',   cuenta.email);
+      set('f-dir',    cuenta.direccion);
+      set('f-patente',cuenta.patente);
+    } catch (e) { console.warn('No se pudo cargar la cuenta:', e.message); }
+  });
 </script>
 
 <script>

@@ -745,6 +745,10 @@
   <span id="toast-msg">Guardado con éxito</span>
 </div>
 
+<!-- ===== Supabase (base de datos) ===== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+
 <script>
   // Toggle panel expandible
   function togglePanel(id) {
@@ -766,37 +770,57 @@
     document.getElementById(inputId).click();
   }
 
-  // Archivo seleccionado
-  function fileSelected(input, docId) {
-    if (!input.files.length) return;
-    const file = input.files[0];
+  // Marcar visualmente una card como subida
+  function marcarCardSubida(docId, nombreArchivo, tamanoKB, cuando) {
     const card = document.getElementById('card-' + docId);
+    if (!card) return;
     const panel = document.getElementById('panel-' + docId);
-    // Cambia estado de la card
     card.classList.remove('missing', 'warning');
     card.classList.add('uploaded');
-    card.querySelector('.doc-badge').className = 'doc-badge ok';
-    card.querySelector('.doc-badge').textContent = '✓ Cargado';
-    card.querySelector('.doc-info p').textContent = file.name + ' · Subido ahora';
-    // Reemplaza zona de upload con preview
-    const zone = panel.querySelector('.upload-zone');
+    const badge = card.querySelector('.doc-badge');
+    if (badge) { badge.className = 'doc-badge ok'; badge.textContent = '✓ Cargado'; }
+    const info = card.querySelector('.doc-info p');
+    if (info) info.textContent = nombreArchivo + ' · ' + (cuando || 'Subido ahora');
+    const zone = panel && panel.querySelector('.upload-zone');
     if (zone) {
       const preview = document.createElement('div');
       preview.className = 'file-preview';
-      preview.innerHTML = `<span>📄</span><span class="fname">${file.name}</span><span class="fsize">${(file.size/1024).toFixed(0)} KB</span><button class="fdel" onclick="eliminarDoc('${docId}')">✕</button>`;
+      preview.innerHTML = `<span>📄</span><span class="fname">${nombreArchivo}</span><span class="fsize">${tamanoKB} KB</span><button class="fdel" onclick="eliminarDoc('${docId}')">✕</button>`;
       zone.replaceWith(preview);
     }
-    updateProgress();
-    showToast('Archivo cargado: ' + file.name);
   }
 
-  // Eliminar doc
-  function eliminarDoc(docId) {
+  // Archivo seleccionado → subir a Supabase Storage
+  async function fileSelected(input, docId) {
+    if (!input.files.length) return;
+    const file = input.files[0];
+    const badge = document.querySelector('#card-' + docId + ' .doc-badge');
+    if (badge) { badge.textContent = 'Subiendo…'; badge.className = 'doc-badge'; }
+    try {
+      const user = await nexoUsuarioActual();
+      if (!user) { showToast('Debes iniciar sesión para subir documentos'); return; }
+      await subirDocumento({ tipo: docId, file });
+      marcarCardSubida(docId, file.name, (file.size/1024).toFixed(0));
+      updateProgress();
+      showToast('Archivo subido: ' + file.name);
+    } catch (e) {
+      console.error(e);
+      showToast('Error subiendo el archivo: ' + e.message);
+      if (badge) { badge.className = 'doc-badge miss'; badge.textContent = 'Pendiente'; }
+    }
+  }
+
+  // Eliminar doc (Storage + tabla)
+  async function eliminarDoc(docId) {
+    try { await eliminarDocumento(docId); }
+    catch (e) { showToast('Error eliminando: ' + e.message); return; }
     const card = document.getElementById('card-' + docId);
-    card.classList.remove('uploaded', 'warning');
-    card.classList.add('missing');
-    card.querySelector('.doc-badge').className = 'doc-badge miss';
-    card.querySelector('.doc-badge').textContent = 'Pendiente';
+    if (card) {
+      card.classList.remove('uploaded', 'warning');
+      card.classList.add('missing');
+      const badge = card.querySelector('.doc-badge');
+      if (badge) { badge.className = 'doc-badge miss'; badge.textContent = 'Pendiente'; }
+    }
     updateProgress();
     showToast('Documento eliminado');
   }
@@ -849,34 +873,43 @@
 
   updateProgress();
 
-  // ===== CARGAR DATOS DEL USUARIO =====
-  (function() {
+  // ===== CARGAR DATOS DEL USUARIO desde Supabase (con fallback a localStorage) =====
+  (async function() {
     function iniciales(n) {
       return (n || '').trim().split(/\s+/).slice(0,2).map(p => p[0] || '').join('').toUpperCase() || '??';
     }
+    function aplicar(datos) {
+      document.getElementById('userAv').textContent     = iniciales(datos.nombre);
+      document.getElementById('userNombre').textContent = datos.nombre || 'Tu nombre';
+      document.getElementById('userRut').textContent    = 'RUT: ' + (datos.rut || '—');
+      const perfiles = datos.perfiles || [];
+      const tieneGuardia  = perfiles.includes('guardia');
+      const tieneVehiculo = perfiles.includes('vehiculo');
+      const tabG = document.getElementById('ptab-guardia');
+      const tabV = document.getElementById('ptab-conductor');
+      tabG.style.display = tieneGuardia  ? '' : 'none';
+      tabV.style.display = tieneVehiculo ? '' : 'none';
+      if (tieneVehiculo && datos.patente) tabV.innerHTML = '🚗 ' + datos.patente;
+      if (!tieneGuardia && tieneVehiculo) switchTab('conductor', tabV);
+    }
+
     let datos = null;
-    try { datos = JSON.parse(localStorage.getItem('nexo_cuenta') || 'null'); } catch(e) {}
+    try { datos = await obtenerCuenta(); } catch(e) { console.warn(e); }
+    if (!datos) {
+      try { datos = JSON.parse(localStorage.getItem('nexo_cuenta') || 'null'); } catch(e) {}
+    }
     if (!datos) datos = { nombre: 'Tu nombre', rut: '—', perfiles: ['guardia'], patente: '' };
+    aplicar(datos);
 
-    document.getElementById('userAv').textContent     = iniciales(datos.nombre);
-    document.getElementById('userNombre').textContent = datos.nombre || 'Tu nombre';
-    document.getElementById('userRut').textContent    = 'RUT: ' + (datos.rut || '—');
-
-    const tieneGuardia  = datos.perfiles.includes('guardia');
-    const tieneVehiculo = datos.perfiles.includes('vehiculo');
-    const tabG = document.getElementById('ptab-guardia');
-    const tabV = document.getElementById('ptab-conductor');
-    tabG.style.display = tieneGuardia  ? '' : 'none';
-    tabV.style.display = tieneVehiculo ? '' : 'none';
-
-    if (tieneVehiculo && datos.patente) {
-      tabV.innerHTML = '🚗 ' + datos.patente;
-    }
-
-    // Si solo eligió vehículo, mostrar primero ese panel
-    if (!tieneGuardia && tieneVehiculo) {
-      switchTab('conductor', tabV);
-    }
+    // Marcar documentos ya subidos
+    try {
+      const docs = await listarDocumentos();
+      docs.forEach(d => {
+        marcarCardSubida(d.tipo, d.nombre, Math.round((d.tamano || 0)/1024),
+          'Subido ' + new Date(d.fecha).toLocaleDateString('es-CL'));
+      });
+      updateProgress();
+    } catch (e) { console.warn('No se pudieron cargar documentos previos:', e.message); }
   })();
 
   // Chevron volver arriba

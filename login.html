@@ -653,39 +653,64 @@
     lbl.style.color = cols[score];
   }
 
-  // Login
-  function doLogin() {
+  // Login (Supabase Auth)
+  async function doLogin() {
     const rut = document.getElementById('login-rut').value.trim();
     const pwd = document.getElementById('login-pwd').value;
     if (!rut || !pwd) { showToast('Completa todos los campos'); return; }
     const btn = event.currentTarget;
     btn.classList.add('loading');
     btn.textContent = 'Ingresando…';
-    setTimeout(() => {
+    try {
+      await nexoSignIn({ rut, password: pwd });
+      window.location.href = 'verificar.html';
+    } catch (err) {
+      console.error(err);
+      showToast(err.message === 'Invalid login credentials'
+        ? 'RUT o contraseña incorrectos'
+        : ('Error: ' + err.message));
       btn.classList.remove('loading');
       btn.innerHTML = 'Ingresar <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>';
-      window.location.href = 'solicitar.html';
-    }, 1400);
+    }
   }
 
-  // Crear cuenta
-  function crearCuenta() {
-    const pwd  = document.getElementById('reg-pwd').value;
-    const pwd2 = document.getElementById('reg-pwd2').value;
-    const err  = document.getElementById('err-pwd2');
+  // Crear cuenta (Supabase Auth + tabla cuentas)
+  async function crearCuenta() {
+    const nombre = document.getElementById('reg-nombre').value.trim();
+    const rut    = document.getElementById('reg-rut').value.trim();
+    const tel    = document.getElementById('reg-tel').value.trim();
+    const email  = document.getElementById('reg-email').value.trim();
+    const empresa= (document.getElementById('reg-empresa')?.value || '').trim();
+    const pwd    = document.getElementById('reg-pwd').value;
+    const pwd2   = document.getElementById('reg-pwd2').value;
+    const err    = document.getElementById('err-pwd2');
+
+    if (!nombre || !rut || !email) { showToast('Completa los datos de tu cuenta'); nextStep(2); return; }
+    if (pwd.length < 8) { showToast('La contraseña debe tener al menos 8 caracteres'); return; }
     if (pwd !== pwd2) { err.classList.add('show'); return; }
     err.classList.remove('show');
 
     const btn = event.currentTarget;
     btn.classList.add('loading');
     btn.textContent = 'Creando cuenta…';
-    setTimeout(() => {
-      // Ocultar pasos, mostrar success
+    try {
+      await nexoSignUp({
+        rut, password: pwd, nombre, email,
+        telefono: tel, tipo: tipoSeleccionado,
+        empresa: tipoSeleccionado === 'guardia' ? empresa : null
+      });
       document.getElementById('step-3').style.display = 'none';
       document.getElementById('panel-registro').querySelector('.steps').style.display = 'none';
       document.getElementById('success-screen').classList.add('show');
-      document.getElementById('panel-registro').querySelector('h2.form-title') && null;
-    }, 1500);
+    } catch (e) {
+      console.error(e);
+      const msg = /already registered|duplicate/i.test(e.message)
+        ? 'Ya existe una cuenta con ese RUT. Ingresa desde la pestaña "Login".'
+        : ('Error creando la cuenta: ' + e.message);
+      showToast(msg);
+      btn.classList.remove('loading');
+      btn.innerHTML = 'Crear cuenta ✓';
+    }
   }
 
   // Google login simulado
@@ -713,6 +738,11 @@
     <polyline points="18 15 12 9 6 15"></polyline>
   </svg>
 </button>
+
+<!-- ===== Supabase (base de datos) ===== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {

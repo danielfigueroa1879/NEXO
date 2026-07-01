@@ -837,6 +837,10 @@
 
 </div><!-- /page -->
 
+<!-- ===== Supabase (base de datos) ===== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+
 <script>
   // Timestamp
   function updateTime() {
@@ -848,51 +852,48 @@
   updateTime();
   setInterval(updateTime, 30000);
 
-  // ===== CARGAR DATOS DEL USUARIO desde localStorage =====
+  // ===== CARGAR DATOS DEL USUARIO desde Supabase =====
   function iniciales(n) {
     return (n || '').trim().split(/\s+/).slice(0,2).map(p => p[0] || '').join('').toUpperCase() || '??';
   }
-  function cargarDatosUsuario() {
+  async function cargarDatosUsuario() {
     let datos = null;
-    try { datos = JSON.parse(localStorage.getItem('nexo_cuenta') || 'null'); } catch(e) {}
-    // Datos por defecto si no hay nada guardado
+    try { datos = await obtenerCuenta(); } catch(e) { console.warn(e); }
+    if (!datos) {
+      try { datos = JSON.parse(localStorage.getItem('nexo_cuenta') || 'null'); } catch(e) {}
+    }
     if (!datos) datos = { nombre: 'Tu nombre', rut: '—', perfiles: ['guardia'], patente: '' };
 
     const nombre = datos.nombre || 'Tu nombre';
     const rut    = datos.rut    || '—';
     const ini    = iniciales(nombre);
 
-    // Panel guardia
     document.getElementById('avG').textContent   = ini;
     document.getElementById('nameG').textContent = nombre;
     document.getElementById('rutG').textContent  = 'RUT: ' + rut;
 
-    // Panel vehículo
     document.getElementById('avV').textContent   = ini;
     document.getElementById('nameV').textContent = nombre;
     document.getElementById('rutV').textContent  = 'RUT: ' + rut;
 
-    // Mostrar/ocultar pestañas según perfiles activos
-    const tieneGuardia  = datos.perfiles.includes('guardia');
-    const tieneVehiculo = datos.perfiles.includes('vehiculo');
+    const perfiles = datos.perfiles || [];
+    const tieneGuardia  = perfiles.includes('guardia');
+    const tieneVehiculo = perfiles.includes('vehiculo');
     const tabG = document.getElementById('tab-guardia');
     const tabV = document.getElementById('tab-conductor');
     tabG.style.display = tieneGuardia  ? '' : 'none';
     tabV.style.display = tieneVehiculo ? '' : 'none';
 
-    // Si solo tiene un perfil, ocultar el selector entero
     const totalActivos = (tieneGuardia ? 1 : 0) + (tieneVehiculo ? 1 : 0);
     if (totalActivos <= 1) {
       document.getElementById('profileSelector').style.display = 'none';
     }
 
-    // Etiqueta con la patente
     if (tieneVehiculo && datos.patente) {
       document.getElementById('patenteLabel').textContent = '🚗 ' + datos.patente;
       document.getElementById('vehLabel').textContent = 'Vehículo · ' + datos.patente;
     }
 
-    // Si no tiene guardia, activar el panel del vehículo por defecto
     if (!tieneGuardia && tieneVehiculo) {
       document.getElementById('panel-guardia').classList.remove('active');
       document.getElementById('panel-conductor').classList.add('active');
@@ -900,7 +901,7 @@
       tabG.classList.remove('active');
     }
   }
-  cargarDatosUsuario();
+  document.addEventListener('DOMContentLoaded', cargarDatosUsuario);
 
   // Switch perfil
   function switchPanel(id, btn) {
