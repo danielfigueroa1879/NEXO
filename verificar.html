@@ -535,37 +535,49 @@
   /* Sección por vehículo (hasta 3) */
   /* ===== SELECTOR DE PATENTES (hasta 3 vehículos) ===== */
   .veh-selector {
-    display: flex; align-items: center; justify-content: center;
-    gap: 10px; flex-wrap: wrap;
-    margin-bottom: 18px;
+    display: flex; align-items: center; justify-content: safe center;
+    gap: 8px; flex-wrap: nowrap;
+    overflow-x: auto;                 /* si no caben, se desliza sin romper la fila */
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 18px; padding: 6px 2px;
   }
+  .veh-selector::-webkit-scrollbar { display: none; }
+  .veh-selector { scrollbar-width: none; }
   .veh-chip {
-    cursor: pointer;
+    cursor: pointer; flex: 0 0 auto;
     border: 1.5px solid var(--line);
     background: #F3F3F7; color: var(--ink-mute);
-    border-radius: 12px; padding: 8px 14px;
-    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    border-radius: 12px; padding: 7px 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
     font-family: 'Space Grotesk', sans-serif;
-    transform: scale(0.9); opacity: 0.7;
-    transition: transform .22s ease, background .22s, color .22s, box-shadow .22s, opacity .22s;
+    opacity: 0.6;
+    transition: background .22s, color .22s, box-shadow .22s, opacity .22s, padding .22s;
   }
   .veh-chip:hover { opacity: 1; }
   .veh-chip .veh-chip-lbl {
-    font-size: 9px; font-weight: 700; letter-spacing: 0.12em;
+    font-size: 8px; font-weight: 700; letter-spacing: 0.1em;
     text-transform: uppercase; opacity: 0.7; display: none;
   }
   .veh-chip .veh-chip-plate {
-    font-size: 15px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
+    font-size: 13px; font-weight: 800; letter-spacing: 0.06em;
+    text-transform: uppercase; white-space: nowrap;
   }
   /* Patente activa: al centro, más grande, al frente, fondo negro y letras blancas */
   .veh-chip.active {
     background: var(--ink); color: #fff; border-color: var(--ink);
-    opacity: 1; transform: scale(1.12);
-    padding: 12px 22px;
-    box-shadow: 0 10px 26px rgba(0,0,0,0.30);
+    opacity: 1; padding: 11px 20px; z-index: 2;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.28);
   }
   .veh-chip.active .veh-chip-lbl { display: block; color: rgba(255,255,255,0.7); }
-  .veh-chip.active .veh-chip-plate { font-size: 24px; text-shadow: 0 2px 6px rgba(0,0,0,0.35); }
+  .veh-chip.active .veh-chip-plate { font-size: 22px; letter-spacing: 0.1em; text-shadow: 0 2px 6px rgba(0,0,0,0.35); }
+  /* Pantallas muy angostas: achicar para que las 3 patentes quepan en una fila */
+  @media (max-width: 380px) {
+    .veh-chip .veh-chip-plate { font-size: 12px; }
+    .veh-chip.active .veh-chip-plate { font-size: 19px; }
+    .veh-chip { padding: 6px 9px; }
+    .veh-chip.active { padding: 10px 15px; }
+    .veh-selector { gap: 6px; }
+  }
   .doc-img-info {
     padding: 14px 16px;
     display: flex; align-items: center; justify-content: space-between;
