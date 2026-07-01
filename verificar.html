@@ -676,7 +676,7 @@
       <div class="card-body">
         <!-- Documentos como imágenes (primero el Certificado OS10) -->
         <div class="docs-grid">
-          <div class="doc-img-card" onclick="abrirDoc('images/Certificado.png','Certificado Curso OS10','Vence: 10 Ene 2026')">
+          <div class="doc-img-card" data-tipo="curso" data-titulo="Certificado Curso OS10" data-sub="Vence: 10 Ene 2026" onclick="abrirDoc('images/Certificado.png','Certificado Curso OS10','Vence: 10 Ene 2026')">
             <div class="doc-img-thumb">
               <img src="images/Certificado.png" alt="Certificado OS10" loading="lazy">
               <span class="status-pill">Vigente</span>
@@ -690,7 +690,7 @@
             </div>
           </div>
 
-          <div class="doc-img-card" onclick="abrirDoc('images/CedulaIdentidad.png','Cédula de Identidad','Vence: 14 Ago 2028')">
+          <div class="doc-img-card" data-tipo="cedula" data-titulo="Cédula de Identidad" data-sub="Vence: 14 Ago 2028" onclick="abrirDoc('images/CedulaIdentidad.png','Cédula de Identidad','Vence: 14 Ago 2028')">
             <div class="doc-img-thumb">
               <img src="images/CedulaIdentidad.png" alt="Cédula de Identidad" loading="lazy">
               <span class="status-pill">Vigente</span>
@@ -748,7 +748,7 @@
       <div class="card-body">
         <!-- Documentos del vehículo como imágenes -->
         <div class="docs-grid">
-          <div class="doc-img-card" onclick="abrirDoc('images/PermisoCirculacion.png','Permiso de Circulación','Válido hasta Dic 2025')">
+          <div class="doc-img-card" data-tipo="permiso" data-titulo="Permiso de Circulación" data-sub="Válido hasta Dic 2025" onclick="abrirDoc('images/PermisoCirculacion.png','Permiso de Circulación','Válido hasta Dic 2025')">
             <div class="doc-img-thumb">
               <img src="images/PermisoCirculacion.png" alt="Permiso de Circulación" loading="lazy">
               <span class="status-pill">Vigente</span>
@@ -776,7 +776,7 @@
             </div>
           </div>
 
-          <div class="doc-img-card" onclick="abrirDoc('images/seguro.png','SOAP','Vence: Ene 2026')">
+          <div class="doc-img-card" data-tipo="soap" data-titulo="SOAP" data-sub="Vence: Ene 2026" onclick="abrirDoc('images/seguro.png','SOAP','Vence: Ene 2026')">
             <div class="doc-img-thumb">
               <img src="images/seguro.png" alt="SOAP" loading="lazy">
               <span class="status-pill">Vigente</span>
@@ -902,6 +902,30 @@
     }
   }
   document.addEventListener('DOMContentLoaded', cargarDatosUsuario);
+
+  // Reemplazar imágenes de demo por los archivos que el usuario subió a Supabase
+  async function cargarDocumentosUsuario() {
+    try {
+      const docs = await listarDocumentos();
+      for (const d of docs) {
+        const card = document.querySelector('.doc-img-card[data-tipo="' + d.tipo + '"]');
+        if (!card) continue;
+        let url;
+        try { url = await urlDocumento(d.path); } catch(e) { continue; }
+        const img = card.querySelector('img');
+        if (img) img.src = url;
+        // Reemplazar el onclick para que abra la URL real en el modal
+        const titulo = card.dataset.titulo || d.nombre;
+        const sub    = card.dataset.sub    || '';
+        card.setAttribute('onclick',
+          "abrirDoc('" + url.replace(/'/g, "\\'") + "','" +
+          titulo.replace(/'/g, "\\'") + "','" +
+          sub.replace(/'/g, "\\'") + "')"
+        );
+      }
+    } catch(e) { console.warn('No se pudieron cargar documentos:', e.message); }
+  }
+  document.addEventListener('DOMContentLoaded', cargarDocumentosUsuario);
 
   // Switch perfil
   function switchPanel(id, btn) {
