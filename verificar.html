@@ -507,6 +507,24 @@
     border: 1px solid rgba(52,199,89,0.4);
   }
   .doc-img-thumb .status-pill.warn { background: var(--orange-light); color: #B85C00; border-color: rgba(255,149,0,0.4); }
+  /* Miniatura para PDF / archivo no-imagen */
+  .doc-file-thumb {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; font-weight: 800; letter-spacing: 1px;
+    color: var(--ink-mute); background: #F0F0F5;
+  }
+  .doc-file-thumb.pdf {
+    color: #CC0000;
+    background: linear-gradient(135deg,#FFF0F0,#FDE3E3);
+  }
+  /* Estado vacío dentro de un grid */
+  .docs-empty {
+    grid-column: 1 / -1;
+    text-align: center; color: var(--ink-mute);
+    font-size: 13px; font-weight: 500;
+    padding: 24px 12px;
+  }
   .doc-img-info {
     padding: 14px 16px;
     display: flex; align-items: center; justify-content: space-between;
@@ -1044,7 +1062,8 @@
   document.addEventListener('DOMContentLoaded', async () => {
     // Si venimos del OAuth de Google, esperar a que se procese la sesión
     await esperarSesionOAuth();
-    await cargarDatosUsuario();
+    await cargarDatosUsuario();          // define window._datosPublicos en modo público
+    await cargarDocumentosUsuario();     // ← después de tener los datos, para que no haya carrera
     aplicarFotoPerfil();
   });
 
@@ -1056,6 +1075,52 @@
     contratos_empresa: 'Contratos de Trabajo',
     seguro_empresa: 'Seguro de la Empresa'
   };
+
+  // Devuelve el HTML de la miniatura según el tipo de archivo (imagen / PDF / otro)
+  function thumbHTML(url, nombre) {
+    const esImg = /\.(jpe?g|png|gif|webp|avif|bmp|svg)$/i.test(nombre || '');
+    const esPdf = /\.pdf$/i.test(nombre || '');
+    const pill = '<span class="status-pill">Subido</span>';
+    if (esImg) return '<img src="' + url + '" loading="lazy" alt="">' + pill;
+    if (esPdf) return '<div class="doc-file-thumb pdf">PDF</div>' + pill;
+    return '<div class="doc-file-thumb">📄</div>' + pill;
+  }
+
+  // Actualiza una tarjeta demo estática con el documento REAL subido por el usuario
+  function actualizarCard(card, d, url) {
+    card.style.display = '';
+    const titulo = card.dataset.titulo || d.nombre || d.tipo;
+    const sub    = d.nombre || 'Documento subido';
+    const thumb  = card.querySelector('.doc-img-thumb');
+    if (thumb) thumb.innerHTML = thumbHTML(url, d.nombre);
+    const nombreEl = card.querySelector('.doc-img-info .nombre');
+    if (nombreEl) nombreEl.textContent = titulo;
+    const venceEl = card.querySelector('.doc-img-info .vence');
+    if (venceEl) venceEl.textContent = sub;
+    card.setAttribute('onclick',
+      "abrirDoc('" + url.replace(/'/g, "\\'") + "','" +
+      titulo.replace(/'/g, "\\'") + "','" + sub.replace(/'/g, "\\'") + "')");
+  }
+
+  // Muestra un mensaje en los grids estáticos que quedaron sin documentos
+  function mostrarVacios() {
+    document.querySelectorAll('#panel-guardia .docs-grid, #panel-conductor .docs-grid').forEach(grid => {
+      if (grid.id === 'extrasGuardia') return;
+      const hayVisibles = [...grid.querySelectorAll('.doc-img-card')].some(c => c.style.display !== 'none');
+      let msg = grid.querySelector('.docs-empty');
+      if (!hayVisibles) {
+        if (!msg) {
+          msg = document.createElement('div');
+          msg.className = 'docs-empty';
+          msg.textContent = 'Aún no hay documentos subidos. Ve a "Mis documentos" para agregarlos.';
+          grid.appendChild(msg);
+        }
+        msg.style.display = '';
+      } else if (msg) {
+        msg.style.display = 'none';
+      }
+    });
+  }
 
   // Renderiza una lista de documentos dentro de un grid contenedor
   async function renderizarGridDinamico(contId, docs) {
@@ -1074,10 +1139,7 @@
         "abrirDoc('" + url.replace(/'/g, "\\'") + "','" +
         titulo.replace(/'/g, "\\'") + "','" + sub.replace(/'/g, "\\'") + "')");
       div.innerHTML = `
-        <div class="doc-img-thumb">
-          <img src="${url}" alt="${titulo}" loading="lazy">
-          <span class="status-pill">Subido</span>
-        </div>
+        <div class="doc-img-thumb">${thumbHTML(url, d.nombre)}</div>
         <div class="doc-img-info">
           <div>
             <div class="nombre">${titulo}</div>
@@ -1092,6 +1154,10 @@
   // Reemplazar imágenes de demo por los archivos que el usuario subió a Supabase
   async function cargarDocumentosUsuario() {
     try {
+      // La tarjeta refleja SOLO lo realmente subido: ocultamos las demo estáticas
+      // y solo revelamos las que tengan un archivo real del usuario.
+      document.querySelectorAll('.doc-img-card[data-tipo]').forEach(c => { c.style.display = 'none'; });
+
       // Modo público (visitante del NFC) → usar documentos del RPC
       const docs = codigoPublico && window._datosPublicos
         ? (window._datosPublicos.documentos || []).map(d => ({ ...d, tamano: 0, fecha: new Date().toISOString() }))
@@ -1117,15 +1183,7 @@
         if (!card) continue;
         let url;
         try { url = codigoPublico ? urlPublicaDocumento(d.path) : await urlDocumento(d.path); } catch(e) { continue; }
-        const img = card.querySelector('img');
-        if (img) img.src = url;
-        const titulo = card.dataset.titulo || d.nombre;
-        const sub    = card.dataset.sub    || '';
-        card.setAttribute('onclick',
-          "abrirDoc('" + url.replace(/'/g, "\\'") + "','" +
-          titulo.replace(/'/g, "\\'") + "','" +
-          sub.replace(/'/g, "\\'") + "')"
-        );
+        actualizarCard(card, d, url);
       }
 
       await renderizarGridDinamico('gridComerciante', comerciante);
@@ -1147,10 +1205,7 @@
             "abrirDoc('" + url.replace(/'/g, "\\'") + "','" +
             titulo.replace(/'/g, "\\'") + "','" + (d.nombre || '').replace(/'/g, "\\'") + "')");
           div.innerHTML = `
-            <div class="doc-img-thumb">
-              <img src="${url}" alt="${titulo}" loading="lazy">
-              <span class="status-pill">Subido</span>
-            </div>
+            <div class="doc-img-thumb">${thumbHTML(url, d.nombre)}</div>
             <div class="doc-img-info">
               <div>
                 <div class="nombre">${titulo}</div>
@@ -1161,10 +1216,11 @@
           cont.appendChild(div);
         }
       }
+
+      // Grids estáticos sin documentos → mostrar estado vacío
+      mostrarVacios();
     } catch(e) { console.warn('No se pudieron cargar documentos:', e.message); }
   }
-  document.addEventListener('DOMContentLoaded', cargarDocumentosUsuario);
-
   // Switch perfil
   function switchPanel(id, btn) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -1191,6 +1247,8 @@
 
   // Abrir documento en modal
   function abrirDoc(src, titulo, subtitulo) {
+    // Los PDF no se ven en el modal de imagen → abrir en pestaña nueva
+    if (/\.pdf(\?|$)/i.test(src)) { window.open(src, '_blank', 'noopener'); return; }
     document.getElementById('modalImg').src = src;
     document.getElementById('modalTitle').textContent = titulo;
     document.getElementById('modalSub').textContent = subtitulo || '';
