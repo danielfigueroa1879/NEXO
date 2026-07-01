@@ -251,14 +251,45 @@
   .btn-upload.secondary { background: #fff; color: var(--ink); border: 1.5px solid var(--line); }
   .btn-upload:active { transform: scale(0.97); }
   .file-preview {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 12px; background: #fff;
-    border-radius: 10px; border: 1px solid var(--line);
-    margin-top: 8px; font-size: 12px;
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px; background: #fff;
+    border-radius: 12px; border: 1px solid var(--line);
+    margin-top: 8px; font-size: 12px; position: relative;
   }
-  .file-preview .fname { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .file-preview .fsize { color: var(--ink-mute); flex-shrink: 0; }
-  .file-preview .fdel { background: none; border: none; cursor: pointer; color: #CC0000; font-size: 16px; line-height: 1; }
+  /* Miniatura real del archivo (imagen o PDF) */
+  .file-preview .doc-thumb {
+    width: 52px; height: 52px; flex-shrink: 0;
+    border-radius: 10px; border: 1px solid var(--line);
+    background: #f4f4f5; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    text-decoration: none; cursor: pointer;
+  }
+  .file-preview .doc-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .file-preview .doc-thumb--pdf {
+    background: linear-gradient(135deg,#FDECEC,#F7C9C9);
+    color: #C0392B; font-weight: 800; font-size: 12px; letter-spacing: .5px;
+  }
+  .file-preview .doc-thumb--file { font-size: 24px; background: #EEF3FF; }
+  .file-preview .fmeta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .file-preview .fname { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-preview .fsize { color: var(--ink-mute); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-preview .fview {
+    flex-shrink: 0; font-size: 12px; font-weight: 700; text-decoration: none;
+    color: var(--blue); background: #EEF3FF; padding: 8px 11px; border-radius: 8px;
+  }
+  .file-preview .fview:active { transform: scale(0.95); }
+  .file-preview .fdel {
+    flex-shrink: 0; background: none; border: none; cursor: pointer;
+    color: #CC0000; font-size: 18px; line-height: 1; padding: 6px;
+  }
+  /* Estado "subiendo" (vista previa optimista) */
+  .file-preview.subiendo { opacity: .85; }
+  .file-preview .fspin {
+    position: absolute; inset: 0; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.55);
+    font-size: 11px; font-weight: 700; color: var(--ink);
+  }
 
   /* ===== VENCE DATE ===== */
   .vence-row {
@@ -444,89 +475,101 @@
   <!-- ===== DOCUMENTOS GUARDIA ===== -->
   <div id="tab-guardia" style="display:none">
 
-    <div class="section-title">Documentos personales <span class="section-count">2 / 2</span></div>
+    <div class="section-title">Documentos personales <span class="section-count">0 / 2</span></div>
 
     <!-- Cédula -->
-    <div class="doc-card uploaded" id="card-cedula">
+    <div class="doc-card missing" id="card-cedula">
       <div class="doc-row" onclick="togglePanel('cedula')">
         <div class="doc-icon-wrap">🪪</div>
         <div class="doc-info">
           <h4>Cédula de identidad</h4>
-          <p>cedula_frente_verso.pdf · Subido hoy</p>
+          <p>Requerido · No subido</p>
         </div>
-        <span class="doc-badge ok">✓ Cargado</span>
+        <span class="doc-badge miss">Pendiente</span>
         <span class="doc-chevron" id="chev-cedula">›</span>
       </div>
       <div class="upload-panel" id="panel-cedula">
         <div class="vence-row">
           <label>Vencimiento</label>
-          <input type="date" value="2028-08-14">
+          <input type="date">
         </div>
-        <div class="file-preview">
-          <span>📄</span>
-          <span class="fname">cedula_frente_verso.pdf</span>
-          <span class="fsize">1.2 MB</span>
-          <button class="fdel" onclick="eliminarDoc('cedula')">✕</button>
+        <div class="upload-zone" onclick="triggerUpload('cedula-input')"
+             ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="dropFile(event,'cedula')">
+          <div class="icon">📁</div>
+          <h5>Arrastra aquí o toca para subir</h5>
+          <p>PDF, JPG o PNG · Máximo 10 MB</p>
+          <input type="file" class="upload-input" id="cedula-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'cedula')">
         </div>
         <div class="upload-actions">
-          <button class="btn-upload secondary" onclick="triggerUpload('cedula-input')">↑ Reemplazar</button>
-          <input type="file" class="upload-input" id="cedula-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'cedula')">
+          <button class="btn-upload primary" onclick="triggerUpload('cedula-input')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+            Subir archivo
+          </button>
+          <button class="btn-upload secondary">📷 Cámara</button>
         </div>
       </div>
     </div>
 
     <!-- Foto carnet -->
-    <div class="doc-card uploaded" id="card-foto">
+    <div class="doc-card missing" id="card-foto">
       <div class="doc-row" onclick="togglePanel('foto')">
         <div class="doc-icon-wrap">📸</div>
         <div class="doc-info">
           <h4>Fotografía reciente</h4>
-          <p>foto_perfil.jpg · Subido hace 3 días</p>
+          <p>Requerido · No subido</p>
         </div>
-        <span class="doc-badge ok">✓ Cargado</span>
+        <span class="doc-badge miss">Pendiente</span>
         <span class="doc-chevron" id="chev-foto">›</span>
       </div>
       <div class="upload-panel" id="panel-foto">
-        <div class="file-preview">
-          <span>🖼️</span>
-          <span class="fname">foto_perfil.jpg</span>
-          <span class="fsize">340 KB</span>
-          <button class="fdel" onclick="eliminarDoc('foto')">✕</button>
+        <div class="upload-zone" onclick="triggerUpload('foto-input')"
+             ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="dropFile(event,'foto')">
+          <div class="icon">🖼️</div>
+          <h5>Arrastra aquí o toca para subir</h5>
+          <p>JPG o PNG · Máximo 10 MB</p>
+          <input type="file" class="upload-input" id="foto-input" accept=".jpg,.jpeg,.png" onchange="fileSelected(this,'foto')">
         </div>
         <div class="upload-actions">
-          <button class="btn-upload secondary" onclick="triggerUpload('foto-input')">↑ Reemplazar</button>
-          <input type="file" class="upload-input" id="foto-input" accept=".jpg,.jpeg,.png" onchange="fileSelected(this,'foto')">
+          <button class="btn-upload primary" onclick="triggerUpload('foto-input')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+            Subir archivo
+          </button>
+          <button class="btn-upload secondary">📷 Cámara</button>
         </div>
       </div>
     </div>
 
-    <div class="section-title">Documentos OS10 <span class="section-count">1 / 3</span></div>
+    <div class="section-title">Documentos OS10 <span class="section-count">0 / 3</span></div>
 
     <!-- Curso OS10 -->
-    <div class="doc-card uploaded" id="card-curso">
+    <div class="doc-card missing" id="card-curso">
       <div class="doc-row" onclick="togglePanel('curso')">
         <div class="doc-icon-wrap">📋</div>
         <div class="doc-info">
           <h4>Certificado Curso OS10</h4>
-          <p>curso_os10_nivel_basico.pdf · Vence: 10 Ene 2026</p>
+          <p>Requerido · No subido</p>
         </div>
-        <span class="doc-badge ok">✓ Vigente</span>
+        <span class="doc-badge miss">Pendiente</span>
         <span class="doc-chevron" id="chev-curso">›</span>
       </div>
       <div class="upload-panel" id="panel-curso">
         <div class="vence-row">
           <label>Vencimiento del curso</label>
-          <input type="date" value="2026-01-10">
+          <input type="date">
         </div>
-        <div class="file-preview">
-          <span>📄</span>
-          <span class="fname">curso_os10_nivel_basico.pdf</span>
-          <span class="fsize">2.1 MB</span>
-          <button class="fdel" onclick="eliminarDoc('curso')">✕</button>
+        <div class="upload-zone" onclick="triggerUpload('curso-input')"
+             ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="dropFile(event,'curso')">
+          <div class="icon">📁</div>
+          <h5>Arrastra aquí o toca para subir</h5>
+          <p>PDF, JPG o PNG · Máximo 10 MB</p>
+          <input type="file" class="upload-input" id="curso-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'curso')">
         </div>
         <div class="upload-actions">
-          <button class="btn-upload secondary" onclick="triggerUpload('curso-input')">↑ Reemplazar</button>
-          <input type="file" class="upload-input" id="curso-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'curso')">
+          <button class="btn-upload primary" onclick="triggerUpload('curso-input')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+            Subir archivo
+          </button>
+          <button class="btn-upload secondary">📷 Cámara</button>
         </div>
       </div>
     </div>
@@ -598,33 +641,34 @@
     </div>
 
     <!-- Contrato -->
-    <div class="doc-card warning" id="card-contrato">
+    <div class="doc-card missing" id="card-contrato">
       <div class="doc-row" onclick="togglePanel('contrato')">
         <div class="doc-icon-wrap">📄</div>
         <div class="doc-info">
           <h4>Contrato de trabajo</h4>
-          <p>contrato_2024.pdf · Verificación pendiente</p>
+          <p>Requerido · No subido</p>
         </div>
-        <span class="doc-badge warn">⚠ Revisar</span>
+        <span class="doc-badge miss">Pendiente</span>
         <span class="doc-chevron" id="chev-contrato">›</span>
       </div>
       <div class="upload-panel" id="panel-contrato">
         <div class="vence-row">
           <label>Vigente desde</label>
-          <input type="date" value="2024-03-01">
+          <input type="date">
         </div>
-        <div class="file-preview">
-          <span>📄</span>
-          <span class="fname">contrato_2024.pdf</span>
-          <span class="fsize">890 KB</span>
-          <button class="fdel" onclick="eliminarDoc('contrato')">✕</button>
-        </div>
-        <div style="margin-top:8px; padding:10px 12px; background:#FFF4E0; border-radius:10px; font-size:12px; color:#B85C00; font-weight:600;">
-          ⚠ El documento está ilegible en la página 2. Por favor reemplaza con una mejor calidad.
+        <div class="upload-zone" onclick="triggerUpload('contrato-input')"
+             ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="dropFile(event,'contrato')">
+          <div class="icon">📁</div>
+          <h5>Arrastra aquí o toca para subir</h5>
+          <p>PDF, JPG o PNG · Máximo 10 MB</p>
+          <input type="file" class="upload-input" id="contrato-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'contrato')">
         </div>
         <div class="upload-actions">
-          <button class="btn-upload primary" onclick="triggerUpload('contrato-input')">↑ Reemplazar</button>
-          <input type="file" class="upload-input" id="contrato-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'contrato')">
+          <button class="btn-upload primary" onclick="triggerUpload('contrato-input')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+            Subir archivo
+          </button>
+          <button class="btn-upload secondary">📷 Cámara</button>
         </div>
       </div>
     </div>
@@ -1180,39 +1224,66 @@
     document.getElementById(inputId).click();
   }
 
-  // Marcar visualmente una card como subida
-  function marcarCardSubida(docId, nombreArchivo, tamanoKB, cuando) {
+  // Construye el HTML de la miniatura + datos del archivo (imagen o PDF)
+  function construirPreview(docId, nombreArchivo, tamanoKB, cuando, previewUrl, subiendo) {
+    const esImg = /\.(jpe?g|png|gif|webp|avif|bmp|svg)$/i.test(nombreArchivo);
+    const esPdf = /\.pdf$/i.test(nombreArchivo);
+
+    let thumb;
+    if (esImg && previewUrl) {
+      thumb = `<a class="doc-thumb" href="${previewUrl}" target="_blank" rel="noopener" title="Ver documento"><img src="${previewUrl}" alt="Vista previa"></a>`;
+    } else if (esPdf) {
+      thumb = `<span class="doc-thumb doc-thumb--pdf">PDF</span>`;
+    } else {
+      thumb = `<span class="doc-thumb doc-thumb--file">📄</span>`;
+    }
+
+    const meta = `<div class="fmeta"><span class="fname">${nombreArchivo}</span><span class="fsize">${tamanoKB} KB · ${cuando || 'Subido ahora'}</span></div>`;
+    const ver  = (previewUrl && !subiendo)
+      ? `<a class="fview" href="${previewUrl}" target="_blank" rel="noopener">Ver</a>` : '';
+    const del  = `<button class="fdel" onclick="eliminarDoc('${docId}')" title="Eliminar">✕</button>`;
+    const spin = subiendo ? `<span class="fspin">Subiendo…</span>` : '';
+    return thumb + meta + ver + del + spin;
+  }
+
+  // Marcar visualmente una card como subida (con vista previa real del archivo)
+  function marcarCardSubida(docId, nombreArchivo, tamanoKB, cuando, previewUrl, subiendo) {
     const card = document.getElementById('card-' + docId);
     if (!card) return;
     const panel = document.getElementById('panel-' + docId);
     card.classList.remove('missing', 'warning');
     card.classList.add('uploaded');
     const badge = card.querySelector('.doc-badge');
-    if (badge) { badge.className = 'doc-badge ok'; badge.textContent = '✓ Cargado'; }
+    if (badge && !subiendo) { badge.className = 'doc-badge ok'; badge.textContent = '✓ Cargado'; }
     const info = card.querySelector('.doc-info p');
     if (info) info.textContent = nombreArchivo + ' · ' + (cuando || 'Subido ahora');
     if (!panel) return;
 
-    const previewHtml = `<span>📄</span><span class="fname">${nombreArchivo}</span><span class="fsize">${tamanoKB} KB</span><button class="fdel" onclick="eliminarDoc('${docId}')">✕</button>`;
+    const previewHtml = construirPreview(docId, nombreArchivo, tamanoKB, cuando, previewUrl, subiendo);
+    const clase = 'file-preview' + (subiendo ? ' subiendo' : '');
 
     // Primera subida: reemplazar la .upload-zone por un .file-preview
     const zone = panel.querySelector('.upload-zone');
     if (zone) {
       const preview = document.createElement('div');
-      preview.className = 'file-preview';
+      preview.className = clase;
       preview.innerHTML = previewHtml;
       zone.replaceWith(preview);
       return;
     }
     // Subida posterior: ya existe un .file-preview, actualizar su contenido
     const existente = panel.querySelector('.file-preview');
-    if (existente) existente.innerHTML = previewHtml;
+    if (existente) { existente.className = clase; existente.innerHTML = previewHtml; }
   }
 
   // Archivo seleccionado → subir a Supabase Storage
   async function fileSelected(input, docId) {
     if (!input.files.length) return;
     const file = input.files[0];
+    const tamKB = (file.size/1024).toFixed(0);
+    // URL local instantánea → vista previa inmediata sin esperar a la red
+    const previewUrl = URL.createObjectURL(file);
+    marcarCardSubida(docId, file.name, tamKB, 'Subiendo…', previewUrl, true);
     const badge = document.querySelector('#card-' + docId + ' .doc-badge');
     if (badge) { badge.textContent = 'Subiendo…'; badge.className = 'doc-badge'; }
     try {
@@ -1222,7 +1293,8 @@
       const h = document.querySelector('.doc-title[data-tipo="' + docId + '"]');
       const titulo = h ? h.textContent.trim() : undefined;
       await subirDocumento({ tipo: docId, file, titulo });
-      marcarCardSubida(docId, file.name, (file.size/1024).toFixed(0));
+      // Confirmar la subida (misma miniatura local, ya sin estado "subiendo")
+      marcarCardSubida(docId, file.name, tamKB, 'Subido ahora', previewUrl, false);
       updateProgress();
       // Si acabó de subir la foto de perfil, refrescar todos los avatares
       if (docId === 'foto') aplicarFotoPerfil();
@@ -1231,6 +1303,8 @@
       console.error(e);
       showToast('Error subiendo el archivo: ' + e.message);
       if (badge) { badge.className = 'doc-badge miss'; badge.textContent = 'Pendiente'; }
+      const pv = document.querySelector('#panel-' + docId + ' .file-preview');
+      if (pv) pv.classList.remove('subiendo');
     }
   }
 
@@ -1355,18 +1429,20 @@
     // Marcar documentos ya subidos + restaurar títulos personalizados
     try {
       const docs = await listarDocumentos();
-      docs.forEach(d => {
+      for (const d of docs) {
         // Restaurar título personalizado si existe (slots renombrables)
         if (d.titulo) {
           const h = document.querySelector('.doc-title[data-tipo="' + d.tipo + '"]');
           if (h) h.textContent = d.titulo;
         }
-        // Si tiene archivo subido (path no vacío), marcar visualmente
+        // Si tiene archivo subido (path no vacío), marcar visualmente con su miniatura real
         if (d.path && d.nombre) {
+          let url = null;
+          try { url = await urlDocumento(d.path); } catch (e) { /* sin URL: cae a icono genérico */ }
           marcarCardSubida(d.tipo, d.nombre, Math.round((d.tamano || 0)/1024),
-            'Subido ' + new Date(d.fecha).toLocaleDateString('es-CL'));
+            'Subido ' + new Date(d.fecha).toLocaleDateString('es-CL'), url, false);
         }
-      });
+      }
       updateProgress();
     } catch (e) { console.warn('No se pudieron cargar documentos previos:', e.message); }
 
