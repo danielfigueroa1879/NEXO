@@ -85,6 +85,27 @@ async function nexoUsuarioActual() {
   return data.user || null;
 }
 
+// Asegura que exista una fila en `cuentas` para el usuario actual.
+// Útil para logins por Google donde no pasamos por nuestro signup manual.
+async function asegurarCuenta() {
+  const user = await nexoUsuarioActual();
+  if (!user) return null;
+  const { data: existente } = await sb.from('cuentas').select('*').eq('id', user.id).maybeSingle();
+  if (existente) return existente;
+  // Crear fila mínima con lo que tengamos del proveedor OAuth
+  const meta = user.user_metadata || {};
+  const nombre = meta.full_name || meta.name || (user.email || 'Usuario').split('@')[0];
+  const { data, error } = await sb.from('cuentas').insert({
+    id: user.id,
+    nombre,
+    email: user.email || null,
+    rut: 'PENDIENTE-' + user.id.slice(0, 6).toUpperCase(),
+    perfiles: []
+  }).select().single();
+  if (error) { console.warn('asegurarCuenta:', error); return null; }
+  return data;
+}
+
 /* ------------------------------------------------------------
    CUENTAS  (tabla `public.cuentas`)
    ------------------------------------------------------------ */
@@ -248,7 +269,7 @@ async function aplicarFotoPerfil() {
 
 // Exponer al window para poder llamarlas desde inline scripts
 Object.assign(window, {
-  nexoSignUp, nexoSignIn, nexoSignOut, nexoUsuarioActual,
+  nexoSignUp, nexoSignIn, nexoSignOut, nexoUsuarioActual, asegurarCuenta,
   guardarCuenta, obtenerCuenta, listarCuentas,
   subirDocumento, guardarTituloDocumento, listarDocumentos, eliminarDocumento, urlDocumento,
   urlFotoPerfil, aplicarFotoPerfil,

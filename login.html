@@ -714,9 +714,19 @@
     }
   }
 
-  // Google login simulado
-  function loginGoogle() {
-    showToast('Próximamente disponible');
+  // Google login (Supabase OAuth)
+  async function loginGoogle() {
+    try {
+      showToast('Abriendo Google…');
+      const { error } = await sb.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: location.origin + '/verificar.html' }
+      });
+      if (error) throw error;
+    } catch (e) {
+      console.error(e);
+      showToast('No se pudo iniciar Google: ' + e.message);
+    }
   }
 
   // Toast

@@ -978,6 +978,10 @@
     }
     if (!datos) {
       try { datos = await obtenerCuenta(); } catch(e) { console.warn(e); }
+      // Si es un login por Google recién estrenado, aún no hay fila en `cuentas` — la creamos
+      if (!datos) {
+        try { datos = await asegurarCuenta(); } catch(e) { console.warn(e); }
+      }
     }
     if (!datos) {
       try { datos = JSON.parse(localStorage.getItem('nexo_cuenta') || 'null'); } catch(e) {}
