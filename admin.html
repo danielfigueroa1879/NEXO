@@ -505,7 +505,7 @@
       </label>
     </div>
 
-    <div class="perfil-row" id="rowVehiculo">
+    <div class="perfil-row" id="rowVehiculo" style="flex-wrap:wrap;">
       <div class="p-icon">🚗</div>
       <div class="p-info">
         <h4 id="vehiculoTitle">Vehículo</h4>
@@ -515,6 +515,15 @@
         <input type="checkbox" id="vehiculoToggle" onchange="togglePerfil('conductor',this)">
         <span class="slider"></span>
       </label>
+      <!-- Input para la patente -->
+      <div style="width:100%;margin-top:10px;">
+        <label style="display:block;font-size:11px;font-weight:600;color:var(--ink-mute);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">
+          Patente del vehículo
+        </label>
+        <input type="text" id="inputPatente" placeholder="PKMB-26" maxlength="8"
+               oninput="this.value = this.value.toUpperCase()"
+               style="width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;text-align:center;background:#fff;color:var(--ink);outline:none;">
+      </div>
     </div>
 
     <div class="perfil-row">
@@ -833,7 +842,11 @@
       const dot = document.querySelector('.theme-dot.selected');
       const tema = dot ? (dot.className.match(/t-(\w+)/) || [])[1] : undefined;
 
-      await guardarCuenta({ perfiles, tema });
+      // Patente (si el input existe)
+      const inpPat = document.getElementById('inputPatente');
+      const patente = inpPat ? inpPat.value.trim().toUpperCase() : undefined;
+
+      await guardarCuenta({ perfiles, tema, patente });
       showToast('¡Configuración guardada!');
     } catch (e) {
       console.error(e);
@@ -887,6 +900,9 @@
     document.getElementById('vehiculoSub').textContent = tieneVehiculo
       ? '4 documentos · Activo'
       : 'Sin configurar';
+    // Precargar patente
+    const inpPat = document.getElementById('inputPatente');
+    if (inpPat) inpPat.value = datos.patente || '';
 
     if (datos.tema) {
       const dot = document.querySelector('.theme-dot.t-' + datos.tema);
