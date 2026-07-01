@@ -533,18 +533,39 @@
     padding: 24px 12px;
   }
   /* Sección por vehículo (hasta 3) */
-  .vehiculo-sec { margin-bottom: 18px; }
-  .vehiculo-sec:last-child { margin-bottom: 0; }
-  .veh-sec-head {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 10px; margin-bottom: 10px;
-    font-size: 14px; font-weight: 800; color: var(--ink);
+  /* ===== SELECTOR DE PATENTES (hasta 3 vehículos) ===== */
+  .veh-selector {
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px; flex-wrap: wrap;
+    margin-bottom: 18px;
   }
-  .veh-sec-head .veh-plate {
-    font-size: 13px; font-weight: 800; letter-spacing: 1px;
-    background: var(--ink); color: #fff;
-    padding: 4px 12px; border-radius: 8px;
+  .veh-chip {
+    cursor: pointer;
+    border: 1.5px solid var(--line);
+    background: #F3F3F7; color: var(--ink-mute);
+    border-radius: 12px; padding: 8px 14px;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    font-family: 'Space Grotesk', sans-serif;
+    transform: scale(0.9); opacity: 0.7;
+    transition: transform .22s ease, background .22s, color .22s, box-shadow .22s, opacity .22s;
   }
+  .veh-chip:hover { opacity: 1; }
+  .veh-chip .veh-chip-lbl {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; opacity: 0.7; display: none;
+  }
+  .veh-chip .veh-chip-plate {
+    font-size: 15px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  /* Patente activa: al centro, más grande, al frente, fondo negro y letras blancas */
+  .veh-chip.active {
+    background: var(--ink); color: #fff; border-color: var(--ink);
+    opacity: 1; transform: scale(1.12);
+    padding: 12px 22px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.30);
+  }
+  .veh-chip.active .veh-chip-lbl { display: block; color: rgba(255,255,255,0.7); }
+  .veh-chip.active .veh-chip-plate { font-size: 24px; text-shadow: 0 2px 6px rgba(0,0,0,0.35); }
   .doc-img-info {
     padding: 14px 16px;
     display: flex; align-items: center; justify-content: space-between;
@@ -1184,7 +1205,8 @@
     return div;
   }
 
-  // Renderiza las secciones de vehículo (hasta 3), cada una con su patente y documentos
+  // Renderiza el SELECTOR de patentes (hasta 3): la activa queda al centro, más
+  // grande, fondo negro y letras blancas; abajo se despliegan sus documentos.
   async function renderVehiculosVerif(vehiculos) {
     const cont = document.getElementById('vehiculosVerif');
     if (!cont) return;
@@ -1195,40 +1217,75 @@
     patentes.forEach((p, i) => { if (p) indices.add(i + 1); });
     const orden = [...indices].sort((a, b) => a - b);
 
+    // El selector ya muestra la patente activa → ocultar el banner del header
+    const banner = document.getElementById('patenteBanner');
+    if (banner) banner.style.display = 'none';
+
     if (!orden.length) {
       cont.innerHTML = '<p class="docs-empty">Aún no hay vehículos registrados.</p>';
       return;
     }
 
-    cont.innerHTML = '';
+    // Pre-resolver las URLs de los documentos de cada vehículo (para cambiar al instante)
+    const datosVeh = {};
     for (const i of orden) {
-      const lista   = vehiculos[i] || [];
-      const patente = patentes[i - 1] || '';
-      const sec = document.createElement('div');
-      sec.className = 'vehiculo-sec';
-
-      const head = document.createElement('div');
-      head.className = 'veh-sec-head';
-      head.innerHTML = '<span>🚗 Vehículo ' + i + '</span>' +
-        (patente ? '<span class="veh-plate">' + patente + '</span>' : '');
-      sec.appendChild(head);
-
-      const grid = document.createElement('div');
-      grid.className = 'docs-grid';
-      let algo = false;
+      const lista = vehiculos[i] || [];
+      const docs = [];
       for (const d of lista) {
         let url;
         try { url = codigoPublico ? urlPublicaDocumento(d.path) : await urlDocumento(d.path); } catch(e) { continue; }
-        grid.appendChild(crearDocCard(url, VEH_DOC_NOMBRE[d.base] || d.tipo, d.nombre || ''));
-        algo = true;
+        docs.push({ url, titulo: VEH_DOC_NOMBRE[d.base] || d.tipo, sub: d.nombre || '' });
       }
-      if (!algo) {
-        grid.innerHTML = '<p class="docs-empty">Sin documentos subidos para este vehículo.</p>';
-      }
-      sec.appendChild(grid);
-      cont.appendChild(sec);
+      datosVeh[i] = { patente: patentes[i - 1] || '', docs };
     }
-    renderizarPdfThumbs();
+
+    cont.innerHTML =
+      '<div class="veh-selector" id="vehSelector"></div>' +
+      '<div class="veh-docs" id="vehDocs"></div>';
+    const selector = cont.querySelector('#vehSelector');
+    const docsBox  = cont.querySelector('#vehDocs');
+
+    // Dibuja los chips; reordena para que el activo quede SIEMPRE al centro
+    function pintarSelector(activo) {
+      const otros = orden.filter(i => i !== activo);
+      const mitad = Math.floor(otros.length / 2);
+      const secuencia = [...otros.slice(0, mitad), activo, ...otros.slice(mitad)];
+      selector.innerHTML = '';
+      secuencia.forEach(i => {
+        const v = datosVeh[i];
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'veh-chip' + (i === activo ? ' active' : '');
+        chip.innerHTML =
+          '<span class="veh-chip-lbl">Vehículo ' + i + '</span>' +
+          '<span class="veh-chip-plate">' + (v.patente || ('N° ' + i)) + '</span>';
+        chip.onclick = () => seleccionar(i);
+        selector.appendChild(chip);
+      });
+    }
+
+    // Despliega abajo los documentos del vehículo activo
+    function pintarDocs(activo) {
+      const v = datosVeh[activo];
+      const grid = document.createElement('div');
+      grid.className = 'docs-grid';
+      if (!v.docs.length) {
+        grid.innerHTML = '<p class="docs-empty">Sin documentos subidos para este vehículo.</p>';
+      } else {
+        v.docs.forEach(doc => grid.appendChild(crearDocCard(doc.url, doc.titulo, doc.sub)));
+      }
+      docsBox.innerHTML = '';
+      docsBox.appendChild(grid);
+      renderizarPdfThumbs();
+    }
+
+    function seleccionar(i) {
+      window._vehActivo = i;
+      pintarSelector(i);
+      pintarDocs(i);
+    }
+
+    seleccionar(orden[0]); // arranca mostrando la primera patente
   }
 
   // Reemplazar imágenes de demo por los archivos que el usuario subió a Supabase
