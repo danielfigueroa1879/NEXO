@@ -331,6 +331,21 @@
     .success-icon { width: 58px; height: 58px; font-size: 26px; }
     .success-screen h3 { font-size: 18px; }
   }
+
+  /* ===== DARK MODE OVERRIDES FOR TIPO SELECTOR ===== */
+  :root[data-theme="dark"] .tipo-btn {
+    background: #26262d !important;
+    border-color: var(--line) !important;
+    color: var(--ink) !important;
+  }
+  :root[data-theme="dark"] .tipo-btn:hover {
+    border-color: var(--ink-soft) !important;
+  }
+  :root[data-theme="dark"] .tipo-btn.selected {
+    background: #34343f !important;
+    border-color: var(--ink) !important;
+    box-shadow: 0 0 0 2px var(--ink) !important;
+  }
 </style>
 <script src="theme.js"></script>
 </head>
