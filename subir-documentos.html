@@ -278,6 +278,12 @@
     color: var(--blue); background: #EEF3FF; padding: 8px 11px; border-radius: 8px;
   }
   .file-preview .fview:active { transform: scale(0.95); }
+  .file-preview .freplace {
+    flex-shrink: 0; font-size: 12px; font-weight: 700; border: none; cursor: pointer;
+    color: var(--ink); background: var(--line); padding: 8px 11px; border-radius: 8px;
+    font-family: inherit; transition: background 0.15s, transform 0.1s;
+  }
+  .file-preview .freplace:active { transform: scale(0.95); }
   .file-preview .fdel {
     flex-shrink: 0; background: none; border: none; cursor: pointer;
     color: #CC0000; font-size: 18px; line-height: 1; padding: 6px;
@@ -1422,11 +1428,13 @@
     }
 
     const meta = `<div class="fmeta"><span class="fname">${nombreArchivo}</span><span class="fsize">${tamanoKB} KB · ${cuando || 'Subido ahora'}</span></div>`;
+    const replace = (previewUrl && !subiendo)
+      ? `<button class="freplace" onclick="triggerUpload('${docId}-input')" title="Reemplazar archivo">Reemplazar</button>` : '';
     const ver  = (previewUrl && !subiendo)
       ? `<a class="fview" href="${previewUrl}" target="_blank" rel="noopener">Ver</a>` : '';
     const del  = `<button class="fdel" onclick="eliminarDoc('${docId}')" title="Eliminar">✕</button>`;
     const spin = subiendo ? `<span class="fspin">Subiendo…</span>` : '';
-    return thumb + meta + ver + del + spin;
+    return thumb + meta + replace + ver + del + spin;
   }
 
   // Marcar visualmente una card como subida (con vista previa real del archivo)
@@ -1439,24 +1447,37 @@
     const badge = card.querySelector('.doc-badge');
     if (badge && !subiendo) { badge.className = 'doc-badge ok'; badge.textContent = '✓ Cargado'; }
     const info = card.querySelector('.doc-info p');
-    if (info) info.textContent = nombreArchivo + ' · ' + (cuando || 'Subido ahora');
+    if (info) {
+      if (!info.getAttribute('data-orig')) {
+        info.setAttribute('data-orig', info.textContent);
+      }
+      info.textContent = nombreArchivo + ' · ' + (cuando || 'Subido ahora');
+    }
     if (!panel) return;
 
     const previewHtml = construirPreview(docId, nombreArchivo, tamanoKB, cuando, previewUrl, subiendo);
     const clase = 'file-preview' + (subiendo ? ' subiendo' : '');
 
-    // Primera subida: reemplazar la .upload-zone por un .file-preview
+    // Hide upload-zone instead of replacing it, so we can restore it on delete
     const zone = panel.querySelector('.upload-zone');
     if (zone) {
-      const preview = document.createElement('div');
-      preview.className = clase;
-      preview.innerHTML = previewHtml;
-      zone.replaceWith(preview);
-      return;
+      zone.style.setProperty('display', 'none', 'important');
     }
-    // Subida posterior: ya existe un .file-preview, actualizar su contenido
-    const existente = panel.querySelector('.file-preview');
-    if (existente) { existente.className = clase; existente.innerHTML = previewHtml; }
+
+    // Update or create file-preview
+    let existente = panel.querySelector('.file-preview');
+    if (!existente) {
+      existente = document.createElement('div');
+      existente.className = clase;
+      const actions = panel.querySelector('.upload-actions');
+      if (actions) {
+        panel.insertBefore(existente, actions);
+      } else {
+        panel.appendChild(existente);
+      }
+    }
+    existente.className = clase;
+    existente.innerHTML = previewHtml;
   }
 
   // Archivo seleccionado → subir a Supabase Storage
@@ -1501,6 +1522,23 @@
       card.classList.add('missing');
       const badge = card.querySelector('.doc-badge');
       if (badge) { badge.className = 'doc-badge miss'; badge.textContent = 'Pendiente'; }
+      const info = card.querySelector('.doc-info p');
+      if (info && info.getAttribute('data-orig')) {
+        info.textContent = info.getAttribute('data-orig');
+      }
+    }
+    const panel = document.getElementById('panel-' + docId);
+    if (panel) {
+      const preview = panel.querySelector('.file-preview');
+      if (preview) preview.remove();
+      
+      const zone = panel.querySelector('.upload-zone');
+      if (zone) {
+        zone.style.removeProperty('display');
+      }
+      
+      const input = panel.querySelector('.upload-input');
+      if (input) input.value = '';
     }
     updateProgress();
     showToast('Documento eliminado');
