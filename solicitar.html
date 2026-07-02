@@ -925,7 +925,7 @@
     }
     llenarResumenSuccess();
     // Marcar la cuenta como pagada/activa (best-effort, requiere sesión)
-    try { guardarCuenta({ estado: 'activa', pago: 'pagado' }); } catch (e) {}
+    try { guardarCuenta({ estado: 'activa', pago: formatoCLP(calcularTotal()) }); } catch (e) {}
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 

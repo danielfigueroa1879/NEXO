@@ -775,6 +775,7 @@
             <th style="padding:8px;">Email</th>
             <th style="padding:8px;">Perfiles</th>
             <th style="padding:8px;">Patente</th>
+            <th style="padding:8px;">Pago</th>
             <th style="padding:8px;">Estado</th>
             <th style="padding:8px;">Docs</th>
             <th style="padding:8px;">Fecha</th>
@@ -997,6 +998,7 @@
           <td>${c.email || '—'}</td>
           <td>${(c.perfiles || []).join(', ') || '—'}</td>
           <td>${c.patente || '—'}</td>
+          <td>${c.pago || 'Pendiente'}</td>
           <td><span class="badge ${c.estado}">${c.estado}</span></td>
           <td>${(c.documentos || []).length}</td>
           <td>${new Date(c.fecha).toLocaleDateString('es-CL')}</td>
@@ -1004,12 +1006,12 @@
         </tr>`;
       }).join('');
       cont.querySelector('tbody').innerHTML = rows ||
-        '<tr><td colspan="9" style="text-align:center;color:#888;">Sin cuentas registradas</td></tr>';
+        '<tr><td colspan="10" style="text-align:center;color:#888;">Sin cuentas registradas</td></tr>';
       cont.querySelector('.count').textContent = cuentas.length + ' cuentas';
     } catch (e) {
       console.error(e);
       cont.querySelector('tbody').innerHTML =
-        `<tr><td colspan="8" style="color:#c00;">Error: ${e.message}</td></tr>`;
+        `<tr><td colspan="10" style="color:#c00;">Error: ${e.message}</td></tr>`;
     }
   }
 
