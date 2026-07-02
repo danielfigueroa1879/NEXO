@@ -154,14 +154,18 @@
       background: rgba(20,20,24,0.85) !important;
       border-bottom-color: var(--line) !important;
     }
-    /* Menú de usuario (home): texto legible en oscuro */
+    /* Menú de usuario (home): un poco más claro y con texto legible en oscuro */
+    :root[data-theme="dark"] .user-menu {
+      background: #313139 !important;
+      border-color: #45454f !important;
+    }
     :root[data-theme="dark"] .user-menu a,
     :root[data-theme="dark"] .user-menu button {
       color: var(--ink) !important;
     }
     :root[data-theme="dark"] .user-menu a:hover,
     :root[data-theme="dark"] .user-menu button:hover {
-      background: #34343f !important;
+      background: #43434e !important;
     }
     :root[data-theme="dark"] .user-menu .logout { color: #ff6468 !important; }
     :root[data-theme="dark"] .user-menu hr { border-top-color: var(--line) !important; }
