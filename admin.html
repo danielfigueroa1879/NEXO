@@ -373,6 +373,29 @@
   .btn-save.secondary { background: #fff; color: var(--ink); border: 1.5px solid var(--line); flex: 0 0 auto; padding: 14px 20px; }
   .btn-save:active { transform: scale(0.98); }
 
+  .btn-admin-doc {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px;
+    background: #0A0A0A;
+    color: #fff;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .btn-admin-doc:active {
+    transform: scale(0.98);
+  }
+  :root[data-theme="dark"] .btn-admin-doc {
+    background: #34343f !important;
+    color: #ffffff !important;
+    border-color: #47474f !important;
+  }
+
   /* ===== TOAST ===== */
   .toast {
     position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
@@ -561,7 +584,7 @@
       <p style="font-size:13px;color:var(--ink-mute);margin-bottom:14px;line-height:1.5;">
         Subir, reemplazar y editar los documentos visibles al fiscalizar. Esta acción está restringida al dueño de la cuenta.
       </p>
-      <a href="subir-documentos.html" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;background:var(--ink);color:#fff;border-radius:12px;font-size:14px;font-weight:700;text-decoration:none;">
+      <a href="subir-documentos.html" class="btn-admin-doc">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
         Subir / cambiar documentos
       </a>

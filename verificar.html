@@ -1071,6 +1071,15 @@
   window._datosPublicos = null;
 
   async function cargarDatosUsuario() {
+    let loggedInUser = null;
+    let loggedInCuenta = null;
+    try {
+      loggedInUser = await nexoUsuarioActual();
+      if (loggedInUser) {
+        loggedInCuenta = await obtenerCuenta();
+      }
+    } catch(e) { console.warn('Error obteniendo cuenta activa:', e); }
+
     let datos = null;
     if (codigoPublico) {
       try {
@@ -1079,9 +1088,9 @@
       } catch(e) { console.warn('Error cargando pública:', e); }
     }
     if (!datos) {
-      try { datos = await obtenerCuenta(); } catch(e) { console.warn(e); }
+      datos = loggedInCuenta;
       // Si es un login por Google recién estrenado, aún no hay fila en `cuentas` — la creamos
-      if (!datos) {
+      if (!datos && loggedInUser) {
         try { datos = await asegurarCuenta(); } catch(e) { console.warn(e); }
       }
     }
@@ -1094,7 +1103,8 @@
       try { localStorage.setItem('nexo_cuenta', JSON.stringify(datos)); } catch(e) {}
     }
 
-    const haPagado = (datos.pago === 'pagado' || datos.estado === 'activa' || datos.es_admin === true);
+    const esVisualizadorAdmin = (loggedInCuenta && loggedInCuenta.es_admin === true);
+    const haPagado = (datos.pago === 'pagado' || datos.estado === 'activa' || datos.es_admin === true || esVisualizadorAdmin);
     if (!haPagado) {
       if (codigoPublico) {
         // Modo público: ocultar la página y mostrar la pantalla de bloqueo
