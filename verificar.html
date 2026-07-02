@@ -713,6 +713,80 @@
     .btn { padding: 12px; font-size: 12px; border-radius: 10px; }
     .btt { bottom: 16px; right: 10px; width: 38px; height: 38px; }
   }
+
+  /* BLOCKED CARD SCREEN */
+  .blocked-card-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+    min-height: calc(100vh - 70px);
+    text-align: center;
+    background: #F5F5F7;
+    font-family: 'Outfit', sans-serif;
+  }
+  .blocked-card-box {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    box-shadow: var(--shadow-card);
+    padding: 48px 32px;
+    max-width: 420px;
+    width: 100%;
+  }
+  .blocked-card-box .lock-icon {
+    font-size: 56px;
+    margin-bottom: 24px;
+    display: inline-block;
+    filter: drop-shadow(0 4px 12px rgba(232, 33, 39, 0.25));
+  }
+  .blocked-card-box h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: var(--ink);
+  }
+  .blocked-card-box p {
+    font-size: 15px;
+    color: var(--ink-mute);
+    line-height: 1.6;
+    margin-bottom: 30px;
+  }
+  .blocked-card-box .badge-nfc-nx {
+    display: inline-block;
+    background: #F5F5F7;
+    color: var(--ink-mute);
+    padding: 6px 14px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+
+  /* UNPAID NOTICE BANNER */
+  .unpaid-notice-banner {
+    background: #FFF4E0;
+    border-bottom: 1px solid #FFE0B2;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #B78103;
+    z-index: 49;
+    text-align: center;
+    flex-wrap: wrap;
+  }
+  .unpaid-notice-banner .notice-link {
+    color: #E82127;
+    text-decoration: underline;
+    margin-left: 6px;
+    font-weight: 700;
+  }
 </style>
 <script src="theme.js"></script>
 </head>
@@ -1015,6 +1089,64 @@
       try { datos = JSON.parse(localStorage.getItem('nexo_cuenta') || 'null'); } catch(e) {}
     }
     if (!datos) datos = { nombre: 'Tu nombre', rut: '—', perfiles: ['guardia'], patente: '' };
+
+    if (datos && !codigoPublico) {
+      try { localStorage.setItem('nexo_cuenta', JSON.stringify(datos)); } catch(e) {}
+    }
+
+    const haPagado = (datos.pago === 'pagado' || datos.estado === 'activa' || datos.es_admin === true);
+    if (!haPagado) {
+      if (codigoPublico) {
+        // Modo público: ocultar la página y mostrar la pantalla de bloqueo
+        const pageEl = document.querySelector('.page');
+        if (pageEl) pageEl.style.display = 'none';
+        
+        let blockedEl = document.getElementById('blockedCardScreen');
+        if (!blockedEl) {
+          blockedEl = document.createElement('div');
+          blockedEl.id = 'blockedCardScreen';
+          blockedEl.className = 'blocked-card-screen';
+          blockedEl.innerHTML = `
+            <div class="blocked-card-box">
+              <div class="lock-icon">🔒</div>
+              <h2>Tarjeta Inactiva</h2>
+              <p>Esta tarjeta NFC NEXO se encuentra inactiva o pendiente de activación por parte de su titular.</p>
+              <div class="badge-nfc-nx">NFC·NX VERIFIED</div>
+            </div>
+          `;
+          document.body.appendChild(blockedEl);
+        }
+        blockedEl.style.display = 'flex';
+        return; // Detener la carga
+      } else {
+        // Modo privado (su propia sesión): mostrar el banner de advertencia arriba
+        let bannerEl = document.getElementById('unpaidNoticeBanner');
+        if (!bannerEl) {
+          bannerEl = document.createElement('div');
+          bannerEl.id = 'unpaidNoticeBanner';
+          bannerEl.className = 'unpaid-notice-banner';
+          bannerEl.innerHTML = `
+            <span class="warning-icon">⚠️</span>
+            <span class="notice-text">Tu tarjeta está inactiva y no es visible públicamente porque el pago está pendiente.</span>
+            <a href="solicitar.html" class="notice-link">Pagar ahora →</a>
+          `;
+          const headerEl = document.querySelector('.header');
+          if (headerEl) {
+            headerEl.parentNode.insertBefore(bannerEl, headerEl.nextSibling);
+          } else {
+            document.body.insertBefore(bannerEl, document.body.firstChild);
+          }
+        }
+        bannerEl.style.display = 'flex';
+      }
+    } else {
+      const bannerEl = document.getElementById('unpaidNoticeBanner');
+      if (bannerEl) bannerEl.style.display = 'none';
+      const blockedEl = document.getElementById('blockedCardScreen');
+      if (blockedEl) blockedEl.style.display = 'none';
+      const pageEl = document.querySelector('.page');
+      if (pageEl) pageEl.style.display = '';
+    }
 
     // Patentes de los vehículos (arreglo nuevo o el campo `patente` antiguo)
     window._patentes = (datos.patentes && datos.patentes.length)
