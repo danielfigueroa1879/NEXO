@@ -601,7 +601,7 @@
             </svg>
           </div>
           <div class="p-info">
-            <h4>Guardia de Seguridad OS10</h4>
+            <h4>Agente de Seguridad OS10</h4>
             <p>Curso OS10, credencial, cédula, antecedentes</p>
           </div>
           <div class="check"></div>
@@ -686,7 +686,7 @@
       </div>
       <div class="resumen-row">
         <span class="lbl">Perfiles activos</span>
-        <span class="val" id="r-perfiles">Guardia OS10</span>
+        <span class="val" id="r-perfiles">Agente OS10</span>
       </div>
       <div class="resumen-row">
         <span class="lbl">Diseño</span>
@@ -1010,7 +1010,7 @@
     const rut    = document.getElementById('f-rut').value.trim() || '—';
     const mail   = document.getElementById('f-mail').value.trim() || 'tu correo';
     const pats   = patentesArray();
-    const nombres = { guardia: 'Guardia OS10', vehiculo: 'Vehículo', comerciante: 'Comerciante', empresa: 'Empresa' };
+    const nombres = { guardia: 'Agente OS10', vehiculo: 'Vehículo', comerciante: 'Comerciante', empresa: 'Empresa' };
     const lista = perfiles.map(p => nombres[p]).join(' + ');
     const temas = { negro: 'Clásico Negro', rojo: 'Rojo Chile', azul: 'Azul Chile', verde: 'Verde' };
 
@@ -1117,7 +1117,7 @@
   // Actualizar resumen
   function actualizarResumen() {
     const nombres = {
-      guardia: 'Guardia OS10',
+      guardia: 'Agente OS10',
       vehiculo: 'Vehículo',
       comerciante: 'Comerciante',
       empresa: 'Empresa'

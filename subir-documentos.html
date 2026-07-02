@@ -648,7 +648,7 @@
         <circle cx="13.3" cy="10" r="0.5" fill="#1a1a1a"/>
         <path d="M3 24 L3 17 Q3 14.5 5 14 L9 13.5 L12 16 L15 13.5 L19 14 Q21 14.5 21 17 L21 24 Z" fill="#E82127"/>
         <path d="M9 13.5 L12 17 L15 13.5 L15 21 L9 21 Z" fill="#0a0a0a"/>
-      </svg>Guardia OS10</button>
+      </svg>Agente OS10</button>
     <button class="ptab" id="ptab-comerciante" onclick="switchTab('comerciante', this)" style="display:none;">🏪 Comerciante</button>
     <button class="ptab" id="ptab-empresa" onclick="switchTab('empresa', this)" style="display:none;">🏢 Empresa</button>
   </div>
@@ -1635,7 +1635,7 @@
       if (overlay) {
         const perfiles = datos.perfiles || [];
         const precios = { guardia: 10000, vehiculo: 10000, comerciante: 10000, empresa: 30000 };
-        const nombres = { guardia: 'Guardia OS10', vehiculo: 'Vehículo (Conductor)', comerciante: 'Comerciante', empresa: 'Empresa' };
+        const nombres = { guardia: 'Agente OS10', vehiculo: 'Vehículo (Conductor)', comerciante: 'Comerciante', empresa: 'Empresa' };
         
         const total = perfiles.reduce((s, p) => s + (precios[p] || 0), 0);
         const planText = perfiles.map(p => nombres[p] || p).join(' + ') || 'Ninguno';

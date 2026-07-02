@@ -1451,7 +1451,7 @@
 
         <!-- 3D NFC Card -->
         <div class="card-container" id="cardContainer">
-          <div class="nfc-card profile-guardia" id="nfcCard">
+          <div class="nfc-card profile-conductor" id="nfcCard">
             <div class="card-glow"></div>
             <div class="card-stripe-indicator"></div>
             <div style="display:flex; justify-content:space-between; align-items:flex-start; position: relative; z-index: 3;">
@@ -1464,9 +1464,9 @@
               </svg>
             </div>
             <div class="card-body">
-              <div class="card-label" id="cardLabel">Perfil: Guardia</div>
+              <div class="card-label" id="cardLabel">Perfil: Vehículo</div>
               <div class="card-name">Juan Pérez S.</div>
-              <div class="card-meta">NFC·NX 0001 · CL · OS10</div>
+              <div class="card-meta">NFC·NX 0001 · CL · TRANSITO</div>
             </div>
           </div>
         </div>
@@ -1533,7 +1533,7 @@
                 </div>
                 <div>
                   <h3>Juan Pérez S.</h3>
-                  <span class="profile-badge badge-guardia">GUARDIA</span>
+                  <span class="profile-badge badge-guardia">AGENTE</span>
                 </div>
               </div>
               <!-- Scanned Documents (Images provided by user) -->
@@ -1635,8 +1635,8 @@
                   <div class="doc-card-header">
                     <span class="doc-card-icon">👥</span>
                     <div class="doc-card-info">
-                      <h4>Listado de Guardias</h4>
-                      <p>12 Guardias acreditados en turno</p>
+                      <h4>Listado de Agentes</h4>
+                      <p>12 Agentes acreditados en turno</p>
                     </div>
                   </div>
                   <div class="doc-card-status status-ok">12 ACTIVOS</div>
@@ -1671,9 +1671,9 @@
 
       <!-- Simulator Selector Buttons -->
       <div class="simulator-controls">
-        <button class="sim-btn active" data-profile="guardia">👮 Guardia</button>
-        <button class="sim-btn" data-profile="conductor">🚗 Vehículo</button>
+        <button class="sim-btn active" data-profile="conductor">🚗 Vehículo</button>
         <button class="sim-btn" data-profile="empresa">🏢 Empresa</button>
+        <button class="sim-btn" data-profile="guardia">👮 Agente</button>
       </div>
     </div>
   </div>
@@ -1688,7 +1688,7 @@
     </div>
     <div class="stat-item">
       <div class="stat-number">2.000+</div>
-      <div class="stat-label">Guardias en la región</div>
+      <div class="stat-label">Agentes en la región</div>
     </div>
     <div class="stat-item">
       <div class="stat-number">10<span style="color:var(--ink-mute); font-weight:400;">+</span></div>
@@ -1711,23 +1711,8 @@
     </p>
 
     <div class="perfiles-grid">
-      <div class="perfil-card active" data-grid-profile="guardia">
-        <div class="perfil-num">001 / Activo</div>
-        <div class="perfil-icon-wrap">
-          <div class="perfil-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              <path d="M9 12l2 2 4-4"/>
-            </svg>
-          </div>
-        </div>
-        <div class="perfil-name">Guardia de Seguridad</div>
-        <div class="perfil-desc">Credencial OS10, curso vigente, empresa empleadora y estado de vigencia en tiempo real.</div>
-        <div class="perfil-status status-live">— Disponible en Demo</div>
-      </div>
-
       <div class="perfil-card active" data-grid-profile="conductor">
-        <div class="perfil-num">002 / Activo</div>
+        <div class="perfil-num">001 / Activo</div>
         <div class="perfil-icon-wrap">
           <div class="perfil-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -1743,7 +1728,7 @@
       </div>
 
       <div class="perfil-card active" data-grid-profile="empresa">
-        <div class="perfil-num">003 / Demo Interactiva</div>
+        <div class="perfil-num">002 / Demo Interactiva</div>
         <div class="perfil-icon-wrap">
           <div class="perfil-icon" style="background: rgba(0, 168, 150, 0.08); border-color: rgba(0, 168, 150, 0.2); color: var(--teal-greek);">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -1754,8 +1739,23 @@
           </div>
         </div>
         <div class="perfil-name">Empresa / Directiva</div>
-        <div class="perfil-desc">Directiva de funcionamiento autorizada por OS10, resoluciones oficiales, pólizas RC, contratos y listado de guardias.</div>
+        <div class="perfil-desc">Directiva de funcionamiento autorizada por OS10, resoluciones oficiales, pólizas RC, contratos y listado de agentes.</div>
         <div class="perfil-status status-live" style="color: var(--teal-greek);">— Probar en simulador</div>
+      </div>
+
+      <div class="perfil-card active" data-grid-profile="guardia">
+        <div class="perfil-num">003 / Activo</div>
+        <div class="perfil-icon-wrap">
+          <div class="perfil-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="M9 12l2 2 4-4"/>
+            </svg>
+          </div>
+        </div>
+        <div class="perfil-name">Agente de Seguridad</div>
+        <div class="perfil-desc">Credencial OS10, curso vigente, empresa empleadora y estado de vigencia en tiempo real.</div>
+        <div class="perfil-status status-live">— Disponible en Demo</div>
       </div>
 
       <div class="perfil-card active" data-grid-profile="comerciante">
@@ -1768,9 +1768,9 @@
             </svg>
           </div>
         </div>
-        <div class="perfil-name">Comerciante</div>
-        <div class="perfil-desc">Patente comercial, patente de alcoholes, autorización municipal y documentos del negocio verificables al escanear.</div>
-        <div class="perfil-status status-live">— Disponible en Demo</div>
+        <div class="perfil-name">Comerciante Establecido</div>
+        <div class="perfil-desc">Patente comercial municipal, inicio de actividades SII y resolución sanitaria si aplica.</div>
+        <div class="perfil-status status-live">— Próximamente</div>
       </div>
 
       <div class="perfil-card coming">
@@ -1827,7 +1827,7 @@
       <div class="flow-step">
         <div class="flow-step-num">03</div>
         <div class="flow-step-title">Te fiscalizan, escaneas, listo</div>
-        <div class="flow-step-desc">Acercas la tarjeta a un celular. Aparece el perfil correspondiente: guardia, conductor o empresa. Todo verificado en tiempo real.</div>
+        <div class="flow-step-desc">Acercas la tarjeta a un celular. Aparece el perfil correspondiente: conductor, empresa o agente. Todo verificado en tiempo real.</div>
       </div>
     </div>
   </div>
@@ -1847,10 +1847,10 @@
         <div class="price-tagline">La tarjeta NFC física, lista para usar. Precio según los perfiles que elijas.</div>
         <ul class="price-features">
           <li>Tarjeta PVC con chip NFC y QR</li>
-          <li>Guardia · $10.000</li>
           <li>Vehículo · $10.000</li>
-          <li>Comerciante · $10.000</li>
           <li>Empresa · $30.000</li>
+          <li>Agente · $10.000</li>
+          <li>Comerciante · $10.000</li>
           <li>Todos los perfiles · $60.000</li>
           <li>Perfil web verificable y en tiempo real</li>
         </ul>
@@ -1859,9 +1859,9 @@
       <div class="pricing-card">
         <div class="price-name">Empresa</div>
         <div><span class="price-amount" style="font-size:32px;">A medida</span></div>
-        <div class="price-tagline">Para empresas de seguridad con varios guardias y puntos de servicio.</div>
+        <div class="price-tagline">Para empresas de seguridad con varios agentes y puntos de servicio.</div>
         <ul class="price-features">
-          <li>Tarjetas para guardias + directiva</li>
+          <li>Tarjetas para agentes + directiva</li>
           <li>Base de datos independiente</li>
           <li>Panel de administración corporativo</li>
           <li>Reportes de cumplimiento</li>
@@ -1986,7 +1986,7 @@
         nfcCard.className = `nfc-card profile-${profile}`;
         
         // Update card meta info
-        let labelText = "Perfil: Guardia";
+        let labelText = "Perfil: Agente";
         let metaText = "NFC·NX 0001 · CL · OS10";
         if (profile === 'conductor') {
           labelText = "Perfil: Vehículo";
