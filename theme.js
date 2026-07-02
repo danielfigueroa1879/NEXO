@@ -8,9 +8,13 @@
 (function() {
   const KEY = 'nexo_theme';
 
-  // 1) Aplicar el tema guardado ANTES del primer render
+  // 1) Aplicar el tema guardado o calcular automático según la hora (19:00 - 07:00 es noche)
   function aplicarTemaGuardado() {
-    const saved = localStorage.getItem(KEY);
+    let saved = localStorage.getItem(KEY);
+    if (!saved) {
+      const hora = new Date().getHours();
+      saved = (hora >= 19 || hora < 7) ? 'dark' : 'light';
+    }
     const dark = saved === 'dark';
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
   }
