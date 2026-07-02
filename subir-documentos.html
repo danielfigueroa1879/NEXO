@@ -1410,6 +1410,7 @@
     try {
       await guardarCuenta({ patentes, patente: patentes[0] || '' });
       showToast('Patentes guardadas');
+      activarBotonGuardarRojo();
     } catch (e) { console.error(e); showToast('Error guardando patentes'); }
   }
 
@@ -1490,6 +1491,7 @@
     marcarCardSubida(docId, file.name, tamKB, 'Subiendo…', previewUrl, true);
     const badge = document.querySelector('#card-' + docId + ' .doc-badge');
     if (badge) { badge.textContent = 'Subiendo…'; badge.className = 'doc-badge'; }
+    activarBotonGuardarRojo();
     try {
       const user = await nexoUsuarioActual();
       if (!user) { showToast('Debes iniciar sesión para subir documentos'); return; }
@@ -1503,6 +1505,7 @@
       // Si acabó de subir la foto de perfil, refrescar todos los avatares
       if (docId === 'foto') aplicarFotoPerfil();
       showToast('Archivo subido: ' + file.name);
+      activarBotonGuardarRojo();
     } catch (e) {
       console.error(e);
       showToast('Error subiendo el archivo: ' + e.message);
@@ -1542,6 +1545,7 @@
     }
     updateProgress();
     showToast('Documento eliminado');
+    activarBotonGuardarRojo();
   }
 
   // Drag & drop
@@ -1578,6 +1582,7 @@
     try {
       await guardarTituloDocumento(tipo, titulo);
       showToast('Título guardado');
+      activarBotonGuardarRojo();
     } catch(e) {
       console.error(e);
       showToast('Error guardando el título');
@@ -1593,6 +1598,15 @@
     document.getElementById('prog-text').textContent = cargados + ' de ' + total;
   }
 
+  function activarBotonGuardarRojo() {
+    const btn = document.querySelector('.btn-save.primary');
+    if (btn) {
+      btn.style.setProperty('background-color', 'var(--red)', 'important');
+      btn.style.setProperty('color', '#ffffff', 'important');
+      btn.style.setProperty('border-color', 'var(--red)', 'important');
+    }
+  }
+
   // Guardar
   async function guardar() {
     // Persistir patentes de todos los vehículos junto con el resto
@@ -1604,6 +1618,7 @@
       } catch (e) { console.error(e); }
     }
     showToast('¡Cambios guardados exitosamente!');
+    window.location.href = 'verificar.html';
   }
 
   // Toast
