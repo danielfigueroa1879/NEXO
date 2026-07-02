@@ -53,10 +53,31 @@
     :root[data-theme="dark"] .modal-content,
     :root[data-theme="dark"] .perfil-box,
     :root[data-theme="dark"] .edit-perfil,
-    :root[data-theme="dark"] .save-bar {
+    :root[data-theme="dark"] .save-bar,
+    :root[data-theme="dark"] .header,
+    :root[data-theme="dark"] .back-btn,
+    :root[data-theme="dark"] .perfil-tabs,
+    :root[data-theme="dark"] .vehiculo-block,
+    :root[data-theme="dark"] .btn-add-veh,
+    :root[data-theme="dark"] .vence-row input,
+    :root[data-theme="dark"] .progress-bar,
+    :root[data-theme="dark"] .success-summary,
+    :root[data-theme="dark"] .summary-info,
+    :root[data-theme="dark"] .info-line,
+    :root[data-theme="dark"] .next-card,
+    :root[data-theme="dark"] .step-panel .card,
+    :root[data-theme="dark"] .resumen-row,
+    :root[data-theme="dark"] .pay-opt,
+    :root[data-theme="dark"] .perfil-opt,
+    :root[data-theme="dark"] .field,
+    :root[data-theme="dark"] .theme-dot-wrap {
       background: #26262d !important;
       color: var(--ink) !important;
       border-color: var(--line) !important;
+    }
+    /* Header con borde inferior en oscuro */
+    :root[data-theme="dark"] .header {
+      border-bottom-color: var(--line) !important;
     }
     /* Encabezados que YA eran oscuros: mantener oscuro con texto claro */
     :root[data-theme="dark"] .perfil-card,
@@ -208,6 +229,16 @@
     }
   `;
   document.head.appendChild(style);
+
+  // Re-mover el <style> al final del <body> apenas exista, para que en la cascada
+  // CSS gane a las reglas !important declaradas dentro del <style> de cada página.
+  function moverAlFinal() {
+    if (document.body && style.parentNode !== document.body) {
+      document.body.appendChild(style);
+    }
+  }
+  if (document.body) moverAlFinal();
+  else document.addEventListener('DOMContentLoaded', moverAlFinal);
 
   // 3) Inyectar botón flotante al cargar el DOM
   function crearBoton() {
