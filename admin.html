@@ -566,7 +566,7 @@
         <p>3 documentos · Activo</p>
       </div>
       <label class="switch">
-        <input type="checkbox" checked onchange="togglePerfil('guardia',this)">
+        <input type="checkbox" id="particularToggle" onchange="togglePerfil('guardia',this)">
         <span class="slider"></span>
       </label>
     </div>
@@ -599,7 +599,7 @@
         <p>0 documentos · Inactivo</p>
       </div>
       <label class="switch">
-        <input type="checkbox" onchange="togglePerfil('comerciante',this)">
+        <input type="checkbox" id="comercianteToggle" onchange="togglePerfil('comerciante',this)">
         <span class="slider"></span>
       </label>
     </div>
@@ -611,7 +611,7 @@
         <p>0 documentos · Inactivo</p>
       </div>
       <label class="switch">
-        <input type="checkbox" onchange="togglePerfil('empresa',this)">
+        <input type="checkbox" id="empresaToggle" onchange="togglePerfil('empresa',this)">
         <span class="slider"></span>
       </label>
     </div>
@@ -970,17 +970,61 @@
     document.getElementById('adminPreviewName').textContent  = datos.nombre || 'Tu nombre';
 
     const perfiles = datos.perfiles || [];
+
+    // Particular Toggle
+    const tieneParticular = perfiles.includes('guardia');
+    const partToggle = document.getElementById('particularToggle');
+    if (partToggle) partToggle.checked = tieneParticular;
+
+    // Vehiculo Toggle
     const tieneVehiculo = perfiles.includes('vehiculo');
-    document.getElementById('vehiculoToggle').checked = tieneVehiculo;
-    document.getElementById('vehiculoTitle').textContent = datos.patente
-      ? 'Vehículo · ' + datos.patente
-      : 'Vehículo (Conductor)';
-    document.getElementById('vehiculoSub').textContent = tieneVehiculo
-      ? '4 documentos · Activo'
-      : 'Sin configurar';
+    const vehToggle = document.getElementById('vehiculoToggle');
+    if (vehToggle) {
+      vehToggle.checked = tieneVehiculo;
+      document.getElementById('vehiculoTitle').textContent = datos.patente
+        ? 'Vehículo · ' + datos.patente
+        : 'Vehículo (Conductor)';
+      document.getElementById('vehiculoSub').textContent = tieneVehiculo
+        ? '4 documentos · Activo'
+        : 'Sin configurar';
+    }
     // Precargar patente
     const inpPat = document.getElementById('inputPatente');
     if (inpPat) inpPat.value = datos.patente || '';
+
+    // Comerciante Toggle
+    const tieneComerciante = perfiles.includes('comerciante');
+    const comToggle = document.getElementById('comercianteToggle');
+    if (comToggle) {
+      comToggle.checked = tieneComerciante;
+      const sub = comToggle.parentElement.parentElement.querySelector('.p-info p');
+      if (!tieneComerciante && datos.tipo !== 'comercio' && !datos.es_admin) {
+        comToggle.disabled = true;
+        comToggle.parentElement.classList.add('coming-soon');
+        if (sub) sub.innerHTML = '<span style="color:var(--orange); font-weight:600;">🔒 Habilitar con Administrador</span>';
+      } else {
+        comToggle.disabled = false;
+        comToggle.parentElement.classList.remove('coming-soon');
+        if (sub) sub.textContent = tieneComerciante ? 'Perfil Activo' : 'Inactivo';
+      }
+    }
+
+    // Empresa Toggle
+    const tieneEmpresa = perfiles.includes('empresa');
+    const empToggle = document.getElementById('empresaToggle');
+    if (empToggle) {
+      empToggle.checked = tieneEmpresa;
+      const sub = empToggle.parentElement.parentElement.querySelector('.p-info p');
+      if (!tieneEmpresa && datos.tipo !== 'empresa' && !datos.es_admin) {
+        empToggle.disabled = true;
+        empToggle.parentElement.classList.add('coming-soon');
+        if (sub) sub.innerHTML = '<span style="color:var(--orange); font-weight:600;">🔒 Habilitar con Administrador</span>';
+      } else {
+        empToggle.disabled = false;
+        empToggle.parentElement.classList.remove('coming-soon');
+        if (sub) sub.textContent = tieneEmpresa ? 'Perfil Activo' : 'Inactivo';
+      }
+    }
 
     if (datos.tema) {
       const dot = document.querySelector('.theme-dot.t-' + datos.tema);
@@ -1108,10 +1152,15 @@
       ? document.getElementById('modalInputPatente').value.trim().toUpperCase()
       : '';
 
+    let tipo = 'guardia';
+    if (perfiles.includes('empresa')) tipo = 'empresa';
+    else if (perfiles.includes('comerciante')) tipo = 'comercio';
+    else if (perfiles.includes('vehiculo')) tipo = 'conductor';
+
     try {
       const { error } = await sb
         .from('cuentas')
-        .update({ perfiles, patente })
+        .update({ perfiles, patente, tipo })
         .eq('id', cuentaId);
       if (error) throw error;
       showToast('Perfiles actualizados');

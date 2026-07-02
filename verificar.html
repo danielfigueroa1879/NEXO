@@ -1395,6 +1395,18 @@
     const datosVeh = {};
     for (const i of orden) {
       const lista = vehiculos[i] || [];
+      const ordenBase = {
+        'permiso': 1,
+        'revision': 2,
+        'soap': 3,
+        'padron': 4
+      };
+      lista.sort((a, b) => {
+        const orderA = ordenBase[a.base] || 999;
+        const orderB = ordenBase[b.base] || 999;
+        return orderA - orderB;
+      });
+
       const docs = [];
       for (const d of lista) {
         let url;
