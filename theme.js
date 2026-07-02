@@ -1,7 +1,7 @@
 /* ============================================================
    NEXO — Modo noche compartido
    Inyecta un botón flotante 🌙 / ☀️ en cualquier página que
-   incluya este script. La preferencia se guarda en localStorage
+   incluya este script. La preferencia se guarda en sessionStorage
    y se aplica antes del primer render para evitar flash.
    ============================================================ */
 
@@ -10,7 +10,7 @@
 
   // 1) Aplicar el tema guardado o calcular automático según la hora (19:00 - 07:00 es noche)
   function aplicarTemaGuardado() {
-    let saved = localStorage.getItem(KEY);
+    let saved = sessionStorage.getItem(KEY);
     if (!saved) {
       const hora = new Date().getHours();
       saved = (hora >= 19 || hora < 7) ? 'dark' : 'light';
@@ -35,6 +35,7 @@
       --red: #ff6468 !important;
       --green: #3ddc6a !important;
       --blue: #6b93ff !important;
+      --surface: #26262d !important;
     }
     /* Fondo general de la página */
     :root[data-theme="dark"] body {
@@ -74,7 +75,8 @@
     :root[data-theme="dark"] .pay-opt,
     :root[data-theme="dark"] .perfil-opt,
     :root[data-theme="dark"] .field,
-    :root[data-theme="dark"] .theme-dot-wrap {
+    :root[data-theme="dark"] .theme-dot-wrap,
+    :root[data-theme="dark"] .stats {
       background: #26262d !important;
       color: var(--ink) !important;
       border-color: var(--line) !important;
@@ -257,7 +259,7 @@
       const actual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
       const nuevo = actual === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', nuevo);
-      localStorage.setItem(KEY, nuevo);
+      sessionStorage.setItem(KEY, nuevo);
       actualizarIcono(btn);
     });
     document.body.appendChild(btn);
