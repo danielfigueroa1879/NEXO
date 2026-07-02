@@ -2,29 +2,40 @@
   publish = "."
   functions = "netlify/functions"
 
-[functions]
-  directory = "netlify/functions"
-  node_bundler = "esbuild"
-
-# ===== FORZAR NO-CACHE EN TODOS LOS DISPOSITIVOS =====
-# Cada vez que un usuario abra la página, el navegador descarga la versión nueva.
+# ===== SIEMPRE FRESCO PERO RÁPIDO =====
+# 'no-cache' obliga a revalidar con el servidor en cada visita (nunca sirve una
+# versión vieja), pero permite responder 304 y NO volver a descargar el archivo
+# si no cambió → carga mucho más rápida y fluida que 'no-store'.
 [[headers]]
   for = "/*"
   [headers.values]
-    Cache-Control = "no-store, no-cache, must-revalidate, max-age=0"
-    Pragma        = "no-cache"
-    Expires       = "0"
+    Cache-Control = "no-cache, must-revalidate"
 
-# HTML siempre fresco
+# HTML: siempre fresco (revalidado)
 [[headers]]
   for = "/*.html"
   [headers.values]
-    Cache-Control = "no-store, no-cache, must-revalidate, max-age=0, proxy-revalidate"
-    Pragma        = "no-cache"
-    Expires       = "0"
+    Cache-Control = "no-cache, must-revalidate, proxy-revalidate"
 
-# Imágenes con cache corto (1 hora) — pueden cambiarse pero no se actualizan tan seguido
+# JS / CSS: se pueden cachear revalidando (304 si no cambian)
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+# Imágenes: cache 1 día con revalidación (cargan al instante en visitas repetidas)
 [[headers]]
   for = "/images/*"
   [headers.values]
-    Cache-Control = "public, max-age=3600, must-revalidate"
+    Cache-Control = "public, max-age=86400, must-revalidate"
+
+# Íconos / favicon: cache largo (rara vez cambian)
+[[headers]]
+  for = "/favicon/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"

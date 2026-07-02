@@ -1025,6 +1025,33 @@
   footer { padding: 48px 32px; border-top: 1px solid var(--line); }
   .footer-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
   .footer-meta { font-size: 12px; color: var(--ink-mute); }
+  /* Firma / autor */
+  .footer-signature {
+    max-width: 1200px; margin: 28px auto 0; padding-top: 22px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+  }
+  .footer-signature .fs-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em;
+  }
+  .footer-signature .fs-role {
+    font-size: 12px; color: var(--ink-mute); margin-top: 3px; font-weight: 500;
+  }
+  .footer-signature .fs-contact {
+    margin-top: 8px; font-size: 12.5px;
+    display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;
+  }
+  .footer-signature .fs-contact a {
+    color: var(--ink-soft); text-decoration: none; font-weight: 500;
+    transition: color 0.15s;
+  }
+  .footer-signature .fs-contact a:hover { color: var(--red); }
+  .footer-signature .fs-sep { color: var(--ink-mute); }
+  @media (max-width: 480px) {
+    .footer-signature .fs-contact { flex-direction: column; gap: 4px; }
+    .footer-signature .fs-contact .fs-sep { display: none; }
+  }
   .footer-flag { display: inline-flex; align-items: center; gap: 6px; }
   /* Bandera chilena: azul+blanco arriba / rojo abajo */
   .flag-stripe {
@@ -1861,6 +1888,17 @@
         <span class="fs-white2"></span>
       </span>
       · © 2026
+    </div>
+  </div>
+
+  <!-- FIRMA / AUTOR -->
+  <div class="footer-signature">
+    <div class="fs-name">Daniel Figueroa Chacama</div>
+    <div class="fs-role">Ingeniero en Informática &amp; Ciberseguridad</div>
+    <div class="fs-contact">
+      <a href="tel:+56959978963">📞 +56 9 5997 8963</a>
+      <span class="fs-sep">·</span>
+      <a href="mailto:informaticacibersegprivada@gmail.com">✉️ informaticacibersegprivada@gmail.com</a>
     </div>
   </div>
 </footer>
