@@ -434,10 +434,151 @@
   @keyframes fadeIn {
     from { opacity: 0; } to { opacity: 1; }
   }
+
+  /* BLOCKED PAY OVERLAY STYLE */
+  .block-pay-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(10, 10, 10, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    animation: fadeIn 0.4s ease-out;
+  }
+  .block-pay-box {
+    background: rgba(30, 30, 32, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    border-radius: 24px;
+    max-width: 440px;
+    width: 100%;
+    padding: 40px 32px;
+    text-align: center;
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .block-pay-box .lock-icon {
+    font-size: 50px;
+    margin-bottom: 20px;
+    display: inline-block;
+    filter: drop-shadow(0 0 10px rgba(232, 33, 39, 0.4));
+    animation: pulse 2s infinite alternate;
+  }
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.08); }
+  }
+  .block-pay-box h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+  }
+  .block-pay-box p {
+    font-size: 14px;
+    color: #a1a1a6;
+    line-height: 1.6;
+    margin-bottom: 28px;
+  }
+  .selected-plan-summary {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 28px;
+    text-align: left;
+  }
+  .selected-plan-summary .summary-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #a1a1a6;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  .selected-plan-summary .summary-list {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 14px;
+  }
+  .selected-plan-summary .summary-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 12px;
+    font-size: 13px;
+    color: #a1a1a6;
+  }
+  .selected-plan-summary .summary-total strong {
+    font-size: 18px;
+    color: #34C759;
+    font-weight: 700;
+  }
+  .btn-block-pay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 16px;
+    background: var(--red, #E82127);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.2s, filter 0.2s;
+    box-shadow: 0 4px 12px rgba(232, 33, 39, 0.3);
+  }
+  .btn-block-pay:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+  }
+  .btn-block-logout {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+    background: transparent;
+    border: none;
+    color: #a1a1a6;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px;
+    text-decoration: underline;
+  }
 </style>
 <script src="theme.js"></script>
 </head>
 <body>
+
+<!-- PANTALLA BLOQUEO PAGO PENDIENTE -->
+<div id="blockPayOverlay" class="block-pay-overlay" style="display: none;">
+  <div class="block-pay-box">
+    <div class="lock-icon">🔒</div>
+    <h2>Activación y Pago Pendiente</h2>
+    <p>Para poder subir tus documentos y activar tu tarjeta NFC NEXO, debes completar el pago de tu plan.</p>
+    
+    <div class="selected-plan-summary">
+      <div class="summary-title">Plan Seleccionado</div>
+      <div id="block-plan-list" class="summary-list">—</div>
+      <div class="summary-total">
+        <span>Total a pagar:</span>
+        <strong id="block-plan-total">$0 CLP</strong>
+      </div>
+    </div>
+
+    <a href="solicitar.html" class="btn-block-pay">💳 Ir a Pagar con Mercado Pago</a>
+    <button class="btn-block-logout" onclick="cerrarSesion()">Cerrar sesión</button>
+  </div>
+</div>
 
 <!-- HEADER -->
 <div class="header">
@@ -1480,11 +1621,34 @@
 
     let datos = null;
     try { datos = await obtenerCuenta(); } catch(e) { console.warn(e); }
-    if (!datos) {
+    if (datos) {
+      try { localStorage.setItem('nexo_cuenta', JSON.stringify(datos)); } catch(e) {}
+    } else {
       try { datos = JSON.parse(localStorage.getItem('nexo_cuenta') || 'null'); } catch(e) {}
     }
     if (!datos) datos = { nombre: 'Tu nombre', rut: '—', perfiles: ['guardia'], patente: '' };
     aplicar(datos);
+
+    const haPagado = (datos.pago === 'pagado' || datos.estado === 'activa' || datos.es_admin === true);
+    if (!haPagado) {
+      const overlay = document.getElementById('blockPayOverlay');
+      if (overlay) {
+        const perfiles = datos.perfiles || [];
+        const precios = { guardia: 10000, vehiculo: 10000, comerciante: 10000, empresa: 30000 };
+        const nombres = { guardia: 'Guardia OS10', vehiculo: 'Vehículo (Conductor)', comerciante: 'Comerciante', empresa: 'Empresa' };
+        
+        const total = perfiles.reduce((s, p) => s + (precios[p] || 0), 0);
+        const planText = perfiles.map(p => nombres[p] || p).join(' + ') || 'Ninguno';
+        
+        const blockPlanList = document.getElementById('block-plan-list');
+        const blockPlanTotal = document.getElementById('block-plan-total');
+        if (blockPlanList) blockPlanList.textContent = planText;
+        if (blockPlanTotal) blockPlanTotal.textContent = '$' + total.toLocaleString('es-CL').replace(/,/g, '.') + ' CLP';
+        
+        overlay.style.display = 'flex';
+      }
+      return; // Detener carga de documentos
+    }
 
     // Patentes guardadas (arreglo nuevo, o el campo `patente` antiguo como fallback)
     const patentesGuardadas = (datos.patentes && datos.patentes.length)
@@ -1523,6 +1687,14 @@
     // Aplicar foto de perfil si la tiene subida
     aplicarFotoPerfil();
   })();
+
+  async function cerrarSesion() {
+    try { await nexoSignOut(); } catch(e) {}
+    window.location.href = 'login.html';
+  }
+  window.cerrarSesion = cerrarSesion;
+
+  // Chevron volver arriba
 
   // Chevron volver arriba
   window.addEventListener('scroll', () => {
