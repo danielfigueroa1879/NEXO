@@ -65,21 +65,26 @@
     text-decoration: none;
   }
   .brand-logo {
-    width: 34px; height: 34px; background: var(--ink);
+    width: 34px; height: 34px; background: transparent;
     border-radius: 9px; display: flex; align-items: center; justify-content: center;
   }
-  .brand-logo svg { width: 18px; height: 18px; fill: #fff; }
+  .brand-logo img { width: 34px; height: 34px; object-fit: contain; }
   .brand-name {
     font-family: 'Space Grotesk', sans-serif;
     font-weight: 700; font-size: 17px; letter-spacing: -0.02em; color: var(--ink);
   }
   .brand-name span { color: var(--red); }
   .back-link {
-    font-size: 13px; font-weight: 600; color: var(--ink-mute);
-    text-decoration: none; display: flex; align-items: center; gap: 5px;
-    transition: color 0.15s;
+    font-size: 15px; font-weight: 600; color: var(--ink-soft);
+    text-decoration: none; display: flex; align-items: center; gap: 6px;
+    transition: color 0.15s, transform 0.15s, background 0.15s;
+    background: #fff;
+    border: 1.5px solid var(--line);
+    padding: 8px 16px;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   }
-  .back-link:hover { color: var(--ink); }
+  .back-link:hover { color: var(--ink); transform: translateY(-1px); background: var(--bg); }
 
   /* ===== MAIN WRAPPER ===== */
   .main {
@@ -312,7 +317,7 @@
   @media (max-width: 375px) {
     .header { padding: 10px 12px; }
     .brand-name { font-size: 14px; }
-    .back-link { font-size: 11px; }
+    .back-link { font-size: 12px; padding: 6px 12px; }
     .main { padding: 12px 10px 40px; align-items: flex-start; padding-top: 8px; }
     .card { border-radius: 14px; }
     .form-body { padding: 18px 16px 22px; }
@@ -346,6 +351,15 @@
     border-color: var(--ink) !important;
     box-shadow: 0 0 0 2px var(--ink) !important;
   }
+  :root[data-theme="dark"] .back-link {
+    background: #26262d !important;
+    border-color: var(--line) !important;
+    color: var(--ink-soft) !important;
+  }
+  :root[data-theme="dark"] .back-link:hover {
+    background: #2f2f38 !important;
+    color: var(--ink) !important;
+  }
 </style>
 <script src="theme.js"></script>
 </head>
@@ -355,12 +369,12 @@
 <div class="header">
   <a href="index.html" class="brand">
     <div class="brand-logo">
-      <svg viewBox="0 0 24 24"><path d="M6 2C4.9 2 4 2.9 4 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 3h8v1.5H8V16zm0-6h3v1.5H8V10z"/></svg>
+      <img src="favicon/favicon.svg" alt="Logo NFC NEXO">
     </div>
     <div class="brand-name">NFC <span>NEXO</span></div>
   </a>
   <a href="index.html" class="back-link">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
     Volver
   </a>
 </div>
