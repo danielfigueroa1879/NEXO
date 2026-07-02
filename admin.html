@@ -94,6 +94,7 @@
 
   /* ===== PAGE ===== */
   .page { max-width: 520px; margin: 0 auto; padding: 20px 16px 100px; }
+  .page-wide { max-width: 1200px; margin: 0 auto; padding: 20px 16px 100px; }
 
   /* ===== OWNER CARD ===== */
   .owner-card {
@@ -757,10 +758,11 @@
       </div>
       <button class="btn-danger" onclick="confirmar('¿Eliminar tu cuenta? Esta acción es irreversible.')">Eliminar</button>
     </div>
-  </div>
+</div><!-- /page -->
 
-  <!-- ===== ADMIN: lista de TODAS las cuentas (solo visible para es_admin=true) ===== -->
-  <div class="section" id="adminList" style="display:none;">
+<!-- ===== ADMIN: lista de TODAS las cuentas (solo visible para es_admin=true) ===== -->
+<div class="page-wide" id="adminList" style="display:none;">
+  <div class="section">
     <div class="section-head">
       <span class="icon">📋</span>
       <h3>Todas las cuentas</h3>
@@ -769,7 +771,7 @@
     <div style="overflow-x:auto;">
       <table style="width:100%; border-collapse:collapse; font-size:13px;">
         <thead>
-          <tr style="background:#f5f5f7; text-align:left;">
+          <tr style="text-align:left;">
             <th style="padding:8px;">Nombre</th>
             <th style="padding:8px;">RUT</th>
             <th style="padding:8px;">Email</th>
@@ -787,14 +789,21 @@
     </div>
     <style>
       #adminList tbody tr { border-bottom: 1px solid #eee; }
-      #adminList tbody td { padding: 8px; }
+      #adminList tbody td { padding: 8px; color: var(--ink); }
       #adminList .badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
       #adminList .badge.pendiente { background:#FFF3CD; color:#8A6A00; }
       #adminList .badge.activa    { background:#D4EDDA; color:#155724; }
       #adminList .badge.rechazada { background:#F8D7DA; color:#721C24; }
+
+      /* Ajustes para modo oscuro */
+      #adminList thead tr { background: #f5f5f7; }
+      #adminList th { color: var(--ink); }
+      :root[data-theme="dark"] #adminList thead tr { background: #2c2c34 !important; }
+      :root[data-theme="dark"] #adminList th { color: #ffffff !important; }
+      :root[data-theme="dark"] #adminList tbody tr { border-bottom-color: var(--line) !important; }
+      :root[data-theme="dark"] #adminList tbody td { color: var(--ink) !important; }
     </style>
   </div>
-
 </div>
 
 <!-- SAVE BAR -->
