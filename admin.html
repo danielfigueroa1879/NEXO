@@ -989,6 +989,43 @@
   }
   window.copiarTexto = copiarTexto;
 
+  async function cambiarEstadoCuenta(cuentaId, nuevoEstado) {
+    try {
+      const { error } = await sb
+        .from('cuentas')
+        .update({ estado: nuevoEstado })
+        .eq('id', cuentaId);
+      if (error) throw error;
+      showToast('Estado actualizado');
+      await cargarListaCuentas();
+    } catch(e) {
+      console.error(e);
+      alert('Error al actualizar estado. Asegúrate de haber ejecutado la política de actualización en Supabase:\n\n' +
+            'drop policy if exists "cuentas_update_propia" on public.cuentas;\n' +
+            'create policy "cuentas_update_propia" on public.cuentas for update using (auth.uid() = id or public.es_admin_actual());');
+    }
+  }
+  window.cambiarEstadoCuenta = cambiarEstadoCuenta;
+
+  async function cambiarPagoCuenta(cuentaId, pagoActual) {
+    const nuevoPago = prompt('Ingresa el monto de pago (ej: $10.000 CLP) o déjalo vacío para marcar como Pendiente:', pagoActual === 'Pendiente' ? '' : pagoActual);
+    if (nuevoPago === null) return;
+    const valorGuardar = nuevoPago.trim() || null;
+    try {
+      const { error } = await sb
+        .from('cuentas')
+        .update({ pago: valorGuardar })
+        .eq('id', cuentaId);
+      if (error) throw error;
+      showToast('Pago actualizado');
+      await cargarListaCuentas();
+    } catch(e) {
+      console.error(e);
+      alert('Error al actualizar pago. Asegúrate de haber ejecutado la política de actualización en Supabase.');
+    }
+  }
+  window.cambiarPagoCuenta = cambiarPagoCuenta;
+
   async function cargarListaCuentas() {
     const cont = document.getElementById('adminList');
     if (!cont) return;
@@ -1008,8 +1045,18 @@
           <td>${c.email || '—'}</td>
           <td>${(c.perfiles || []).join(', ') || '—'}</td>
           <td>${c.patente || '—'}</td>
-          <td>${c.pago || 'Pendiente'}</td>
-          <td><span class="badge ${c.estado}">${c.estado}</span></td>
+          <td>
+            <span onclick="cambiarPagoCuenta('${c.id}', '${c.pago || 'Pendiente'}')" style="cursor:pointer; text-decoration:underline; color:#0066cc; font-weight:600;">
+              ${c.pago || 'Pendiente'} ✏️
+            </span>
+          </td>
+          <td>
+            <select onchange="cambiarEstadoCuenta('${c.id}', this.value)" class="badge ${c.estado}" style="padding:4px 6px; border:none; border-radius:10px; font-family:'Outfit',sans-serif; font-size:11px; font-weight:600; cursor:pointer; outline:none;">
+              <option value="pendiente" ${c.estado === 'pendiente' ? 'selected' : ''} style="background:#fff; color:#000;">⏳ Pendiente</option>
+              <option value="activa" ${c.estado === 'activa' ? 'selected' : ''} style="background:#fff; color:#000;">✅ Activa</option>
+              <option value="rechazada" ${c.estado === 'rechazada' ? 'selected' : ''} style="background:#fff; color:#000;">❌ Rechazada</option>
+            </select>
+          </td>
           <td>${(c.documentos || []).length}</td>
           <td>${new Date(c.fecha).toLocaleDateString('es-CL')}</td>
           <td>${linkCol}</td>
