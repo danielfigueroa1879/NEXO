@@ -442,6 +442,17 @@
   }
   .btn-action:active { transform: scale(0.97); }
 
+  /* ===== DARK MODE OVERRIDES FOR BOTTOM BAR ===== */
+  :root[data-theme="dark"] .bottom-bar {
+    background: rgba(30, 30, 35, 0.92) !important;
+    border-top-color: var(--line) !important;
+  }
+  :root[data-theme="dark"] .btn-action.secondary {
+    background: #2c2c34 !important;
+    color: var(--ink) !important;
+    border-color: var(--line) !important;
+  }
+
   /* ===== TOAST ===== */
   .toast {
     position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
@@ -770,7 +781,7 @@
   <div class="inner">
     <div class="price-tag">
       <span>Total</span>
-      <strong>$10.000 CLP</strong>
+      <strong id="bar-total">$10.000 CLP</strong>
     </div>
     <button class="btn-action secondary" id="btnBack" onclick="prev()" style="display:none;">← Atrás</button>
     <button class="btn-action primary" id="btnNext" onclick="next()">
@@ -1054,6 +1065,9 @@
     // Mostrar/ocultar campo patente
     const patWrap = document.getElementById('patenteWrap');
     if (patWrap) patWrap.style.display = perfiles.includes('vehiculo') ? 'block' : 'none';
+    
+    // Actualizar el precio en la barra inferior
+    actualizarPrecioBar();
   }
 
   // Tema
@@ -1087,6 +1101,19 @@
     return '$' + n.toLocaleString('es-CL').replace(/,/g, '.') + ' CLP';
   }
 
+  // Actualizar el total de la barra inferior
+  function actualizarPrecioBar() {
+    const total = calcularTotal();
+    const barTotal = document.getElementById('bar-total');
+    if (barTotal) barTotal.textContent = formatoCLP(total);
+    if (paso === TOTAL_PASOS) {
+      const btn = document.getElementById('btnNext');
+      if (btn) {
+        btn.innerHTML = '🔒 Pagar ' + formatoCLP(total).replace(' CLP','') + ' <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>';
+      }
+    }
+  }
+
   // Actualizar resumen
   function actualizarResumen() {
     const nombres = {
@@ -1113,6 +1140,9 @@
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2400);
   }
+
+  // Inicializar precio de la barra al cargar
+  actualizarPrecioBar();
 </script>
 
 <!-- ===== Supabase (base de datos) ===== -->
@@ -1131,6 +1161,23 @@
       set('f-tel',    cuenta.telefono);
       set('f-mail',   cuenta.email);
       set('f-dir',    cuenta.direccion);
+      
+      // Cargar perfiles ya guardados
+      if (Array.isArray(cuenta.perfiles) && cuenta.perfiles.length) {
+        perfiles = [...cuenta.perfiles];
+        // Sincronizar clases visuales
+        document.querySelectorAll('.perfil-opt').forEach(opt => {
+          const p = opt.getAttribute('data-perfil');
+          if (perfiles.includes(p)) {
+            opt.classList.add('selected');
+          } else {
+            opt.classList.remove('selected');
+          }
+        });
+        const patWrap = document.getElementById('patenteWrap');
+        if (patWrap) patWrap.style.display = perfiles.includes('vehiculo') ? 'block' : 'none';
+      }
+
       // Precargar patentes (arreglo nuevo o el campo `patente` antiguo)
       const pats = (cuenta.patentes && cuenta.patentes.length)
         ? cuenta.patentes
@@ -1138,6 +1185,9 @@
       set('f-patente',  pats[0]);
       if (pats[1]) { const el = document.getElementById('f-patente2'); el.value = pats[1]; el.style.display = 'block'; }
       if (pats[2]) { const el = document.getElementById('f-patente3'); el.value = pats[2]; el.style.display = 'block'; document.getElementById('addPatBtn').style.display = 'none'; }
+      
+      // Actualizar total en barra
+      actualizarPrecioBar();
     } catch (e) { console.warn('No se pudo cargar la cuenta:', e.message); }
   });
 </script>
