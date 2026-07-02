@@ -154,6 +154,18 @@
       background: rgba(20,20,24,0.85) !important;
       border-bottom-color: var(--line) !important;
     }
+    /* Menú de usuario (home): texto legible en oscuro */
+    :root[data-theme="dark"] .user-menu a,
+    :root[data-theme="dark"] .user-menu button {
+      color: var(--ink) !important;
+    }
+    :root[data-theme="dark"] .user-menu a:hover,
+    :root[data-theme="dark"] .user-menu button:hover {
+      background: #34343f !important;
+    }
+    :root[data-theme="dark"] .user-menu .logout { color: #ff6468 !important; }
+    :root[data-theme="dark"] .user-menu hr { border-top-color: var(--line) !important; }
+
     /* Badge neutro + miniatura de archivo */
     :root[data-theme="dark"] .doc-badge:not(.ok):not(.miss):not(.warn) {
       background: #35353d !important; color: var(--ink) !important;
