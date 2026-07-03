@@ -1288,6 +1288,8 @@
       if (panel) panel.classList.add('active');
       if (tabs[primero]) tabs[primero].classList.add('active');
     }
+    // Entrar directamente en modo visualización completa (modo-completo) en la carga inicial
+    document.body.classList.add('modo-completo');
   }
   document.addEventListener('DOMContentLoaded', async () => {
     // Si venimos del OAuth de Google, esperar a que se procese la sesión
