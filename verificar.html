@@ -797,10 +797,73 @@
     margin-left: 6px;
     font-weight: 700;
   }
+
+  /* Botón Flotante Volver Atrás */
+  .floating-back-btn {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #0A0A0A;
+    color: #ffffff;
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 8px 14px;
+    border-radius: 30px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+    transition: transform 0.2s, background 0.15s;
+  }
+  .floating-back-btn:active {
+    transform: scale(0.95);
+  }
+  .floating-back-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+  
+  :root[data-theme="dark"] .floating-back-btn {
+    background: #ffffff;
+    color: #0A0A0A;
+    border-color: rgba(0,0,0,0.1);
+  }
+
+  /* Modo Visualización Completa */
+  body.modo-completo .header,
+  body.modo-completo .verify-banner,
+  body.modo-completo .profile-selector {
+    display: none !important;
+  }
+  body.modo-completo .floating-back-btn {
+    display: inline-flex !important;
+  }
+  body.modo-completo .page {
+    padding-top: 48px !important;
+    animation: slideUpTransition 0.3s ease;
+  }
+  @keyframes slideUpTransition {
+    from { transform: translateY(15px); opacity: 0.8; }
+    to { transform: translateY(0); opacity: 1; }
+  }
 </style>
 <script src="theme.js"></script>
 </head>
 <body>
+
+<!-- FLOATING BACK BUTTON -->
+<button class="floating-back-btn" onclick="salirModoCompleto()" id="floatingBackBtn" title="Mostrar perfiles y cabecera">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="19" y1="12" x2="5" y2="12"></line>
+    <polyline points="12 19 5 12 12 5"></polyline>
+  </svg>
+  Volver
+</button>
 
 <!-- HEADER -->
 <div class="header">
@@ -1553,7 +1616,21 @@
     document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
     document.getElementById('panel-' + id).classList.add('active');
     btn.classList.add('active');
+    document.body.classList.add('modo-completo');
   }
+
+  function salirModoCompleto() {
+    document.body.classList.remove('modo-completo');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  window.salirModoCompleto = salirModoCompleto;
+
+  window.addEventListener('scroll', () => {
+    // Al hacer scroll, entra automáticamente al modo completo ocultando el banner/selectores
+    if (window.scrollY > 40 && !document.body.classList.contains('modo-completo')) {
+      document.body.classList.add('modo-completo');
+    }
+  });
 
   // Registrar fiscalización
   function registrarFiscalizacion() {
