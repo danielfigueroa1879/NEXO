@@ -119,25 +119,34 @@
     padding: 12px 12px 60px;
   }
 
-  /* ===== VERIFICACIÓN BADGE ===== */
-  .verify-banner {
-    background: var(--green-light);
-    border: 1.5px solid var(--green);
-    border-radius: 14px;
-    padding: 14px 18px;
-    display: flex;
+  /* ===== VERIFICATION BADGE IN CARD HEADER ===== */
+  .verification-badge {
+    background: rgba(48, 209, 88, 0.12);
+    border: 1px solid rgba(48, 209, 88, 0.3);
+    border-radius: 100px;
+    padding: 3px 8px;
+    display: inline-flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
-    animation: slideDown 0.4s ease;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #34c759;
+    margin-bottom: 6px;
+    position: relative;
+    width: fit-content;
   }
-  .verify-icon {
-    width: 36px; height: 36px; flex-shrink: 0;
-    background: var(--green);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
+  .pulse-ring {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 100px;
+    border: 1.5px solid rgba(52, 199, 89, 0.4);
+    animation: badgePulse 2s infinite;
   }
-  .verify-icon svg { width: 20px; height: 20px; }
+  @keyframes badgePulse {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.12, 1.25); opacity: 0; }
+  }
   .verify-text h3 { font-size: 15px; font-weight: 700; color: #1A7A34; }
   .verify-text p { font-size: 12px; color: #1A7A34; opacity: 0.8; margin-top: 1px; }
 
@@ -784,10 +793,7 @@
     .header { padding: 10px 12px; }
     .header-name { font-size: 14px; }
     .page { padding: 14px 10px 70px; }
-    .verify-banner { padding: 10px 12px; gap: 8px; }
-    .verify-text h3 { font-size: 13px; }
-    .verify-text p { font-size: 11px; }
-    .verify-icon { width: 30px; height: 30px; }
+
     .profile-tab { padding: 7px 12px; font-size: 12px; }
     .card-header { padding: 14px; gap: 10px; }
     .avatar { width: 50px; height: 50px; font-size: 20px; }
@@ -939,7 +945,6 @@
 
   /* Modo Visualización Completa */
   body.modo-completo .header,
-  body.modo-completo .verify-banner,
   body.modo-completo .profile-selector {
     display: none !important;
   }
@@ -1000,16 +1005,7 @@
 
 <div class="page">
 
-  <!-- BANNER VERIFICADO -->
-  <div class="verify-banner">
-    <div class="verify-icon">
-      <svg viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-    </div>
-    <div class="verify-text">
-      <h3>Identidad verificada por NFC NEXO</h3>
-      <p>Escaneo exitoso · Datos en tiempo real</p>
-    </div>
-  </div>
+
 
   <!-- SELECTOR DE PERFIL — se ajusta según los perfiles activos -->
   <div class="profile-selector" id="profileSelector">
@@ -1038,6 +1034,11 @@
         </button>
         <div class="avatar" id="avG">??</div>
         <div class="card-identity">
+          <div class="verification-badge">
+            <div class="pulse-ring"></div>
+            <span class="check-dot">✓</span>
+            <span>VERIFICADO</span>
+          </div>
           <h2 id="nameG">Cargando…</h2>
           <div class="rut" id="rutG">RUT: —</div>
           <div class="card-type-badge">
@@ -1112,6 +1113,11 @@
         </button>
         <div class="avatar" id="avV">??</div>
         <div class="card-identity">
+          <div class="verification-badge">
+            <div class="pulse-ring"></div>
+            <span class="check-dot">✓</span>
+            <span>VERIFICADO</span>
+          </div>
           <h2 id="nameV">Cargando…</h2>
           <div class="rut" id="rutV">RUT: —</div>
           <div class="card-type-badge">
@@ -1147,6 +1153,11 @@
         </button>
         <div class="avatar" id="avC">??</div>
         <div class="card-identity">
+          <div class="verification-badge">
+            <div class="pulse-ring"></div>
+            <span class="check-dot">✓</span>
+            <span>VERIFICADO</span>
+          </div>
           <h2 id="nameC">Cargando…</h2>
           <div class="rut" id="rutC">RUT: —</div>
           <div class="card-type-badge">
@@ -1174,6 +1185,11 @@
         </button>
         <div class="avatar" id="avE">??</div>
         <div class="card-identity">
+          <div class="verification-badge">
+            <div class="pulse-ring"></div>
+            <span class="check-dot">✓</span>
+            <span>VERIFICADO</span>
+          </div>
           <h2 id="nameE">Cargando…</h2>
           <div class="rut" id="rutE">RUT: —</div>
           <div class="card-type-badge">
