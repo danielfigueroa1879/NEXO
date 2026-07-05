@@ -340,8 +340,9 @@
   .card-type-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); }
   .card-type-badge span { font-size: 11px; color: #FF6B6E; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
 
-  /* Bandera chilena: azul+blanco arriba / rojo abajo */
-  .flag-strip {
+  /* Bandera chilena: oculta — el usuario prefiere ver directamente los documentos */
+  .flag-strip { display: none; }
+  .flag-strip-hidden-original {
     height: 8px;
     display: grid;
     grid-template-columns: 28px 1fr;
@@ -528,7 +529,9 @@
 
   /* ===== PANEL CONDUCTOR (oculto por defecto) ===== */
   .panel { display: none; }
-  .panel.active { display: block; animation: fadeUp 0.3s ease; }
+  /* Antes se aplicaba animation: fadeUp en cada cambio → producía un "flash".
+     Ahora sólo aparece: sin animación al conmutar entre perfiles. */
+  .panel.active { display: block; }
 
   /* ===== ANIMATIONS ===== */
   @keyframes fadeUp {
@@ -617,7 +620,7 @@
     gap: 8px; flex-wrap: nowrap;
     overflow-x: auto;                 /* si no caben, se desliza sin romper la fila */
     -webkit-overflow-scrolling: touch;
-    margin-bottom: 18px; padding: 6px 2px;
+    margin-bottom: 8px; padding: 2px 2px 0;
   }
   .veh-selector::-webkit-scrollbar { display: none; }
   .veh-selector { scrollbar-width: none; }
