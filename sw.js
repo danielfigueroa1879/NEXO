@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nfc-nexo-v6';
+const CACHE_NAME = 'nfc-nexo-v7';
 const OFFLINE_URL = 'index.html';
 
 self.addEventListener('install', (event) => {
@@ -44,29 +44,37 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
   const esLocal = url.origin === self.location.origin;
-  const esPublicaSupabase = url.hostname.endsWith('.supabase.co') && url.pathname.includes('/storage/v1/object/public/documentos/');
+  const esSupabaseStorage = url.hostname.endsWith('.supabase.co') && url.pathname.includes('/storage/v1/object/');
 
-  // Si no es un recurso local ni un documento público de Supabase, no lo interceptamos
-  if (!esLocal && !esPublicaSupabase) {
+  // Si no es un recurso local ni archivos de almacenamiento de Supabase, no lo interceptamos
+  if (!esLocal && !esSupabaseStorage) {
     return;
   }
 
+  // Clave de caché limpia (para Supabase Storage ignoramos tokens y firmas que cambian constantemente)
+  let cacheKey = event.request;
+  if (esSupabaseStorage) {
+    const cleanUrl = new URL(event.request.url);
+    cleanUrl.search = ''; // Elimina ?token=...&expires=...
+    cacheKey = cleanUrl.toString();
+  }
+
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      // Fetch de red en segundo plano (para actualizar caché de forma asíncrona)
+    caches.match(cacheKey).then((cachedResponse) => {
+      // Realizar consulta de red en segundo plano para actualizar la caché de forma asíncrona
+      // (siempre usando la request original autorizada con token)
       const fetchPromise = fetch(event.request)
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
+              cache.put(cacheKey, responseToCache);
             });
           }
           return networkResponse;
         })
         .catch((error) => {
           console.warn('Fallo actualización de fondo para:', event.request.url, error);
-          // Si no había caché y falló el fetch, intentamos devolver el HTML offline de fallback
           if (!cachedResponse) {
             const acceptHeader = event.request.headers.get('accept');
             if (acceptHeader && acceptHeader.includes('text/html')) {
@@ -75,7 +83,7 @@ self.addEventListener('fetch', (event) => {
           }
         });
 
-      // Servir inmediatamente desde caché si existe (Carga instantánea, 0ms), sino esperar a la red
+      // Servir al instante desde caché (0ms de latencia, sin carga por partes) si existe
       return cachedResponse || fetchPromise;
     })
   );
