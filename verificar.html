@@ -710,7 +710,25 @@
     display: block;
     border-radius: 4px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    opacity: 0;
+    transition: opacity .15s ease;
   }
+  .doc-modal-body img.ready { opacity: 1; }
+  /* Spinner mientras la imagen carga */
+  .doc-modal-spinner {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 38px; height: 38px;
+    border: 3px solid rgba(255,255,255,0.18);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: docSpin .8s linear infinite;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .1s;
+  }
+  .doc-modal.loading .doc-modal-spinner { opacity: 1; }
+  @keyframes docSpin { to { transform: translate(-50%, -50%) rotate(360deg); } }
   .doc-modal-close {
     position: fixed;
     top: 14px; right: 20px;
@@ -1801,18 +1819,40 @@
     alert('Función disponible próximamente. Contacte a NFC NEXO en soporte@nfcnexo.cl');
   }
 
-  // Abrir documento en modal
+  // Abrir documento en modal. Optimizado:
+  //  - Si el thumb ya cargó la MISMA imagen, reusamos su blob (aparece al instante).
+  //  - Si aún no está lista, mostramos spinner y hacemos fade cuando cargue.
   function abrirDoc(src, titulo, subtitulo) {
-    // Los PDF no se ven en el modal de imagen → abrir en pestaña nueva
     if (/\.pdf(\?|$)/i.test(src)) { window.open(src, '_blank', 'noopener'); return; }
-    document.getElementById('modalImg').src = src;
+    const modal = document.getElementById('docModal');
+    const img   = document.getElementById('modalImg');
     document.getElementById('modalTitle').textContent = titulo;
     document.getElementById('modalSub').textContent = subtitulo || '';
-    document.getElementById('docModal').classList.add('show');
+
+    // Reutilizar imagen ya decodificada por el thumb si existe (evita re-fetch)
+    const thumb = document.querySelector('.doc-img-thumb img[src="' + src + '"]');
+    const yaCargada = thumb && thumb.complete && thumb.naturalWidth > 0;
+
+    img.classList.remove('ready');
+    modal.classList.add('show', 'loading');
     document.body.style.overflow = 'hidden';
+
+    const marcarListo = () => {
+      modal.classList.remove('loading');
+      img.classList.add('ready');
+    };
+
+    if (img.src !== src) {
+      img.onload = marcarListo;
+      img.onerror = marcarListo;
+      img.src = src;
+    }
+    // Si la imagen ya estaba decodificada por el thumb, la mostramos al instante
+    if (yaCargada || (img.complete && img.naturalWidth > 0)) marcarListo();
   }
   function cerrarDoc() {
-    document.getElementById('docModal').classList.remove('show');
+    const modal = document.getElementById('docModal');
+    modal.classList.remove('show', 'loading');
     document.body.style.overflow = '';
   }
   // Cerrar con tecla ESC
@@ -1824,8 +1864,9 @@
 <!-- MODAL VISOR DE DOCUMENTOS: pantalla completa, sin marcos, sólo el documento + X -->
 <div class="doc-modal" id="docModal">
   <button class="doc-modal-close" onclick="cerrarDoc()" title="Cerrar" aria-label="Cerrar">✕</button>
+  <div class="doc-modal-spinner" aria-hidden="true"></div>
   <div class="doc-modal-body">
-    <img id="modalImg" src="" alt="Documento">
+    <img id="modalImg" src="" alt="Documento" decoding="sync">
   </div>
   <h3 id="modalTitle" hidden></h3>
   <div id="modalSub" hidden></div>
