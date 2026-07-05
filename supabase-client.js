@@ -13,7 +13,7 @@
 const SUPABASE_URL      = 'https://wzzvfycrbkgholazxmnq.supabase.co';       // solo el dominio base, sin /rest/v1/…
 const SUPABASE_ANON_KEY = 'sb_publishable_Ksaisk6CWNecrUnI9fD3wg_dxnO_TsB';  // clave pública "publishable" o "anon"
 
-// Cliente global (usa el bundle UMD cargado por <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">)
+// Cliente global (usa el bundle UMD cargado por <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js">)
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,

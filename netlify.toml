@@ -34,8 +34,36 @@
   [headers.values]
     Cache-Control = "public, max-age=86400, must-revalidate"
 
-# Íconos / favicon: cache largo (rara vez cambian)
+# Íconos / favicon: nunca cambian → cache 1 año inmutable (Lighthouse-friendly)
 [[headers]]
   for = "/favicon/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Imágenes de assets estáticos (logo, previews demo): 30 días revalidados
+[[headers]]
+  for = "/images/*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000, must-revalidate"
+
+[[headers]]
+  for = "/images/*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000, must-revalidate"
+
+[[headers]]
+  for = "/images/*.svg"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000, must-revalidate"
+
+# Service worker (sw.js): siempre fresco para publicar updates
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+# Web app manifest
+[[headers]]
+  for = "/site.webmanifest"
   [headers.values]
     Cache-Control = "public, max-age=604800"
