@@ -561,6 +561,123 @@
     padding: 8px;
     text-decoration: underline;
   }
+
+  /* ===== MERGE MODAL STYLES ===== */
+  .merge-modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .merge-modal-overlay.show {
+    opacity: 1; pointer-events: auto;
+  }
+  .merge-modal-box {
+    background: var(--surface);
+    color: var(--ink);
+    width: 100%; max-width: 520px;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    display: flex; flex-direction: column; gap: 20px;
+    position: relative;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+  }
+  .merge-modal-overlay.show .merge-modal-box {
+    transform: translateY(0);
+  }
+  .merge-modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 12px;
+  }
+  .merge-modal-header h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px; font-weight: 700;
+  }
+  .merge-modal-close {
+    background: none; border: none; font-size: 20px; color: var(--ink-mute); cursor: pointer;
+  }
+  .merge-slots {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  @media (max-width: 480px) {
+    .merge-slots { grid-template-columns: 1fr; }
+  }
+  .merge-slot-card {
+    border: 2px dashed var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    text-align: center;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+    min-height: 180px;
+    justify-content: center;
+  }
+  .merge-slot-card.has-image {
+    border-style: solid;
+    border-color: var(--green);
+  }
+  .merge-slot-title {
+    font-size: 13px; font-weight: 600; color: var(--ink-soft);
+  }
+  .merge-slot-preview {
+    width: 100%; height: 100px;
+    object-fit: contain;
+    border-radius: 6px;
+    background: #fff;
+    border: 1px solid var(--line);
+  }
+  .merge-slot-actions {
+    display: flex; gap: 6px; width: 100%;
+  }
+  .merge-slot-btn {
+    flex: 1;
+    padding: 8px 4px; font-size: 11px; font-weight: 600;
+    border-radius: 8px; border: 1px solid var(--line);
+    background: #fff; color: var(--ink);
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;
+    transition: background 0.15s;
+  }
+  .merge-slot-btn:hover {
+    background: var(--bg);
+  }
+  .merge-slot-btn.primary {
+    background: var(--ink); color: #fff; border-color: var(--ink);
+  }
+  .merge-footer-actions {
+    display: flex; flex-direction: column; gap: 10px;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+  .merge-btn-combine {
+    width: 100%;
+    padding: 14px; font-size: 14px; font-weight: 600;
+    border-radius: 12px; border: none;
+    background: var(--ink); color: #fff;
+    cursor: pointer; transition: opacity 0.15s, background-color 0.15s;
+  }
+  .merge-btn-combine:disabled {
+    background: var(--line); color: var(--ink-mute); cursor: not-allowed;
+  }
+  .merge-btn-combine:not(:disabled):hover {
+    background: var(--green);
+  }
+  .merge-btn-direct {
+    background: transparent; border: none; color: var(--ink-mute);
+    font-size: 12px; text-decoration: underline; cursor: pointer;
+    align-self: center;
+  }
+  .merge-btn-direct:hover {
+    color: var(--ink);
+  }
 </style>
 <script>(function(){try{var k='nexo_theme',s=sessionStorage.getItem(k);if(!s){var h=new Date().getHours();s=(h>=19||h<7)?'dark':'light';}document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){}})();</script>
 <script src="theme.js" defer></script>
@@ -668,7 +785,7 @@
           <label>Vencimiento</label>
           <input type="date">
         </div>
-        <div class="upload-zone" onclick="triggerUpload('cedula-input')"
+        <div class="upload-zone" onclick="abrirModalDosCaras('cedula')"
              ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="dropFile(event,'cedula')">
           <div class="icon">📁</div>
           <h5>Arrastra aquí o toca para subir</h5>
@@ -676,11 +793,11 @@
           <input type="file" class="upload-input" id="cedula-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'cedula')">
         </div>
         <div class="upload-actions">
-          <button class="btn-upload primary" onclick="triggerUpload('cedula-input')">
+          <button class="btn-upload primary" onclick="abrirModalDosCaras('cedula')">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
             Subir archivo
           </button>
-          <button class="btn-upload secondary">📷 Cámara</button>
+          <button class="btn-upload secondary" onclick="abrirModalDosCaras('cedula')">📷 Cámara</button>
         </div>
       </div>
     </div>
@@ -709,7 +826,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
             Subir archivo
           </button>
-          <button class="btn-upload secondary">📷 Cámara</button>
+          <button class="btn-upload secondary" onclick="triggerCamera('foto-input')">📷 Cámara</button>
         </div>
       </div>
     </div>
@@ -744,7 +861,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
             Subir archivo
           </button>
-          <button class="btn-upload secondary">📷 Cámara</button>
+          <button class="btn-upload secondary" onclick="triggerCamera('curso-input')">📷 Cámara</button>
         </div>
       </div>
     </div>
@@ -777,7 +894,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
             Subir archivo
           </button>
-          <button class="btn-upload secondary">📷 Cámara</button>
+          <button class="btn-upload secondary" onclick="triggerCamera('antecedentes-input')">📷 Cámara</button>
         </div>
       </div>
     </div>
@@ -810,7 +927,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
             Subir archivo
           </button>
-          <button class="btn-upload secondary">📷 Cámara</button>
+          <button class="btn-upload secondary" onclick="triggerCamera('credencial-input')">📷 Cámara</button>
         </div>
       </div>
     </div>
@@ -843,7 +960,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
             Subir archivo
           </button>
-          <button class="btn-upload secondary">📷 Cámara</button>
+          <button class="btn-upload secondary" onclick="triggerCamera('contrato-input')">📷 Cámara</button>
         </div>
       </div>
     </div>
@@ -876,7 +993,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
             Subir archivo
           </button>
-          <button class="btn-upload secondary">📷 Cámara</button>
+          <button class="btn-upload secondary" onclick="triggerCamera('examen-input')">📷 Cámara</button>
         </div>
       </div>
     </div>
@@ -904,18 +1021,19 @@
           <label>Vencimiento</label>
           <input type="date">
         </div>
-        <div class="upload-zone" onclick="triggerUpload('licencia-input')">
+        <div class="upload-zone" onclick="abrirModalDosCaras('licencia')"
+             ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="dropFile(event,'licencia')">
           <div class="icon">📁</div>
           <h5>Arrastra aquí o toca para subir</h5>
           <p>PDF, JPG o PNG · Máximo 10 MB</p>
           <input type="file" class="upload-input" id="licencia-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'licencia')">
         </div>
         <div class="upload-actions">
-          <button class="btn-upload primary" onclick="triggerUpload('licencia-input')">
+          <button class="btn-upload primary" onclick="abrirModalDosCaras('licencia')">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
             Subir archivo
           </button>
-          <button class="btn-upload secondary">📷 Cámara</button>
+          <button class="btn-upload secondary" onclick="abrirModalDosCaras('licencia')">📷 Cámara</button>
         </div>
       </div>
     </div>
@@ -1290,6 +1408,34 @@
     document.getElementById(inputId).click();
   }
 
+  // Trigger input file en modo cámara (abre directo la cámara en móviles)
+  function triggerCamera(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const origAccept = input.getAttribute('accept');
+    
+    // Configurar atributos temporales para capturar de la cámara
+    input.setAttribute('accept', 'image/*');
+    input.setAttribute('capture', 'environment');
+    
+    const restoreAttributes = () => {
+      if (origAccept) {
+        input.setAttribute('accept', origAccept);
+      } else {
+        input.removeAttribute('accept');
+      }
+      input.removeAttribute('capture');
+      window.removeEventListener('focus', restoreAttributes);
+    };
+
+    // Restaurar los atributos originales cuando la ventana recupere el foco
+    setTimeout(() => {
+      window.addEventListener('focus', restoreAttributes);
+    }, 1000);
+
+    input.click();
+  }
+
   /* ===================== MULTI-VEHÍCULO (hasta 3) ===================== */
   const MAX_VEH = 3;
   let numVehiculos = 1;
@@ -1332,7 +1478,7 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
               Subir archivo
             </button>
-            <button class="btn-upload secondary">📷 Cámara</button>
+            <button class="btn-upload secondary" onclick="triggerCamera('${docId}-input')">📷 Cámara</button>
           </div>
         </div>
       </div>`;
@@ -1744,6 +1890,211 @@
     const _btt = document.getElementById('btt');
     if (_btt) _btt.classList.toggle('show', window.scrollY > 120);
   });
+
+  /* ===================== FUSIÓN DE DOCUMENTOS (DOS CARAS) ===================== */
+  let mergeDocId = null; // 'cedula' o 'licencia'
+  let frontImageBlob = null;
+  let backImageBlob = null;
+
+  function abrirModalDosCaras(docId) {
+    mergeDocId = docId;
+    
+    // Configurar título del modal
+    const tit = document.getElementById('mergeModalTitle');
+    if (docId === 'cedula') {
+      tit.textContent = 'Subir Cédula de Identidad (Ambas Caras)';
+    } else {
+      tit.textContent = 'Subir Licencia de Conducir (Ambas Caras)';
+    }
+    
+    // Limpiar estados anteriores
+    frontImageBlob = null;
+    backImageBlob = null;
+    
+    document.getElementById('preview-front').style.display = 'none';
+    document.getElementById('preview-front-placeholder').style.display = 'block';
+    document.getElementById('slot-front').classList.remove('has-image');
+    
+    document.getElementById('preview-back').style.display = 'none';
+    document.getElementById('preview-back-placeholder').style.display = 'block';
+    document.getElementById('slot-back').classList.remove('has-image');
+    
+    document.getElementById('btnMergeCombine').disabled = true;
+    
+    document.getElementById('modal-front-input').value = '';
+    document.getElementById('modal-back-input').value = '';
+    
+    // Mostrar modal
+    document.getElementById('mergeModal').classList.add('show');
+  }
+  window.abrirModalDosCaras = abrirModalDosCaras;
+
+  function cerrarMergeModal() {
+    document.getElementById('mergeModal').classList.remove('show');
+    mergeDocId = null;
+  }
+  window.cerrarMergeModal = cerrarMergeModal;
+
+  function modalTriggerUpload(side) {
+    const input = document.getElementById('modal-' + side + '-input');
+    input.removeAttribute('capture');
+    input.click();
+  }
+  window.modalTriggerUpload = modalTriggerUpload;
+
+  function modalTriggerCamera(side) {
+    const input = document.getElementById('modal-' + side + '-input');
+    input.setAttribute('capture', 'environment');
+    input.click();
+  }
+  window.modalTriggerCamera = modalTriggerCamera;
+
+  function modalFileSelected(input, side) {
+    if (!input.files.length) return;
+    const file = input.files[0];
+    
+    // Comprimir/Cargar la imagen de vista previa
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imgEl = document.getElementById('preview-' + side);
+      const placeholderEl = document.getElementById('preview-' + side + '-placeholder');
+      const cardEl = document.getElementById('slot-' + side);
+      
+      imgEl.src = e.target.result;
+      imgEl.style.display = 'block';
+      placeholderEl.style.display = 'none';
+      cardEl.classList.add('has-image');
+      
+      if (side === 'front') frontImageBlob = file;
+      else backImageBlob = file;
+      
+      // Habilitar botón de combinar si ambos están cargados
+      document.getElementById('btnMergeCombine').disabled = !(frontImageBlob && backImageBlob);
+    };
+    reader.readAsDataURL(file);
+  }
+  window.modalFileSelected = modalFileSelected;
+
+  function subirDirecto() {
+    cerrarMergeModal();
+    // Ejecutar el trigger original del input oculto correspondiente
+    if (mergeDocId === 'cedula') {
+      triggerUpload('cedula-input');
+    } else if (mergeDocId === 'licencia') {
+      triggerUpload('licencia-input');
+    }
+  }
+  window.subirDirecto = subirDirecto;
+
+  async function procesarFusion() {
+    if (!frontImageBlob || !backImageBlob || !mergeDocId) return;
+    
+    const btn = document.getElementById('btnMergeCombine');
+    btn.disabled = true;
+    btn.textContent = 'Procesando y subiendo…';
+    
+    try {
+      // 1. Cargar ambas imágenes en memoria y unirlas en un Canvas
+      const combinedBlob = await combinarCaras(
+        URL.createObjectURL(frontImageBlob),
+        URL.createObjectURL(backImageBlob)
+      );
+      
+      // 2. Crear un archivo File del Blob combinado
+      const filename = `${mergeDocId}_combinado.jpg`;
+      const combinedFile = new File([combinedBlob], filename, {
+        type: 'image/jpeg',
+        lastModified: Date.now()
+      });
+      
+      // 3. Proceder con el flujo de subida normal
+      cerrarMergeModal();
+      btn.textContent = 'Combinar y subir documento';
+      
+      // Llamar al flujo de subida
+      const tamKB = (combinedFile.size/1024).toFixed(0);
+      const previewUrl = URL.createObjectURL(combinedFile);
+      marcarCardSubida(mergeDocId, filename, tamKB, 'Subiendo…', previewUrl, true);
+      
+      const badge = document.querySelector('#card-' + mergeDocId + ' .doc-badge');
+      if (badge) { badge.textContent = 'Subiendo…'; badge.className = 'doc-badge'; }
+      activarBotonGuardarRojo();
+      
+      const user = await nexoUsuarioActual();
+      if (!user) { showToast('Debes iniciar sesión para subir documentos'); return; }
+      
+      const data = await subirDocumento({ tipo: mergeDocId, file: combinedFile });
+      
+      const realKB = data && data.tamano ? Math.round(data.tamano / 1024) : tamKB;
+      const realNombre = data && data.nombre ? data.nombre : filename;
+      marcarCardSubida(mergeDocId, realNombre, realKB, 'Subido ahora', previewUrl, false);
+      updateProgress();
+      showToast('Documentos combinados y subidos con éxito');
+      activarBotonGuardarRojo();
+    } catch (e) {
+      console.error(e);
+      showToast('Error al fusionar imágenes: ' + e.message);
+      btn.disabled = false;
+      btn.textContent = 'Combinar y subir documento';
+    }
+  }
+  window.procesarFusion = procesarFusion;
+
+  function combinarCaras(frontImageSrc, backImageSrc) {
+    return new Promise((resolve, reject) => {
+      const imgFront = new Image();
+      const imgBack = new Image();
+      let loadedCount = 0;
+      
+      const checkLoaded = () => {
+        loadedCount++;
+        if (loadedCount === 2) {
+          // Escalamos ambas imágenes para que tengan un ancho uniforme de 1000px
+          const targetWidth = 1000;
+          const scaleFront = targetWidth / imgFront.width;
+          const heightFront = imgFront.height * scaleFront;
+          
+          const scaleBack = targetWidth / imgBack.width;
+          const heightBack = imgBack.height * scaleBack;
+          
+          const spacing = 20; // Espaciador entre las caras
+          const border = 15;  // Margen de borde blanco
+          
+          const canvas = document.createElement('canvas');
+          canvas.width = targetWidth + (border * 2);
+          canvas.height = heightFront + heightBack + spacing + (border * 2);
+          
+          const ctx = canvas.getContext('2d');
+          
+          // Rellenar fondo con color blanco limpio
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          // Dibujar lado frontal
+          ctx.drawImage(imgFront, border, border, targetWidth, heightFront);
+          
+          // Dibujar lado reverso
+          ctx.drawImage(imgBack, border, border + heightFront + spacing, targetWidth, heightBack);
+          
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              reject(new Error('Fallo al generar el blob combinado.'));
+              return;
+            }
+            resolve(blob);
+          }, 'image/jpeg', 0.85); // Calidad JPEG al 85% para excelente claridad de texto
+        }
+      };
+      
+      imgFront.onload = checkLoaded;
+      imgFront.onerror = () => reject(new Error('Lado frontal no se pudo cargar.'));
+      imgBack.onload = checkLoaded;
+      imgBack.onerror = () => reject(new Error('Lado reverso no se pudo cargar.'));
+      
+      imgFront.src = frontImageSrc;
+      imgBack.src = backImageSrc;
+    });
+  }
 </script>
 
 <button class="btt" id="btt" title="Volver arriba" onclick="window.scrollTo({top:0,behavior:'smooth'})">
@@ -1760,5 +2111,51 @@
     });
   }
 </script>
+<!-- MODAL PARA FUSIÓN DE DOCUMENTOS (DOS CARAS) -->
+<div class="merge-modal-overlay" id="mergeModal" onclick="if(event.target===this) cerrarMergeModal()">
+  <div class="merge-modal-box">
+    <div class="merge-modal-header">
+      <h3 id="mergeModalTitle">Subir Cédula de Identidad</h3>
+      <button class="merge-modal-close" onclick="cerrarMergeModal()">✕</button>
+    </div>
+    
+    <div class="merge-slots">
+      <!-- Lado Frontal -->
+      <div class="merge-slot-card" id="slot-front">
+        <span class="merge-slot-title">Parte Frontal (Adelante)</span>
+        <div id="preview-front-placeholder" style="font-size:32px; opacity:0.5;">🪪</div>
+        <img id="preview-front" class="merge-slot-preview" style="display:none;" alt="Vista previa frontal">
+        <div class="merge-slot-actions">
+          <button class="merge-slot-btn primary" onclick="modalTriggerCamera('front')">📷 Cámara</button>
+          <button class="merge-slot-btn" onclick="modalTriggerUpload('front')">📁 Archivo</button>
+        </div>
+      </div>
+      
+      <!-- Lado Reverso -->
+      <div class="merge-slot-card" id="slot-back">
+        <span class="merge-slot-title">Parte Trasera (Atrás)</span>
+        <div id="preview-back-placeholder" style="font-size:32px; opacity:0.5;">📝</div>
+        <img id="preview-back" class="merge-slot-preview" style="display:none;" alt="Vista previa trasera">
+        <div class="merge-slot-actions">
+          <button class="merge-slot-btn primary" onclick="modalTriggerCamera('back')">📷 Cámara</button>
+          <button class="merge-slot-btn" onclick="modalTriggerUpload('back')">📁 Archivo</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Hidden Inputs for capturing files -->
+    <input type="file" id="modal-front-input" accept="image/*" style="display:none;" onchange="modalFileSelected(this, 'front')">
+    <input type="file" id="modal-back-input" accept="image/*" style="display:none;" onchange="modalFileSelected(this, 'back')">
+    
+    <div class="merge-footer-actions">
+      <button class="merge-btn-combine" id="btnMergeCombine" disabled onclick="procesarFusion()">
+        Combinar y subir documento
+      </button>
+      <button class="merge-btn-direct" onclick="subirDirecto()">
+        Prefiero subir un solo archivo directo (PDF, JPG o PNG)
+      </button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
