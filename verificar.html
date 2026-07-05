@@ -175,7 +175,6 @@
     box-shadow: var(--shadow-heavy);
     overflow: hidden;
     margin-bottom: 16px;
-    animation: fadeUp 0.5s ease;
   }
   .card-header {
     background: linear-gradient(135deg, #0A0A0A 0%, #1C1C1E 100%);
@@ -528,10 +527,22 @@
   }
 
   /* ===== PANEL CONDUCTOR (oculto por defecto) ===== */
-  .panel { display: none; }
-  /* Antes se aplicaba animation: fadeUp en cada cambio → producía un "flash".
-     Ahora sólo aparece: sin animación al conmutar entre perfiles. */
-  .panel.active { display: block; }
+  /* Cambio de perfil sin "flash": los paneles inactivos no se destruyen ni animan,
+     sólo pierden espacio y visibilidad instantáneamente. */
+  .panel {
+    display: block;
+    visibility: hidden;
+    height: 0;
+    margin: 0;
+    overflow: hidden;
+    contain: layout paint;
+  }
+  .panel.active {
+    visibility: visible;
+    height: auto;
+    overflow: visible;
+    margin: 0;
+  }
 
   /* ===== ANIMATIONS ===== */
   @keyframes fadeUp {
@@ -702,7 +713,7 @@
   }
   .doc-modal-close {
     position: fixed;
-    top: 14px; right: 14px;
+    top: 14px; right: 20px;
     width: 40px; height: 40px;
     border-radius: 50%;
     border: 1px solid rgba(255,255,255,0.2);
@@ -913,7 +924,6 @@
   .floating-back-btn { display: none !important; }
   body.modo-completo .page {
     padding-top: 10px !important;
-    animation: slideUpTransition 0.3s ease;
   }
   @keyframes slideUpTransition {
     from { transform: translateY(15px); opacity: 0.8; }
