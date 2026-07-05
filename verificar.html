@@ -1393,7 +1393,9 @@
     const esImg = /\.(jpe?g|png|gif|webp|avif|bmp|svg)$/i.test(nombre || '');
     const esPdf = /\.pdf$/i.test(nombre || '');
     const pill = '<span class="status-pill">Subido</span>';
-    if (esImg) return '<img src="' + url + '" loading="lazy" alt="">' + pill;
+    // decoding="async" evita bloquear el hilo principal; fetchpriority="high" prioriza
+    // los thumbnails ante otros recursos secundarios (mejora "First Meaningful Paint").
+    if (esImg) return '<img src="' + url + '" loading="eager" decoding="async" fetchpriority="high" alt="">' + pill;
     if (esPdf) {
       // Fondo "PDF" visible mientras carga; encima, un canvas con la 1ª página real
       return '<div class="doc-file-thumb pdf">PDF</div>' +
@@ -1402,29 +1404,47 @@
     return '<div class="doc-file-thumb">📄</div>' + pill;
   }
 
-  // Pinta la primera página de cada PDF (canvas.pdf-thumb) que aún no se haya renderizado
+  // Renderiza en PARALELO la 1ª página de cada PDF (canvas.pdf-thumb) que aún no se
+  // haya renderizado. Antes iba secuencial: N PDFs → N tiempos. Ahora concurrente.
   async function renderizarPdfThumbs() {
     if (!window.pdfjsLib) return;
     const canvases = document.querySelectorAll('canvas.pdf-thumb:not([data-rendered])');
-    for (const canvas of canvases) {
+    const tareas = [...canvases].map(async canvas => {
       canvas.setAttribute('data-rendered', '1');
       const url = canvas.getAttribute('data-pdf');
-      if (!url) continue;
+      if (!url) return;
       try {
         const pdf  = await pdfjsLib.getDocument(url).promise;
         const page = await pdf.getPage(1);
         const base = page.getViewport({ scale: 1 });
         const anchoObjetivo = (canvas.parentElement && canvas.parentElement.clientWidth) || 260;
-        const escala   = Math.max(1, (anchoObjetivo * 2) / base.width); // x2 para nitidez
+        const escala   = Math.max(1, (anchoObjetivo * 2) / base.width);
         const viewport = page.getViewport({ scale: escala });
         canvas.width  = viewport.width;
         canvas.height = viewport.height;
         await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-        canvas.classList.add('ok'); // revela el canvas por encima del fondo "PDF"
+        canvas.classList.add('ok');
       } catch (e) {
         console.warn('No se pudo previsualizar el PDF:', e && e.message);
       }
-    }
+    });
+    await Promise.all(tareas);
+  }
+
+  // Resuelve en PARALELO todas las URLs firmadas de una lista de docs y devuelve
+  // un Map<path, url>. Antes cada await bloqueaba el siguiente → 12 docs = 12× RTT.
+  async function resolverUrls(docs) {
+    const map = new Map();
+    if (!docs || !docs.length) return map;
+    const unicos = [...new Map(docs.filter(d => d && d.path).map(d => [d.path, d])).values()];
+    const resultados = await Promise.all(unicos.map(async d => {
+      try {
+        const url = codigoPublico ? urlPublicaDocumento(d.path) : await urlDocumento(d.path);
+        return [d.path, url];
+      } catch (e) { return null; }
+    }));
+    resultados.forEach(r => { if (r) map.set(r[0], r[1]); });
+    return map;
   }
 
   // Actualiza una tarjeta demo estática con el documento REAL subido por el usuario
@@ -1464,15 +1484,49 @@
     });
   }
 
-  // Renderiza una lista de documentos dentro de un grid contenedor
+  // Renderiza los "documentos extras" del perfil guardia (paralelizado).
+  async function renderizarExtrasGuardia(extras) {
+    const cont = document.getElementById('extrasGuardia');
+    if (!cont || !extras.length) return;
+    const urls = await resolverUrls(extras);
+    const frag = document.createDocumentFragment();
+    for (const d of extras) {
+      const url = urls.get(d.path);
+      if (!url) continue;
+      const num = d.tipo.replace('extra', '');
+      const titulo = 'Documento extra ' + num;
+      const div = document.createElement('div');
+      div.className = 'doc-img-card';
+      div.setAttribute('onclick',
+        "abrirDoc('" + url.replace(/'/g, "\\'") + "','" +
+        titulo.replace(/'/g, "\\'") + "','" + (d.nombre || '').replace(/'/g, "\\'") + "')");
+      div.innerHTML = `
+        <div class="doc-img-thumb">${thumbHTML(url, d.nombre)}</div>
+        <div class="doc-img-info">
+          <div>
+            <div class="nombre">${titulo}</div>
+            <div class="vence">${d.nombre || ''}</div>
+          </div>
+          <span class="chev">›</span>
+        </div>`;
+      frag.appendChild(div);
+    }
+    cont.style.display = '';
+    cont.innerHTML = '';
+    cont.appendChild(frag);
+  }
+
+  // Renderiza una lista de documentos dentro de un grid contenedor.
+  // Optimizado: resuelve TODAS las URLs en paralelo antes de pintar → render inmediato.
   async function renderizarGridDinamico(contId, docs) {
     const cont = document.getElementById(contId);
     if (!cont) return;
-    if (!docs.length) return; // deja el mensaje "Aún no has subido"
-    cont.innerHTML = '';
+    if (!docs.length) return;
+    const urls = await resolverUrls(docs);
+    const frag = document.createDocumentFragment();
     for (const d of docs) {
-      let url;
-      try { url = codigoPublico ? urlPublicaDocumento(d.path) : await urlDocumento(d.path); } catch(e) { continue; }
+      const url = urls.get(d.path);
+      if (!url) continue;
       const titulo = d.titulo || NOMBRES_DOC[d.tipo] || d.tipo;
       const sub = d.nombre || '';
       const div = document.createElement('div');
@@ -1489,8 +1543,10 @@
           </div>
           <span class="chev">›</span>
         </div>`;
-      cont.appendChild(div);
+      frag.appendChild(div);
     }
+    cont.innerHTML = '';
+    cont.appendChild(frag);
   }
 
   // Nombres visibles de los documentos de vehículo
@@ -1536,26 +1592,23 @@
       return;
     }
 
-    // Pre-resolver las URLs de los documentos de cada vehículo (para cambiar al instante)
+    // Pre-resolver TODAS las URLs de TODOS los vehículos en PARALELO (1 sola espera).
+    const ordenBase = { 'permiso': 1, 'revision': 2, 'soap': 3, 'padron': 4 };
+    const todos = [];
+    for (const i of orden) {
+      const lista = (vehiculos[i] || []).slice();
+      lista.sort((a, b) => (ordenBase[a.base] || 999) - (ordenBase[b.base] || 999));
+      vehiculos[i] = lista;
+      lista.forEach(d => todos.push(d));
+    }
+    const urls = await resolverUrls(todos);
+
     const datosVeh = {};
     for (const i of orden) {
-      const lista = vehiculos[i] || [];
-      const ordenBase = {
-        'permiso': 1,
-        'revision': 2,
-        'soap': 3,
-        'padron': 4
-      };
-      lista.sort((a, b) => {
-        const orderA = ordenBase[a.base] || 999;
-        const orderB = ordenBase[b.base] || 999;
-        return orderA - orderB;
-      });
-
       const docs = [];
-      for (const d of lista) {
-        let url;
-        try { url = codigoPublico ? urlPublicaDocumento(d.path) : await urlDocumento(d.path); } catch(e) { continue; }
+      for (const d of (vehiculos[i] || [])) {
+        const url = urls.get(d.path);
+        if (!url) continue;
         docs.push({ url, titulo: VEH_DOC_NOMBRE[d.base] || d.tipo, sub: d.nombre || '' });
       }
       datosVeh[i] = { patente: patentes[i - 1] || '', docs };
@@ -1625,70 +1678,48 @@
       const comerciante = [];
       const empresa = [];
       const vehiculos = {}; // { 1:[docs], 2:[docs], 3:[docs] }
+      const fijos = []; // documentos con card fija (cédula, antecedentes, etc.)
       for (const d of docs) {
-        if (!d.path) continue; // solo título guardado, sin archivo aún
+        if (!d.path) continue;
 
-        // Documentos de vehículo: permiso/revision/soap/padron (+ sufijo _v2 / _v3)
         const vm = /^(permiso|revision|soap|padron)(?:_v([23]))?$/.exec(d.tipo || '');
         if (vm) {
           const idx = vm[2] ? parseInt(vm[2], 10) : 1;
           (vehiculos[idx] = vehiculos[idx] || []).push({ ...d, base: vm[1] });
           continue;
         }
-
-        // Documento extra guardia sin card fija
         if (/^extra\d+$/.test(d.tipo)) { extras.push(d); continue; }
-        // Documentos comerciante
         if (d.tipo === 'patente_alcoholes' || d.tipo === 'patente_comercial' || /^com_extra\d+$/.test(d.tipo)) {
           comerciante.push(d); continue;
         }
-        // Documentos empresa
         if (d.tipo === 'directiva' || d.tipo === 'contratos_empresa' || d.tipo === 'seguro_empresa' || /^emp_extra\d+$/.test(d.tipo)) {
           empresa.push(d); continue;
         }
-
-        const card = document.querySelector('.doc-img-card[data-tipo="' + d.tipo + '"]');
-        if (!card) continue;
-        let url;
-        try { url = codigoPublico ? urlPublicaDocumento(d.path) : await urlDocumento(d.path); } catch(e) { continue; }
-        actualizarCard(card, d, url);
-      }
-
-      await renderVehiculosVerif(vehiculos);
-      await renderizarGridDinamico('gridComerciante', comerciante);
-      await renderizarGridDinamico('gridEmpresa', empresa);
-
-      // Renderizar documentos extras (si hay)
-      const cont = document.getElementById('extrasGuardia');
-      if (cont && extras.length) {
-        cont.style.display = '';
-        cont.innerHTML = '';
-        for (const d of extras) {
-          let url;
-          try { url = codigoPublico ? urlPublicaDocumento(d.path) : await urlDocumento(d.path); } catch(e) { continue; }
-          const num = d.tipo.replace('extra', '');
-          const titulo = 'Documento extra ' + num;
-          const div = document.createElement('div');
-          div.className = 'doc-img-card';
-          div.setAttribute('onclick',
-            "abrirDoc('" + url.replace(/'/g, "\\'") + "','" +
-            titulo.replace(/'/g, "\\'") + "','" + (d.nombre || '').replace(/'/g, "\\'") + "')");
-          div.innerHTML = `
-            <div class="doc-img-thumb">${thumbHTML(url, d.nombre)}</div>
-            <div class="doc-img-info">
-              <div>
-                <div class="nombre">${titulo}</div>
-                <div class="vence">${d.nombre || ''}</div>
-              </div>
-              <span class="chev">›</span>
-            </div>`;
-          cont.appendChild(div);
+        if (document.querySelector('.doc-img-card[data-tipo="' + d.tipo + '"]')) {
+          fijos.push(d);
         }
       }
 
+      // Resolver TODAS las URLs de docs con card fija en PARALELO
+      const urlsFijos = await resolverUrls(fijos);
+      for (const d of fijos) {
+        const url = urlsFijos.get(d.path);
+        if (!url) continue;
+        const card = document.querySelector('.doc-img-card[data-tipo="' + d.tipo + '"]');
+        if (card) actualizarCard(card, d, url);
+      }
+
+      // Renderizar todas las secciones EN PARALELO (los grids son independientes)
+      await Promise.all([
+        renderVehiculosVerif(vehiculos),
+        renderizarGridDinamico('gridComerciante', comerciante),
+        renderizarGridDinamico('gridEmpresa', empresa),
+        renderizarExtrasGuardia(extras)
+      ]);
+
       // Grids estáticos sin documentos → mostrar estado vacío
       mostrarVacios();
-      // Renderizar las miniaturas reales de los PDF (1ª página)
+      // Renderizar las miniaturas reales de los PDF (1ª página) en paralelo
       renderizarPdfThumbs();
     } catch(e) { console.warn('No se pudieron cargar documentos:', e.message); }
   }
