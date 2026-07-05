@@ -1411,9 +1411,9 @@
     const esImg = /\.(jpe?g|png|gif|webp|avif|bmp|svg)$/i.test(nombre || '');
     const esPdf = /\.pdf$/i.test(nombre || '');
     const pill = '<span class="status-pill">Subido</span>';
-    // decoding="async" evita bloquear el hilo principal; fetchpriority="high" prioriza
-    // los thumbnails ante otros recursos secundarios (mejora "First Meaningful Paint").
-    if (esImg) return '<img src="' + url + '" loading="eager" decoding="async" fetchpriority="high" alt="">' + pill;
+    // loading="lazy" evita saturar el ancho de banda al arranque; decoding="async"
+    // libera el hilo principal para que el layout se pinte antes.
+    if (esImg) return '<img src="' + url + '" loading="lazy" decoding="async" alt="">' + pill;
     if (esPdf) {
       // Fondo "PDF" visible mientras carga; encima, un canvas con la 1ª página real
       return '<div class="doc-file-thumb pdf">PDF</div>' +
@@ -1866,7 +1866,7 @@
   <button class="doc-modal-close" onclick="cerrarDoc()" title="Cerrar" aria-label="Cerrar">✕</button>
   <div class="doc-modal-spinner" aria-hidden="true"></div>
   <div class="doc-modal-body">
-    <img id="modalImg" src="" alt="Documento" decoding="sync">
+    <img id="modalImg" src="" alt="Documento" decoding="async">
   </div>
   <h3 id="modalTitle" hidden></h3>
   <div id="modalSub" hidden></div>
