@@ -27,7 +27,10 @@
 <meta name="twitter:image" content="https://nfcnexo.netlify.app/favicon/web-app-manifest-512x512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Fonts: cargar de forma NO bloqueante para no retrasar el LCP. Con display=swap
+     el texto se pinta al instante en fuente fallback y luego cambia sin trabar. -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"></noscript>
 <link rel="icon" type="image/png" href="favicon/favicon-96x96.png" sizes="96x96" />
 <link rel="icon" type="image/svg+xml" href="favicon/favicon.svg" />
 <link rel="shortcut icon" href="favicon/favicon.ico" />
@@ -1292,7 +1295,18 @@
     }
   }
 </style>
-<script src="theme.js"></script>
+<!-- Aplicar tema ANTES del primer render (inline, sin bloquear descarga externa) -->
+<script>
+(function(){
+  try {
+    var k='nexo_theme', s=sessionStorage.getItem(k);
+    if(!s){ var h=new Date().getHours(); s=(h>=19||h<7)?'dark':'light'; }
+    document.documentElement.setAttribute('data-theme', s==='dark'?'dark':'light');
+  } catch(e){}
+})();
+</script>
+<!-- theme.js carga en defer: no bloquea el render inicial -->
+<script src="theme.js" defer></script>
 </head>
 <body>
 
