@@ -1495,9 +1495,11 @@
       // Si es un slot renombrable, incluir el título editado
       const h = document.querySelector('.doc-title[data-tipo="' + docId + '"]');
       const titulo = h ? h.textContent.trim() : undefined;
-      await subirDocumento({ tipo: docId, file, titulo });
-      // Confirmar la subida (misma miniatura local, ya sin estado "subiendo")
-      marcarCardSubida(docId, file.name, tamKB, 'Subido ahora', previewUrl, false);
+      const data = await subirDocumento({ tipo: docId, file, titulo });
+      // Confirmar la subida (mostrando el tamaño real comprimido)
+      const realKB = data && data.tamano ? Math.round(data.tamano / 1024) : tamKB;
+      const realNombre = data && data.nombre ? data.nombre : file.name;
+      marcarCardSubida(docId, realNombre, realKB, 'Subido ahora', previewUrl, false);
       updateProgress();
       // Si acabó de subir la foto de perfil, refrescar todos los avatares
       if (docId === 'foto') aplicarFotoPerfil();

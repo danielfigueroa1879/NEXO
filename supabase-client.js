@@ -178,6 +178,62 @@ async function listarCuentas() {
   return data || [];
 }
 
+// Comprime imágenes en el cliente (max 1600px de ancho/alto, 80% calidad JPEG)
+function comprimirImagenClientSide(file, maxDim = 1600, calidad = 0.8) {
+  return new Promise((resolve) => {
+    // Si no es imagen (ej. PDF) o no hay soporte en el entorno actual, omitir
+    if (!file || !file.type || !file.type.startsWith('image/') || typeof FileReader === 'undefined') {
+      resolve(file);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            resolve(file);
+            return;
+          }
+          // Cambiar extensión a .jpg en el nombre del archivo
+          let nuevoNombre = file.name || 'documento.jpg';
+          const extIndex = nuevoNombre.lastIndexOf('.');
+          if (extIndex !== -1) {
+            nuevoNombre = nuevoNombre.substring(0, extIndex) + '.jpg';
+          } else {
+            nuevoNombre += '.jpg';
+          }
+          const compressedFile = new File([blob], nuevoNombre, {
+            type: 'image/jpeg',
+            lastModified: Date.now()
+          });
+          resolve(compressedFile);
+        }, 'image/jpeg', calidad);
+      };
+      img.onerror = () => resolve(file);
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
+  });
+}
+
 /* ------------------------------------------------------------
    DOCUMENTOS  (Storage + tabla `public.documentos`)
    ------------------------------------------------------------ */
@@ -185,14 +241,17 @@ async function subirDocumento({ tipo, file, titulo }) {
   const user = await nexoUsuarioActual();
   if (!user) throw new Error('Debes iniciar sesión para subir documentos');
 
-  const ext  = (file.name.split('.').pop() || 'bin').toLowerCase();
+  // Comprimir imagen si aplica (cámara de celular, PNGs pesados, etc.)
+  const fileToUpload = await comprimirImagenClientSide(file);
+
+  const ext  = (fileToUpload.name.split('.').pop() || 'bin').toLowerCase();
   const path = `${user.id}/${tipo}.${ext}`;
 
   const { error: eUp } = await sb.storage.from('documentos')
-    .upload(path, file, { upsert: true, contentType: file.type || undefined });
+    .upload(path, fileToUpload, { upsert: true, contentType: fileToUpload.type || undefined });
   if (eUp) throw eUp;
 
-  const payload = { cuenta_id: user.id, tipo, nombre: file.name, path, tamano: file.size };
+  const payload = { cuenta_id: user.id, tipo, nombre: fileToUpload.name, path, tamano: fileToUpload.size };
   if (titulo) payload.titulo = titulo;
   const { data, error } = await sb.from('documentos')
     .upsert(payload, { onConflict: 'cuenta_id,tipo' })

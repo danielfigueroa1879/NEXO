@@ -36,6 +36,13 @@
 <link rel="shortcut icon" href="favicon/favicon.ico" />
 <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png" />
 <link class="pwa-manifest-link" rel="manifest" href="favicon/nexo.webmanifest" />
+<!-- Preload de imágenes críticas en WebP para carga instantánea -->
+<link rel="preload" as="image" href="images/CertifficadoAnteceddentes.webp" type="image/webp">
+<link rel="preload" as="image" href="images/CedulaIdentidad.webp" type="image/webp">
+<link rel="preload" as="image" href="images/PermisoCirculacion.webp" type="image/webp">
+<link rel="preload" as="image" href="images/Revisiontecnica.webp" type="image/webp">
+<link rel="preload" as="image" href="images/seguro.webp" type="image/webp">
+<link rel="preload" as="image" href="images/padron.webp" type="image/webp">
 <style>
   :root {
     --bg: #FAFAFA;
@@ -1552,8 +1559,8 @@
                 </div>
               </div>
               <!-- Scanned Documents (Images provided by user) -->
-              <img src="images/CertifficadoAnteceddentes.png" alt="Certificado de Antecedentes" class="replica-image" loading="lazy" decoding="async" fetchpriority="low" width="800" height="1100">
-              <img src="images/CedulaIdentidad.png" alt="Cédula de Identidad" class="replica-image" loading="lazy" decoding="async" fetchpriority="low" width="800" height="500">
+              <img src="images/CertifficadoAnteceddentes.webp" alt="Certificado de Antecedentes" class="replica-image" loading="eager" decoding="async" width="800" height="1100">
+              <img src="images/CedulaIdentidad.webp" alt="Cédula de Identidad" class="replica-image" loading="eager" decoding="async" width="800" height="500">
             </div>
 
             <!-- Profile: Conductor Particular -->
@@ -1582,10 +1589,10 @@
               </div>
 
               <!-- Scanned Documents (Images provided by user) -->
-              <img src="images/PermisoCirculacion.png" alt="Permiso de Circulación" class="replica-image" loading="lazy" decoding="async" fetchpriority="low" width="800" height="1100">
-              <img src="images/Revisiontecnica.png" alt="Revisión Técnica" class="replica-image" loading="lazy" decoding="async" fetchpriority="low" width="800" height="1100">
-              <img src="images/seguro.png" alt="Seguro SOAP" class="replica-image" loading="lazy" decoding="async" fetchpriority="low" width="800" height="1100">
-              <img src="images/padron.png" alt="Padrón / Certificado Inscripción" class="replica-image" loading="lazy" decoding="async" fetchpriority="low" width="800" height="1100">
+              <img src="images/PermisoCirculacion.webp" alt="Permiso de Circulación" class="replica-image" loading="eager" decoding="async" width="800" height="1100">
+              <img src="images/Revisiontecnica.webp" alt="Revisión Técnica" class="replica-image" loading="eager" decoding="async" width="800" height="1100">
+              <img src="images/seguro.webp" alt="Seguro SOAP" class="replica-image" loading="eager" decoding="async" width="800" height="1100">
+              <img src="images/padron.webp" alt="Padrón / Certificado Inscripción" class="replica-image" loading="eager" decoding="async" width="800" height="1100">
             </div>
 
             <!-- Profile: Empresa -->
