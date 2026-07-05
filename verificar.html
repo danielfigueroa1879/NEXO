@@ -865,7 +865,30 @@
     font-weight: 700;
   }
 
-  /* Botón Flotante Volver Atrás */
+  /* Botón "Volver" (chevron) DENTRO del banner negro (esquina superior derecha) */
+  .card-back-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: #fff;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 3;
+    transition: background 0.15s, transform 0.15s;
+    padding: 0;
+  }
+  .card-back-btn:hover { background: rgba(255,255,255,0.22); }
+  .card-back-btn:active { transform: scale(0.9); }
+  .card-back-btn svg { width: 14px; height: 14px; stroke: #fff; }
+  body.modo-completo .card-back-btn { display: inline-flex; }
+
+  /* Botón Flotante Volver Atrás (queda oculto: reemplazado por el chevron interno) */
   .floating-back-btn {
     position: fixed;
     top: 16px;
@@ -907,9 +930,8 @@
   body.modo-completo .profile-selector {
     display: none !important;
   }
-  body.modo-completo .floating-back-btn {
-    display: inline-flex !important;
-  }
+  /* El chevron dentro del banner negro reemplaza al botón flotante */
+  .floating-back-btn { display: none !important; }
   body.modo-completo .page {
     padding-top: 48px !important;
     animation: slideUpTransition 0.3s ease;
@@ -990,6 +1012,9 @@
     <!-- Tarjeta de identidad -->
     <div class="id-card">
       <div class="card-header">
+        <button type="button" class="card-back-btn" onclick="salirModoCompleto()" title="Volver" aria-label="Volver">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
         <div class="avatar" id="avG">??</div>
         <div class="card-identity">
           <h2 id="nameG">Cargando…</h2>
@@ -1067,6 +1092,9 @@
 
     <div class="id-card">
       <div class="card-header">
+        <button type="button" class="card-back-btn" onclick="salirModoCompleto()" title="Volver" aria-label="Volver">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
         <div class="avatar" id="avV">??</div>
         <div class="card-identity">
           <h2 id="nameV">Cargando…</h2>
@@ -1105,6 +1133,9 @@
   <div class="panel" id="panel-comerciante">
     <div class="id-card">
       <div class="card-header">
+        <button type="button" class="card-back-btn" onclick="salirModoCompleto()" title="Volver" aria-label="Volver">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
         <div class="avatar" id="avC">??</div>
         <div class="card-identity">
           <h2 id="nameC">Cargando…</h2>
@@ -1132,6 +1163,9 @@
   <div class="panel" id="panel-empresa">
     <div class="id-card">
       <div class="card-header">
+        <button type="button" class="card-back-btn" onclick="salirModoCompleto()" title="Volver" aria-label="Volver">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
         <div class="avatar" id="avE">??</div>
         <div class="card-identity">
           <h2 id="nameE">Cargando…</h2>
