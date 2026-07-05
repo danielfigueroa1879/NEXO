@@ -677,71 +677,47 @@
   }
 
   /* ===== MODAL VIEWER ===== */
+  /* Visor de documento a pantalla completa: sin marcos, sólo el documento + X para cerrar */
   .doc-modal {
     position: fixed; inset: 0;
-    background: rgba(0,0,0,0.85);
+    background: #0A0A0A;
     z-index: 500;
     display: none;
-    align-items: center; justify-content: center;
-    padding: 20px;
-    backdrop-filter: blur(8px);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
-  .doc-modal.show { display: flex; animation: fadeIn .25s ease; }
-  .doc-modal-inner {
-    background: #fff;
-    border-radius: 18px;
-    max-width: 480px; width: 100%;
-    max-height: 92vh;
-    display: flex; flex-direction: column;
-    overflow: hidden;
-    box-shadow: 0 30px 80px rgba(0,0,0,0.5);
-  }
-  .doc-modal-header {
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--line);
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 10px;
-  }
-  .doc-modal-header h3 {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 16px; font-weight: 700; letter-spacing: -0.01em;
-  }
-  .doc-modal-close {
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    border: none; background: var(--bg);
-    cursor: pointer; font-size: 18px;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--ink); transition: background .15s;
-  }
-  .doc-modal-close:hover { background: var(--line); }
+  .doc-modal.show { display: block; animation: fadeIn .2s ease; }
   .doc-modal-body {
-    flex: 1; overflow: auto;
-    background: #1C1C1E;
-    display: flex; align-items: center; justify-content: center;
-    padding: 16px;
-    min-height: 300px;
+    min-height: 100%;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 12px;
   }
   .doc-modal-body img {
-    max-width: 100%; max-height: 60vh;
-    border-radius: 8px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 4px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
   }
-  .doc-modal-footer {
-    padding: 12px 18px;
-    border-top: 1px solid var(--line);
-    display: flex; gap: 8px;
+  .doc-modal-close {
+    position: fixed;
+    top: 14px; right: 14px;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(20,20,20,0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #fff;
+    cursor: pointer;
+    font-size: 20px; font-weight: 300; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 510;
+    transition: background .15s, transform .12s;
   }
-  .doc-modal-footer button, .doc-modal-footer a {
-    flex: 1; padding: 11px;
-    border-radius: 10px; border: none;
-    font-family: 'Outfit', sans-serif;
-    font-size: 13px; font-weight: 700;
-    cursor: pointer; text-decoration: none;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-  }
-  .doc-modal-footer .btn-replace { background: var(--ink); color: #fff; }
-  .doc-modal-footer .btn-close { background: #fff; color: var(--ink); border: 1.5px solid var(--line); }
+  .doc-modal-close:hover { background: rgba(40,40,40,0.9); }
+  .doc-modal-close:active { transform: scale(0.92); }
 
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -1822,23 +1798,14 @@
   });
 </script>
 
-<!-- MODAL VISOR DE DOCUMENTOS -->
-<div class="doc-modal" id="docModal" onclick="if(event.target===this)cerrarDoc()">
-  <div class="doc-modal-inner">
-    <div class="doc-modal-header">
-      <div>
-        <h3 id="modalTitle">Documento</h3>
-        <div id="modalSub" style="font-size:11px;color:var(--ink-mute);margin-top:2px;"></div>
-      </div>
-      <button class="doc-modal-close" onclick="cerrarDoc()">✕</button>
-    </div>
-    <div class="doc-modal-body">
-      <img id="modalImg" src="" alt="Documento">
-    </div>
-    <div class="doc-modal-footer">
-      <button class="btn-close" onclick="cerrarDoc()" style="flex:1">Cerrar</button>
-    </div>
+<!-- MODAL VISOR DE DOCUMENTOS: pantalla completa, sin marcos, sólo el documento + X -->
+<div class="doc-modal" id="docModal">
+  <button class="doc-modal-close" onclick="cerrarDoc()" title="Cerrar" aria-label="Cerrar">✕</button>
+  <div class="doc-modal-body">
+    <img id="modalImg" src="" alt="Documento">
   </div>
+  <h3 id="modalTitle" hidden></h3>
+  <div id="modalSub" hidden></div>
 </div>
 
 <!-- CHEVRON VOLVER ARRIBA -->
