@@ -233,6 +233,35 @@
     @media (max-width: 640px) {
       .nexo-theme-toggle { bottom: 16px; left: 16px; width: 40px; height: 40px; font-size: 18px; }
     }
+
+    /* Botón flotante de WhatsApp (soporte) */
+    .nexo-whatsapp-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: #25D366;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      z-index: 9999;
+      box-shadow: 0 4px 14px rgba(37, 211, 102, 0.45), 0 2px 6px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+      -webkit-tap-highlight-color: transparent;
+      text-decoration: none;
+    }
+    .nexo-whatsapp-btn:hover { transform: scale(1.08); box-shadow: 0 6px 18px rgba(37, 211, 102, 0.55); }
+    .nexo-whatsapp-btn:active { transform: scale(0.95); }
+    .nexo-whatsapp-btn svg { width: 28px; height: 28px; fill: #fff; }
+    @media (max-width: 640px) {
+      .nexo-whatsapp-btn { bottom: 88px; right: 16px; width: 48px; height: 48px; }
+      .nexo-whatsapp-btn svg { width: 26px; height: 26px; }
+    }
   `;
   document.head.appendChild(style);
 
@@ -273,6 +302,31 @@
     document.addEventListener('DOMContentLoaded', crearBoton);
   } else {
     crearBoton();
+  }
+
+  // 4) Botón flotante de WhatsApp para soporte
+  function crearBotonWhatsApp() {
+    if (document.getElementById('nexoWhatsAppBtn')) return;
+    const numero = '56937758716';
+    const mensaje = encodeURIComponent('Hola, necesito ayuda con mi tarjeta NEXO');
+    const a = document.createElement('a');
+    a.id = 'nexoWhatsAppBtn';
+    a.className = 'nexo-whatsapp-btn';
+    a.href = `https://wa.me/${numero}?text=${mensaje}`;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.title = 'Contáctanos por WhatsApp';
+    a.setAttribute('aria-label', 'Contactar por WhatsApp');
+    a.innerHTML = '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<path d="M16.004 3.2c-7.06 0-12.8 5.74-12.8 12.8 0 2.26.6 4.46 1.72 6.4L3.2 28.8l6.58-1.72c1.86 1.02 3.96 1.56 6.22 1.56 7.06 0 12.8-5.74 12.8-12.8s-5.74-12.8-12.8-12.8zm0 23.36c-1.98 0-3.9-.52-5.58-1.5l-.4-.24-3.9 1.02 1.04-3.8-.26-.4c-1.08-1.72-1.66-3.72-1.66-5.78 0-5.9 4.8-10.7 10.72-10.7 5.9 0 10.72 4.8 10.72 10.72s-4.8 10.68-10.72 10.68zm5.86-8c-.32-.16-1.9-.94-2.2-1.04-.3-.1-.5-.16-.72.16-.22.32-.82 1.04-1 1.24-.18.22-.38.24-.7.08-.32-.16-1.36-.5-2.6-1.6-.96-.86-1.6-1.92-1.8-2.24-.18-.32-.02-.5.14-.66.14-.14.32-.38.48-.56.16-.18.22-.32.32-.54.1-.22.06-.4-.02-.56-.08-.16-.72-1.72-.98-2.36-.26-.62-.52-.54-.72-.54h-.62c-.22 0-.56.08-.86.4-.3.32-1.14 1.12-1.14 2.72s1.16 3.16 1.32 3.38c.16.22 2.3 3.5 5.58 4.9.78.34 1.38.54 1.86.68.78.24 1.5.22 2.06.14.62-.1 1.9-.78 2.18-1.54.28-.76.28-1.42.18-1.54-.08-.14-.28-.22-.6-.38z"/>' +
+      '</svg>';
+    document.body.appendChild(a);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', crearBotonWhatsApp);
+  } else {
+    crearBotonWhatsApp();
   }
 
   // Exponer para uso desde otros scripts
