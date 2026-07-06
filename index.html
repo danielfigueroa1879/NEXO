@@ -1064,6 +1064,37 @@
     .footer-signature .fs-contact { flex-direction: column; gap: 4px; }
     .footer-signature .fs-contact .fs-sep { display: none; }
   }
+
+  /* Marco legal / descarga de ley */
+  .footer-legal {
+    max-width: 1200px; margin: 22px auto 0; padding-top: 20px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+  }
+  .footer-legal .fl-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-mute); margin-bottom: 10px;
+  }
+  .footer-legal .fl-links {
+    display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center;
+  }
+  .footer-legal .fl-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 16px; border-radius: 100px;
+    background: var(--surface); border: 1px solid var(--line);
+    color: var(--ink-soft); text-decoration: none;
+    font-size: 13px; font-weight: 500;
+    transition: border-color 0.2s, color 0.2s, background 0.2s, transform 0.15s;
+  }
+  .footer-legal .fl-btn:hover {
+    border-color: var(--ink); color: var(--ink); transform: translateY(-1px);
+  }
+  .footer-legal .fl-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .footer-legal .fl-note {
+    font-size: 11px; color: var(--ink-mute); margin-top: 10px; max-width: 640px;
+    margin-left: auto; margin-right: auto; line-height: 1.5;
+  }
   .footer-flag { display: inline-flex; align-items: center; gap: 6px; }
   /* Bandera chilena: azul+blanco arriba / rojo abajo */
   .flag-stripe {
@@ -1915,6 +1946,32 @@
       <a href="tel:+56937758716">📞 +56 9 3775 8716</a>
       <span class="fs-sep">·</span>
       <a href="mailto:informaticacibersegprivada@gmail.com">✉️ informaticacibersegprivada@gmail.com</a>
+    </div>
+  </div>
+
+  <!-- MARCO LEGAL -->
+  <div class="footer-legal">
+    <div class="fl-title">Marco Legal</div>
+    <div class="fl-links">
+      <a class="fl-btn" href="docs/LEY-19799_12-ABR-2002.pdf" download="LEY-19799-Documento-Electronico-Firma-Electronica.pdf" aria-label="Descargar Ley 19.799 en PDF">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Descargar Ley 19.799 (PDF)
+      </a>
+      <a class="fl-btn" href="https://www.bcn.cl/leychile/navegar?idNorma=196640&amp;idParte=" target="_blank" rel="noopener noreferrer" aria-label="Ver Ley 19.799 en la Biblioteca del Congreso Nacional">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+          <polyline points="15 3 21 3 21 9"/>
+          <line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+        Ver en BCN (fuente oficial)
+      </a>
+    </div>
+    <div class="fl-note">
+      Ley N.º 19.799 sobre <strong>Documentos Electrónicos, Firma Electrónica y Servicios de Certificación</strong>. Otorga a los documentos digitales de tu NFC NEXO el mismo valor legal que los documentos en papel.
     </div>
   </div>
 </footer>
