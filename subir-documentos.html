@@ -2100,24 +2100,43 @@
 
   function capturarFoto() {
     const video = document.getElementById('webcamVideo');
-    if (!video || !stream) return;
-    
+    const container = video && video.parentElement;
+    const cutout = document.querySelector('.webcam-cutout');
+    if (!video || !stream || !container || !cutout) return;
+
     try {
       const vw = video.videoWidth;
       const vh = video.videoHeight;
       if (!vw || !vh) throw new Error('Cámara no lista');
-      
-      const cropW = vw * 0.85;
-      const cropH = cropW / 1.586;
-      const startX = (vw - cropW) / 2;
-      const startY = (vh - cropH) / 2;
-      
+
+      // Mapear el marco verde visible (webcam-cutout) al espacio de píxeles del video.
+      // El <video> usa object-fit: cover → escala para llenar el contenedor y recorta el excedente.
+      const cRect = container.getBoundingClientRect();
+      const scale = Math.max(cRect.width / vw, cRect.height / vh);
+      const offsetX = (vw * scale - cRect.width) / 2;
+      const offsetY = (vh * scale - cRect.height) / 2;
+
+      const gRect = cutout.getBoundingClientRect();
+      const gX = gRect.left - cRect.left;
+      const gY = gRect.top - cRect.top;
+
+      const cropX = (gX + offsetX) / scale;
+      const cropY = (gY + offsetY) / scale;
+      const cropW = gRect.width / scale;
+      const cropH = gRect.height / scale;
+
+      // Canvas de salida: cédula centrada sobre fondo blanco con margen.
+      const targetCardW = 1000;
+      const targetCardH = Math.round(targetCardW / 1.586); // 630
+      const pad = 40;
       const canvas = document.createElement('canvas');
-      canvas.width = 1000;
-      canvas.height = 630;
-      
+      canvas.width = targetCardW + pad * 2;
+      canvas.height = targetCardH + pad * 2;
+
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, startX, startY, cropW, cropH, 0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(video, cropX, cropY, cropW, cropH, pad, pad, targetCardW, targetCardH);
       
       canvas.toBlob((blob) => {
         if (!blob) {
