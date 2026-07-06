@@ -2229,7 +2229,7 @@
       const user = await nexoUsuarioActual();
       if (!user) { showToast('Debes iniciar sesión para subir documentos'); return; }
       
-      const data = await subirDocumento({ tipo: mergeDocId, file: combinedFile, nombre: filename });
+      const data = await subirDocumento({ tipo: mergeDocId, file: combinedFile, nombre: filename, noCompress: true });
       
       const realKB = data && data.tamano ? Math.round(data.tamano / 1024) : tamKB;
       const realNombre = data && data.nombre ? data.nombre : filename;
