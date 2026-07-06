@@ -953,6 +953,17 @@
   body.modo-completo .page {
     padding-top: 10px !important;
   }
+  /* Modo Visualización Completa */
+  body.modo-completo .header,
+  body.modo-completo .verify-banner,
+  body.modo-completo .profile-selector {
+    display: none !important;
+  }
+  /* El chevron dentro del banner negro reemplaza al botón flotante */
+  .floating-back-btn { display: none !important; }
+  body.modo-completo .page {
+    padding-top: 10px !important;
+  }
   @keyframes slideUpTransition {
     from { transform: translateY(15px); opacity: 0.8; }
     to { transform: translateY(0); opacity: 1; }
@@ -969,9 +980,57 @@
 </script>
 <script src="theme.js" defer></script>
 </head>
-<body class="modo-completo">
+<body>
+
+<!-- FLOATING BACK BUTTON -->
+<button class="floating-back-btn" onclick="salirModoCompleto()" id="floatingBackBtn" title="Mostrar perfiles y cabecera">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="19" y1="12" x2="5" y2="12"></line>
+    <polyline points="12 19 5 12 12 5"></polyline>
+  </svg>
+  Volver
+</button>
+
+<!-- HEADER -->
+<div class="header">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <a href="index.html" class="back-btn" title="Volver al inicio">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    </a>
+    <a href="index.html" class="header-brand" title="Ir al inicio">
+      <div class="header-logo">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 2C4.9 2 4 2.9 4 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 3h8v1.5H8V16zm0-6h3v1.5H8V10z"/>
+        </svg>
+      </div>
+      <div class="header-name">NFC <span>NEXO</span></div>
+    </a>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <a href="admin.html" title="Configuración (solo dueño)" class="back-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61L4.89 11.06c-.05.3-.07.62-.07.94 0 .32.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+    </a>
+    <div class="timestamp" id="ts">—</div>
+  </div>
+</div>
 
 <div class="page">
+
+  <!-- SELECTOR DE PERFIL — se ajusta según los perfiles activos -->
+  <div class="profile-selector" id="profileSelector">
+    <button class="profile-tab active" id="tab-conductor" onclick="switchPanel('conductor', this)">
+      <span class="dot"></span> <span id="patenteLabel">🚗 Vehículo</span>
+    </button>
+    <button class="profile-tab" id="tab-guardia" onclick="switchPanel('guardia', this)">
+      <span class="dot"></span> 🤵 Particular
+    </button>
+    <button class="profile-tab" id="tab-comerciante" onclick="switchPanel('comerciante', this)" style="display:none;">
+      <span class="dot"></span> 🏪 Comerciante
+    </button>
+    <button class="profile-tab" id="tab-empresa" onclick="switchPanel('empresa', this)" style="display:none;">
+      <span class="dot"></span> 🏢 Empresa
+    </button>
+  </div>
 
   <!-- ===== PANEL GUARDIA ===== -->
   <div class="panel" id="panel-guardia">
@@ -1058,7 +1117,7 @@
 
     <div class="id-card">
       <div class="card-header">
-        <button type="button" class="card-back-btn" onclick="volverAtras()" title="Volver" aria-label="Volver">
+        <button type="button" class="card-back-btn" onclick="salirModoCompleto()" title="Volver" aria-label="Volver">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
         </button>
         <div class="avatar" id="avV">??</div>
@@ -1098,7 +1157,7 @@
   <div class="panel" id="panel-comerciante">
     <div class="id-card">
       <div class="card-header">
-        <button type="button" class="card-back-btn" onclick="volverAtras()" title="Volver" aria-label="Volver">
+        <button type="button" class="card-back-btn" onclick="salirModoCompleto()" title="Volver" aria-label="Volver">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
         </button>
         <div class="avatar" id="avC">??</div>
@@ -1130,7 +1189,7 @@
   <div class="panel" id="panel-empresa">
     <div class="id-card">
       <div class="card-header">
-        <button type="button" class="card-back-btn" onclick="volverAtras()" title="Volver" aria-label="Volver">
+        <button type="button" class="card-back-btn" onclick="salirModoCompleto()" title="Volver" aria-label="Volver">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
         </button>
         <div class="avatar" id="avE">??</div>
@@ -1747,14 +1806,17 @@
     document.body.classList.add('modo-completo');
   }
 
-  function volverAtras() {
-    if (document.referrer && (document.referrer.includes('subir-documentos') || document.referrer.includes('admin'))) {
-      window.location.href = 'subir-documentos.html';
-    } else {
-      window.location.href = 'index.html';
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 40 && !document.body.classList.contains('modo-completo')) {
+      document.body.classList.add('modo-completo');
     }
+  });
+
+  function salirModoCompleto() {
+    document.body.classList.remove('modo-completo');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
-  window.volverAtras = volverAtras;
+  window.salirModoCompleto = salirModoCompleto;
 
   // Reportar problema
   function reportarProblema() {
