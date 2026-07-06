@@ -219,10 +219,16 @@ function comprimirImagenClientSide(file, maxDim = 1600, calidad = 0.8) {
           } else {
             nuevoNombre += '.jpg';
           }
-          const compressedFile = new File([blob], nuevoNombre, {
-            type: 'image/jpeg',
-            lastModified: Date.now()
-          });
+          let compressedFile;
+          try {
+            compressedFile = new File([blob], nuevoNombre, {
+              type: 'image/jpeg',
+              lastModified: Date.now()
+            });
+          } catch (e) {
+            compressedFile = blob;
+            compressedFile.name = nuevoNombre;
+          }
           resolve(compressedFile);
         }, 'image/jpeg', calidad);
       };
@@ -244,14 +250,15 @@ async function subirDocumento({ tipo, file, titulo }) {
   // Comprimir imagen si aplica (cámara de celular, PNGs pesados, etc.)
   const fileToUpload = await comprimirImagenClientSide(file);
 
-  const ext  = (fileToUpload.name.split('.').pop() || 'bin').toLowerCase();
+  const nombreOriginal = file.name || fileToUpload.name || `${tipo}.jpg`;
+  const ext  = (nombreOriginal.split('.').pop() || 'jpg').toLowerCase();
   const path = `${user.id}/${tipo}.${ext}`;
 
   const { error: eUp } = await sb.storage.from('documentos')
     .upload(path, fileToUpload, { upsert: true, contentType: fileToUpload.type || undefined });
   if (eUp) throw eUp;
 
-  const payload = { cuenta_id: user.id, tipo, nombre: fileToUpload.name, path, tamano: fileToUpload.size };
+  const payload = { cuenta_id: user.id, tipo, nombre: nombreOriginal, path, tamano: fileToUpload.size };
   if (titulo) payload.titulo = titulo;
   const { data, error } = await sb.from('documentos')
     .upsert(payload, { onConflict: 'cuenta_id,tipo' })

@@ -677,6 +677,97 @@
   }
   .merge-btn-direct:hover {
     color: var(--ink);
+  /* ===== WEBCAM CARD-FRAMING MODAL ===== */
+  .webcam-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #000;
+    z-index: 3000;
+    display: none;
+    flex-direction: column;
+  }
+  .webcam-modal-overlay.show {
+    display: flex;
+  }
+  .webcam-video-container {
+    position: relative;
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  .webcam-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .webcam-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+  .webcam-cutout {
+    width: 88%;
+    max-width: 390px;
+    aspect-ratio: 1.586;
+    border: 3px solid #34C759;
+    border-radius: 16px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7), 0 0 20px rgba(52, 199, 89, 0.5);
+    position: relative;
+  }
+  .webcam-cutout::before {
+    content: '';
+    position: absolute;
+    top: 10%; left: 8%; right: 8%; bottom: 10%;
+    border: 1px dashed rgba(255, 255, 255, 0.35);
+    border-radius: 8px;
+  }
+  .webcam-instructions {
+    position: absolute;
+    top: 30px; left: 20px; right: 20px;
+    text-align: center;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    z-index: 10;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .webcam-controls {
+    position: absolute;
+    bottom: 40px; left: 0; right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    z-index: 10;
+  }
+  .webcam-btn {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: transform 0.2s, background 0.2s;
+  }
+  .webcam-btn:active {
+    transform: scale(0.9);
+  }
+  .webcam-btn.capture-btn {
+    width: 76px; height: 76px;
+    background: #fff;
+    border: 4px solid rgba(255,255,255,0.3);
+  }
+  .webcam-btn.capture-btn:active {
+    background: #e5e5ea;
   }
 </style>
 <script>(function(){try{var k='nexo_theme',s=sessionStorage.getItem(k);if(!s){var h=new Date().getHours();s=(h>=19||h<7)?'dark':'light';}document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){}})();</script>
@@ -1942,12 +2033,121 @@
   }
   window.modalTriggerUpload = modalTriggerUpload;
 
+  let stream = null;
+  let activeFacingMode = 'environment';
+  let mergeTargetSide = null;
+
+  async function iniciarWebcam(side) {
+    mergeTargetSide = side;
+    document.getElementById('webcamModal').classList.add('show');
+    
+    const label = mergeDocId === 'cedula' ? 'Cédula de Identidad' : 'Licencia de Conducir';
+    const sideText = side === 'front' ? 'frontal (adelante)' : 'trasera (atrás)';
+    document.getElementById('webcamInstructionsText').textContent = `Encuadra el lado ${sideText} de tu ${label}`;
+    
+    await abrirStream();
+  }
+
+  async function abrirStream() {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    
+    try {
+      const constraints = {
+        video: {
+          facingMode: { ideal: activeFacingMode },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false
+      };
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
+      const video = document.getElementById('webcamVideo');
+      if (video) video.srcObject = stream;
+    } catch (err) {
+      console.error('Error al acceder a la cámara:', err);
+      showToast('No se pudo acceder a la cámara. Usando selector de archivos.');
+      detenerWebcam();
+      if (mergeTargetSide) {
+        modalTriggerUpload(mergeTargetSide);
+      }
+    }
+  }
+
+  function detenerWebcam() {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      stream = null;
+    }
+    document.getElementById('webcamModal').classList.remove('show');
+    const video = document.getElementById('webcamVideo');
+    if (video) video.srcObject = null;
+  }
+  window.detenerWebcam = detenerWebcam;
+
+  async function cambiarCamaraMode() {
+    activeFacingMode = activeFacingMode === 'environment' ? 'user' : 'environment';
+    await abrirStream();
+  }
+  window.cambiarCamaraMode = cambiarCamaraMode;
+
   function modalTriggerCamera(side) {
-    const input = document.getElementById('modal-' + side + '-input');
-    input.setAttribute('capture', 'environment');
-    input.click();
+    iniciarWebcam(side);
   }
   window.modalTriggerCamera = modalTriggerCamera;
+
+  function capturarFoto() {
+    const video = document.getElementById('webcamVideo');
+    if (!video || !stream) return;
+    
+    try {
+      const vw = video.videoWidth;
+      const vh = video.videoHeight;
+      if (!vw || !vh) throw new Error('Cámara no lista');
+      
+      const cropW = vw * 0.85;
+      const cropH = cropW / 1.586;
+      const startX = (vw - cropW) / 2;
+      const startY = (vh - cropH) / 2;
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = 1000;
+      canvas.height = 630;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, startX, startY, cropW, cropH, 0, 0, canvas.width, canvas.height);
+      
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          showToast('Error al capturar la imagen');
+          return;
+        }
+        
+        const side = mergeTargetSide;
+        const imgEl = document.getElementById('preview-' + side);
+        const placeholderEl = document.getElementById('preview-' + side + '-placeholder');
+        const cardEl = document.getElementById('slot-' + side);
+        
+        imgEl.src = URL.createObjectURL(blob);
+        imgEl.style.display = 'block';
+        placeholderEl.style.display = 'none';
+        cardEl.classList.add('has-image');
+        
+        if (side === 'front') frontImageBlob = blob;
+        else backImageBlob = blob;
+        
+        document.getElementById('btnMergeCombine').disabled = !(frontImageBlob && backImageBlob);
+        
+        detenerWebcam();
+        showToast('Imagen capturada');
+      }, 'image/jpeg', 0.9);
+    } catch (e) {
+      console.error(e);
+      showToast('Error al capturar foto: ' + e.message);
+    }
+  }
+  window.capturarFoto = capturarFoto;
 
   function modalFileSelected(input, side) {
     if (!input.files.length) return;
@@ -2000,12 +2200,18 @@
         URL.createObjectURL(backImageBlob)
       );
       
-      // 2. Crear un archivo File del Blob combinado
+      // 2. Crear un archivo File del Blob combinado con fallback de Blob
       const filename = `${mergeDocId}_combinado.jpg`;
-      const combinedFile = new File([combinedBlob], filename, {
-        type: 'image/jpeg',
-        lastModified: Date.now()
-      });
+      let combinedFile;
+      try {
+        combinedFile = new File([combinedBlob], filename, {
+          type: 'image/jpeg',
+          lastModified: Date.now()
+        });
+      } catch (err) {
+        combinedFile = combinedBlob;
+        combinedFile.name = filename;
+      }
       
       // 3. Proceder con el flujo de subida normal
       cerrarMergeModal();
@@ -2155,6 +2361,24 @@
         Prefiero subir un solo archivo directo (PDF, JPG o PNG)
       </button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL DE CAPTURA WEBCAM (CON ENCUADRE DE TARJETA) -->
+<div class="webcam-modal-overlay" id="webcamModal">
+  <div class="webcam-instructions" id="webcamInstructionsText">Encuadra el documento</div>
+  <div class="webcam-video-container">
+    <video id="webcamVideo" autoplay playsinline muted class="webcam-video"></video>
+    <div class="webcam-overlay">
+      <div class="webcam-cutout"></div>
+    </div>
+  </div>
+  <div class="webcam-controls">
+    <button type="button" class="webcam-btn" onclick="detenerWebcam()" title="Cancelar">✕</button>
+    <button type="button" class="webcam-btn capture-btn" onclick="capturarFoto()" title="Capturar">
+      <div style="width:24px;height:24px;border-radius:50%;background:#E82127;"></div>
+    </button>
+    <button type="button" class="webcam-btn" onclick="cambiarCamaraMode()" title="Cambiar Cámara">🔄</button>
   </div>
 </div>
 </body>
