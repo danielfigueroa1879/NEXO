@@ -2189,20 +2189,27 @@
 
   async function procesarFusion() {
     if (!frontImageBlob || !backImageBlob || !mergeDocId) return;
-    
+
+    // Capturar el tipo de documento ANTES de cerrar el modal:
+    // cerrarMergeModal() resetea mergeDocId a null, y sin esta copia
+    // los pasos siguientes intentarían actualizar #card-null y subir con tipo=null.
+    const docId = mergeDocId;
+    const frontBlob = frontImageBlob;
+    const backBlob = backImageBlob;
+
     const btn = document.getElementById('btnMergeCombine');
     btn.disabled = true;
     btn.textContent = 'Procesando y subiendo…';
-    
+
     try {
       // 1. Cargar ambas imágenes en memoria y unirlas en un Canvas
       const combinedBlob = await combinarCaras(
-        URL.createObjectURL(frontImageBlob),
-        URL.createObjectURL(backImageBlob)
+        URL.createObjectURL(frontBlob),
+        URL.createObjectURL(backBlob)
       );
-      
+
       // 2. Crear un archivo File del Blob combinado con fallback de Blob
-      const filename = `${mergeDocId}_combinado.jpg`;
+      const filename = `${docId}_combinado.jpg`;
       let combinedFile;
       try {
         combinedFile = new File([combinedBlob], filename, {
@@ -2212,36 +2219,47 @@
       } catch (err) {
         combinedFile = combinedBlob;
       }
-      
+
       // 3. Proceder con el flujo de subida normal
       cerrarMergeModal();
       btn.textContent = 'Combinar y subir documento';
-      
+      btn.disabled = false;
+
       // Llamar al flujo de subida
       const tamKB = (combinedFile.size/1024).toFixed(0);
       const previewUrl = URL.createObjectURL(combinedFile);
-      marcarCardSubida(mergeDocId, filename, tamKB, 'Subiendo…', previewUrl, true);
-      
-      const badge = document.querySelector('#card-' + mergeDocId + ' .doc-badge');
+      marcarCardSubida(docId, filename, tamKB, 'Subiendo…', previewUrl, true);
+
+      const badge = document.querySelector('#card-' + docId + ' .doc-badge');
       if (badge) { badge.textContent = 'Subiendo…'; badge.className = 'doc-badge'; }
       activarBotonGuardarRojo();
-      
+
       const user = await nexoUsuarioActual();
-      if (!user) { showToast('Debes iniciar sesión para subir documentos'); return; }
-      
-      const data = await subirDocumento({ tipo: mergeDocId, file: combinedFile, nombre: filename, noCompress: true });
-      
+      if (!user) {
+        showToast('Debes iniciar sesión para subir documentos');
+        if (badge) { badge.className = 'doc-badge miss'; badge.textContent = 'Pendiente'; }
+        const pv = document.querySelector('#panel-' + docId + ' .file-preview');
+        if (pv) pv.classList.remove('subiendo');
+        return;
+      }
+
+      const data = await subirDocumento({ tipo: docId, file: combinedFile, nombre: filename, noCompress: true });
+
       const realKB = data && data.tamano ? Math.round(data.tamano / 1024) : tamKB;
       const realNombre = data && data.nombre ? data.nombre : filename;
-      marcarCardSubida(mergeDocId, realNombre, realKB, 'Subido ahora', previewUrl, false);
+      marcarCardSubida(docId, realNombre, realKB, 'Subido ahora', previewUrl, false);
       updateProgress();
       showToast('Documentos combinados y subidos con éxito');
       activarBotonGuardarRojo();
     } catch (e) {
       console.error(e);
-      showToast('Error al fusionar imágenes: ' + e.message);
+      showToast('Error al subir el documento combinado: ' + e.message);
       btn.disabled = false;
       btn.textContent = 'Combinar y subir documento';
+      const badge = document.querySelector('#card-' + docId + ' .doc-badge');
+      if (badge) { badge.className = 'doc-badge miss'; badge.textContent = 'Pendiente'; }
+      const pv = document.querySelector('#panel-' + docId + ' .file-preview');
+      if (pv) pv.classList.remove('subiendo');
     }
   }
   window.procesarFusion = procesarFusion;
