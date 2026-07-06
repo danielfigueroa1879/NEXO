@@ -227,7 +227,6 @@ function comprimirImagenClientSide(file, maxDim = 1600, calidad = 0.8) {
             });
           } catch (e) {
             compressedFile = blob;
-            compressedFile.name = nuevoNombre;
           }
           resolve(compressedFile);
         }, 'image/jpeg', calidad);
@@ -243,14 +242,14 @@ function comprimirImagenClientSide(file, maxDim = 1600, calidad = 0.8) {
 /* ------------------------------------------------------------
    DOCUMENTOS  (Storage + tabla `public.documentos`)
    ------------------------------------------------------------ */
-async function subirDocumento({ tipo, file, titulo }) {
+async function subirDocumento({ tipo, file, titulo, nombre }) {
   const user = await nexoUsuarioActual();
   if (!user) throw new Error('Debes iniciar sesión para subir documentos');
 
   // Comprimir imagen si aplica (cámara de celular, PNGs pesados, etc.)
   const fileToUpload = await comprimirImagenClientSide(file);
 
-  const nombreOriginal = file.name || fileToUpload.name || `${tipo}.jpg`;
+  const nombreOriginal = nombre || file.name || (fileToUpload && fileToUpload.name) || `${tipo}.jpg`;
   const ext  = (nombreOriginal.split('.').pop() || 'jpg').toLowerCase();
   const path = `${user.id}/${tipo}.${ext}`;
 
