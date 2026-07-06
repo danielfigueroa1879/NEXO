@@ -980,7 +980,7 @@
 </script>
 <script src="theme.js" defer></script>
 </head>
-<body>
+<body class="modo-completo">
 
 <!-- FLOATING BACK BUTTON -->
 <button class="floating-back-btn" onclick="salirModoCompleto()" id="floatingBackBtn" title="Mostrar perfiles y cabecera">
@@ -1813,8 +1813,7 @@
   });
 
   function salirModoCompleto() {
-    document.body.classList.remove('modo-completo');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.location.href = 'subir-documentos.html';
   }
   window.salirModoCompleto = salirModoCompleto;
 
