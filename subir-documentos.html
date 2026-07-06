@@ -2288,44 +2288,41 @@
       const imgFront = new Image();
       const imgBack = new Image();
       let loadedCount = 0;
-      
+
       const checkLoaded = () => {
         loadedCount++;
         if (loadedCount === 2) {
-          // Escalamos ambas imágenes para que tengan un ancho uniforme de 1000px
-          const targetWidth = 1000;
-          const scaleFront = targetWidth / imgFront.width;
-          const heightFront = imgFront.height * scaleFront;
-          
-          const scaleBack = targetWidth / imgBack.width;
-          const heightBack = imgBack.height * scaleBack;
-          
-          const spacing = 20; // Espaciador entre las caras
-          const border = 15;  // Margen de borde blanco
-          
+          // Formato "hoja oficio" (8.5 × 13 pulgadas, aspecto 0.654):
+          // ambas caras centradas como par en el medio de la hoja, con poca separación entre sí.
+          const sheetW = 1200;
+          const sheetH = Math.round(sheetW * 13 / 8.5);    // 1835 → proporción oficio real
+          const cardW = Math.round(sheetW / 2);            // 600 → mitad del ancho de la hoja
+          const cardH = Math.round(cardW / 1.586);         // 378 (aspecto CR80)
+          const gap = 100;                                  // separación pequeña entre frontal y reverso
+          const pairH = cardH * 2 + gap;
+          const shiftUp = 200;                              // desplaza el par hacia arriba
+          const topY = Math.round((sheetH - pairH) / 2) - shiftUp;
+          const x = Math.round((sheetW - cardW) / 2);       // centrado horizontal
+
           const canvas = document.createElement('canvas');
-          canvas.width = targetWidth + (border * 2);
-          canvas.height = heightFront + heightBack + spacing + (border * 2);
-          
+          canvas.width = sheetW;
+          canvas.height = sheetH;
+
           const ctx = canvas.getContext('2d');
-          
-          // Rellenar fondo con color blanco limpio
           ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          
-          // Dibujar lado frontal
-          ctx.drawImage(imgFront, border, border, targetWidth, heightFront);
-          
-          // Dibujar lado reverso
-          ctx.drawImage(imgBack, border, border + heightFront + spacing, targetWidth, heightBack);
-          
+          ctx.fillRect(0, 0, sheetW, sheetH);
+
+          // Frontal arriba, reverso abajo, ambos centrados
+          ctx.drawImage(imgFront, x, topY, cardW, cardH);
+          ctx.drawImage(imgBack, x, topY + cardH + gap, cardW, cardH);
+
           canvas.toBlob((blob) => {
             if (!blob) {
               reject(new Error('Fallo al generar el blob combinado.'));
               return;
             }
             resolve(blob);
-          }, 'image/jpeg', 0.85); // Calidad JPEG al 85% para excelente claridad de texto
+          }, 'image/jpeg', 0.9);
         }
       };
       
