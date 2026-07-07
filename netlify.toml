@@ -2,6 +2,14 @@
   publish = "."
   functions = "netlify/functions"
 
+# ===== TAREA PROGRAMADA =====
+# Avisos por correo de documentos por vencer.
+# Se ejecuta todos los días a las 12:00 UTC (~09:00 Chile CLT).
+# Requiere env vars en Netlify → Site settings → Environment variables:
+#   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, RESEND_FROM
+[functions."notificar-vencimientos"]
+  schedule = "0 12 * * *"
+
 # ===== SIEMPRE FRESCO PERO RÁPIDO =====
 # 'no-cache' obliga a revalidar con el servidor en cada visita (nunca sirve una
 # versión vieja), pero permite responder 304 y NO volver a descargar el archivo

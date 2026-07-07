@@ -122,7 +122,16 @@ create table if not exists public.documentos (
 -- Migración: si la tabla ya existe sin la columna titulo, la agrega
 alter table public.documentos add column if not exists titulo text;
 
+-- Migración: fecha de vencimiento del documento (para avisos por correo)
+alter table public.documentos add column if not exists vence date;
+
+-- Migración: último "hito" de aviso enviado (30, 15, 7, 1, 0, -1=vencido).
+-- Se usa para no volver a mandar el mismo correo dos veces.
+alter table public.documentos add column if not exists notif_hito integer;
+
 create index if not exists documentos_cuenta_idx on public.documentos (cuenta_id);
+create index if not exists documentos_vence_idx  on public.documentos (vence)
+  where vence is not null;
 
 -- ------------------------------------------------------------
 -- 3) ROW LEVEL SECURITY

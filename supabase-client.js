@@ -242,7 +242,7 @@ function comprimirImagenClientSide(file, maxDim = 1600, calidad = 0.8) {
 /* ------------------------------------------------------------
    DOCUMENTOS  (Storage + tabla `public.documentos`)
    ------------------------------------------------------------ */
-async function subirDocumento({ tipo, file, titulo, nombre, noCompress }) {
+async function subirDocumento({ tipo, file, titulo, nombre, noCompress, vence }) {
   const user = await nexoUsuarioActual();
   if (!user) throw new Error('Debes iniciar sesión para subir documentos');
 
@@ -259,11 +259,37 @@ async function subirDocumento({ tipo, file, titulo, nombre, noCompress }) {
 
   const payload = { cuenta_id: user.id, tipo, nombre: nombreOriginal, path, tamano: fileToUpload.size };
   if (titulo) payload.titulo = titulo;
+  // Fecha de vencimiento (YYYY-MM-DD) — reinicia el hito de aviso al cambiar
+  if (vence !== undefined) {
+    payload.vence = vence || null;
+    payload.notif_hito = null;
+  }
   const { data, error } = await sb.from('documentos')
     .upsert(payload, { onConflict: 'cuenta_id,tipo' })
     .select().single();
   if (error) throw error;
   return data;
+}
+
+// Guardar solo la fecha de vencimiento (sin re-subir archivo)
+async function guardarVenceDocumento(tipo, vence) {
+  const user = await nexoUsuarioActual();
+  if (!user) throw new Error('Sin sesión');
+  const vencePayload = vence || null;
+  const { data: existente } = await sb.from('documentos')
+    .select('id').eq('cuenta_id', user.id).eq('tipo', tipo).maybeSingle();
+  if (existente) {
+    const { error } = await sb.from('documentos')
+      .update({ vence: vencePayload, notif_hito: null })
+      .eq('id', existente.id);
+    if (error) throw error;
+  } else {
+    // Aún no hay archivo — creamos placeholder con path vacío para no perder la fecha
+    const { error } = await sb.from('documentos').insert({
+      cuenta_id: user.id, tipo, nombre: '', path: '', vence: vencePayload
+    });
+    if (error) throw error;
+  }
 }
 
 // Guardar solo el título personalizado (sin subir archivo)
@@ -361,7 +387,7 @@ async function aplicarFotoPerfil() {
 Object.assign(window, {
   nexoSignUp, nexoSignIn, nexoSignOut, nexoUsuarioActual, asegurarCuenta, esperarSesionOAuth,
   guardarCuenta, obtenerCuenta, listarCuentas,
-  subirDocumento, guardarTituloDocumento, listarDocumentos, eliminarDocumento, urlDocumento,
+  subirDocumento, guardarTituloDocumento, guardarVenceDocumento, listarDocumentos, eliminarDocumento, urlDocumento,
   urlFotoPerfil, aplicarFotoPerfil,
   verificarPublico, urlPublicaDocumento, urlDeMiTarjeta
 });
