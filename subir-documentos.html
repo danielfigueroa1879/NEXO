@@ -220,6 +220,17 @@
   .doc-info { flex: 1; min-width: 0; }
   .doc-info h4 { font-size: 14px; font-weight: 600; }
   .doc-info p { font-size: 11px; color: var(--ink-mute); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Fecha de vencimiento siempre visible bajo el nombre del documento */
+  .doc-info .doc-vence-info {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 3px;
+    letter-spacing: 0.2px;
+  }
+  .doc-info .doc-vence-info.ok      { color: #1A7A34; }
+  .doc-info .doc-vence-info.soon    { color: #B85C00; }
+  .doc-info .doc-vence-info.expired { color: #c1272d; }
   .doc-badge {
     font-size: 11px; font-weight: 700; padding: 4px 10px;
     border-radius: 20px; flex-shrink: 0;
@@ -1752,31 +1763,62 @@
   }
 
   // Aplica el color rojo/naranjo a la tarjeta según su fecha de vencimiento
+  // y muestra siempre la fecha bajo el nombre del documento.
   function actualizarEstadoVencimiento(docId, venceISO) {
     const card = document.getElementById('card-' + docId);
     if (!card) return;
     card.classList.remove('expired', 'soon');
     const badge = card.querySelector('.doc-badge');
-    // Sacar cualquier badge previo de vencimiento
     if (badge) badge.classList.remove('expired', 'soon');
 
+    // Línea de fecha siempre visible bajo el título de la tarjeta
+    const info = card.querySelector('.doc-info');
+    let venceInfo = info ? info.querySelector('.doc-vence-info') : null;
+
     const dias = diasHastaVence(venceISO);
-    if (dias === null) return; // sin fecha
+    if (dias === null) {
+      // sin fecha → quitar la línea si estaba
+      if (venceInfo) venceInfo.remove();
+      return;
+    }
+
+    // Crear/actualizar la línea con la fecha en formato es-CL
+    if (!venceInfo && info) {
+      venceInfo = document.createElement('span');
+      venceInfo.className = 'doc-vence-info';
+      info.appendChild(venceInfo);
+    }
+    const fechaCL = new Date(venceISO + 'T00:00:00').toLocaleDateString('es-CL');
 
     if (dias < 0) {
       card.classList.add('expired');
+      if (venceInfo) {
+        venceInfo.className = 'doc-vence-info expired';
+        venceInfo.textContent = `⚠️ Venció el ${fechaCL} · hace ${Math.abs(dias)} día(s)`;
+      }
       if (badge) {
         badge.className = 'doc-badge expired';
-        badge.textContent = dias === -1 ? 'Vencido ayer' : `Vencido hace ${Math.abs(dias)} días`;
+        badge.textContent = 'Vencido';
       }
     } else if (dias <= 15) {
       card.classList.add('soon');
+      if (venceInfo) {
+        venceInfo.className = 'doc-vence-info soon';
+        const cuando = dias === 0 ? 'HOY' : dias === 1 ? 'mañana' : `en ${dias} días`;
+        venceInfo.textContent = `⏰ Vence ${cuando} · ${fechaCL}`;
+      }
       if (badge) {
         badge.className = 'doc-badge soon';
         badge.textContent =
           dias === 0 ? 'Vence HOY' :
           dias === 1 ? 'Vence mañana' :
           `Vence en ${dias} días`;
+      }
+    } else {
+      // Vigente y con más de 15 días — solo mostrar la fecha, sin cambiar el badge
+      if (venceInfo) {
+        venceInfo.className = 'doc-vence-info ok';
+        venceInfo.textContent = `📅 Vence el ${fechaCL}`;
       }
     }
   }
