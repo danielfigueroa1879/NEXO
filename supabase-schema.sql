@@ -78,7 +78,8 @@ returns json language sql stable security definer set search_path = public as $$
          'tipo',   d.tipo,
          'titulo', d.titulo,
          'nombre', d.nombre,
-         'path',   d.path
+         'path',   d.path,
+         'vence',  d.vence
        ))
        from public.documentos d
        where d.cuenta_id = c.id and d.path <> ''), '[]'::json)

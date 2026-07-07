@@ -593,6 +593,22 @@
     box-shadow: 0 8px 24px rgba(0,0,0,0.10);
     border-color: var(--ink);
   }
+  /* Documento vencido — rojo intenso, siempre visible en la tarjeta */
+  .doc-img-card.expired {
+    border-color: #c1272d;
+    background: linear-gradient(0deg, rgba(193,39,45,0.08), rgba(193,39,45,0.08)), #fff;
+    box-shadow: 0 0 0 1px rgba(193,39,45,0.35), 0 2px 8px rgba(193,39,45,0.15);
+  }
+  .doc-img-card.expired .nombre { color: #c1272d; }
+  .doc-img-card.expired .vence  { color: #c1272d; font-weight: 700; }
+  /* Documento por vencer (≤ 15 días) — naranjo */
+  .doc-img-card.soon {
+    border-color: #e07b00;
+    background: linear-gradient(0deg, rgba(224,123,0,0.06), rgba(224,123,0,0.06)), #fff;
+  }
+  .doc-img-card.soon .vence { color: #b85c00; font-weight: 700; }
+  /* Documento vigente — texto verde suave */
+  .doc-img-card.ok .vence { color: #1A7A34; font-weight: 600; }
   .doc-img-thumb {
     aspect-ratio: 3/4;
     background: #F0F0F5;
@@ -1515,17 +1531,41 @@
     return map;
   }
 
+  // Estado de vencimiento a partir de una fecha YYYY-MM-DD.
+  // Devuelve { text, cls } donde cls = 'expired' | 'soon' | 'ok' | ''.
+  function estadoVence(venceISO) {
+    if (!venceISO) return { text: '', cls: '' };
+    const [y, m, d] = venceISO.split('-').map(Number);
+    const vence = new Date(y, m - 1, d).getTime();
+    const hoy = new Date();
+    const hoy0 = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()).getTime();
+    const dias = Math.round((vence - hoy0) / 86400000);
+    const fechaCL = new Date(y, m - 1, d).toLocaleDateString('es-CL');
+    if (dias < 0) {
+      const abs = Math.abs(dias);
+      return { text: `⚠️ Venció el ${fechaCL} · hace ${abs} día${abs === 1 ? '' : 's'}`, cls: 'expired' };
+    }
+    if (dias <= 15) {
+      const cuando = dias === 0 ? 'HOY' : dias === 1 ? 'mañana' : `en ${dias} días`;
+      return { text: `⏰ Vence ${cuando} · ${fechaCL}`, cls: 'soon' };
+    }
+    return { text: `📅 Vence el ${fechaCL}`, cls: 'ok' };
+  }
+
   // Actualiza una tarjeta demo estática con el documento REAL subido por el usuario
   function actualizarCard(card, d, url) {
     card.style.display = '';
     const titulo = card.dataset.titulo || d.nombre || d.tipo;
-    const sub    = d.nombre || 'Documento subido';
+    const est    = estadoVence(d.vence);
+    const sub    = est.text || d.nombre || 'Documento subido';
     const thumb  = card.querySelector('.doc-img-thumb');
     if (thumb) thumb.innerHTML = thumbHTML(url, d.nombre);
     const nombreEl = card.querySelector('.doc-img-info .nombre');
     if (nombreEl) nombreEl.textContent = titulo;
     const venceEl = card.querySelector('.doc-img-info .vence');
     if (venceEl) venceEl.textContent = sub;
+    card.classList.remove('expired', 'soon', 'ok');
+    if (est.cls) card.classList.add(est.cls);
     card.setAttribute('onclick',
       "abrirDoc('" + url.replace(/'/g, "\\'") + "','" +
       titulo.replace(/'/g, "\\'") + "','" + sub.replace(/'/g, "\\'") + "')");
@@ -1563,17 +1603,19 @@
       if (!url) continue;
       const num = d.tipo.replace('extra', '');
       const titulo = 'Documento extra ' + num;
+      const est = estadoVence(d.vence);
+      const sub = est.text || d.nombre || '';
       const div = document.createElement('div');
-      div.className = 'doc-img-card';
+      div.className = 'doc-img-card' + (est.cls ? ' ' + est.cls : '');
       div.setAttribute('onclick',
         "abrirDoc('" + url.replace(/'/g, "\\'") + "','" +
-        titulo.replace(/'/g, "\\'") + "','" + (d.nombre || '').replace(/'/g, "\\'") + "')");
+        titulo.replace(/'/g, "\\'") + "','" + sub.replace(/'/g, "\\'") + "')");
       div.innerHTML = `
         <div class="doc-img-thumb">${thumbHTML(url, d.nombre)}</div>
         <div class="doc-img-info">
           <div>
             <div class="nombre">${titulo}</div>
-            <div class="vence">${d.nombre || ''}</div>
+            <div class="vence">${sub}</div>
           </div>
           <span class="chev">›</span>
         </div>`;
@@ -1595,9 +1637,10 @@
       const url = urls.get(d.path);
       if (!url) continue;
       const titulo = d.titulo || NOMBRES_DOC[d.tipo] || d.tipo;
-      const sub = d.nombre || '';
+      const est    = estadoVence(d.vence);
+      const sub    = est.text || d.nombre || '';
       const div = document.createElement('div');
-      div.className = 'doc-img-card';
+      div.className = 'doc-img-card' + (est.cls ? ' ' + est.cls : '');
       div.setAttribute('onclick',
         "abrirDoc('" + url.replace(/'/g, "\\'") + "','" +
         titulo.replace(/'/g, "\\'") + "','" + sub.replace(/'/g, "\\'") + "')");
@@ -1625,16 +1668,18 @@
   };
 
   // Construye una tarjeta de documento
-  function crearDocCard(url, titulo, sub) {
+  function crearDocCard(url, titulo, sub, venceISO) {
+    const est = estadoVence(venceISO);
+    const subMostrar = est.text || sub || '';
     const div = document.createElement('div');
-    div.className = 'doc-img-card';
+    div.className = 'doc-img-card' + (est.cls ? ' ' + est.cls : '');
     div.setAttribute('onclick',
       "abrirDoc('" + url.replace(/'/g, "\\'") + "','" +
-      titulo.replace(/'/g, "\\'") + "','" + (sub || '').replace(/'/g, "\\'") + "')");
+      titulo.replace(/'/g, "\\'") + "','" + subMostrar.replace(/'/g, "\\'") + "')");
     div.innerHTML =
       '<div class="doc-img-thumb">' + thumbHTML(url, sub) + '</div>' +
       '<div class="doc-img-info"><div><div class="nombre">' + titulo + '</div>' +
-      '<div class="vence">' + (sub || '') + '</div></div><span class="chev">›</span></div>';
+      '<div class="vence">' + subMostrar + '</div></div><span class="chev">›</span></div>';
     return div;
   }
 
@@ -1672,7 +1717,7 @@
       for (const d of (vehiculos[i] || [])) {
         const url = urls.get(d.path);
         if (!url) continue;
-        docs.push({ url, titulo: VEH_DOC_NOMBRE[d.base] || d.tipo, sub: d.nombre || '' });
+        docs.push({ url, titulo: VEH_DOC_NOMBRE[d.base] || d.tipo, sub: d.nombre || '', vence: d.vence });
       }
       datosVeh[i] = { patente: patentes[i - 1] || '', docs };
     }
@@ -1708,7 +1753,7 @@
       if (!v.docs.length) {
         grid.innerHTML = '<p class="docs-empty">Sin documentos subidos para este vehículo.</p>';
       } else {
-        v.docs.forEach(doc => grid.appendChild(crearDocCard(doc.url, doc.titulo, doc.sub)));
+        v.docs.forEach(doc => grid.appendChild(crearDocCard(doc.url, doc.titulo, doc.sub, doc.vence)));
       }
       docsBox.innerHTML = '';
       docsBox.appendChild(grid);
