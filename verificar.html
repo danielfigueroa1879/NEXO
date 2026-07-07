@@ -593,22 +593,12 @@
     box-shadow: 0 8px 24px rgba(0,0,0,0.10);
     border-color: var(--ink);
   }
-  /* Documento vencido — rojo intenso, siempre visible en la tarjeta */
-  .doc-img-card.expired {
-    border-color: #c1272d;
-    background: linear-gradient(0deg, rgba(193,39,45,0.08), rgba(193,39,45,0.08)), #fff;
-    box-shadow: 0 0 0 1px rgba(193,39,45,0.35), 0 2px 8px rgba(193,39,45,0.15);
-  }
-  .doc-img-card.expired .nombre { color: #c1272d; }
-  .doc-img-card.expired .vence  { color: #c1272d; font-weight: 700; }
-  /* Documento por vencer (≤ 15 días) — naranjo */
-  .doc-img-card.soon {
-    border-color: #e07b00;
-    background: linear-gradient(0deg, rgba(224,123,0,0.06), rgba(224,123,0,0.06)), #fff;
-  }
-  .doc-img-card.soon .vence { color: #b85c00; font-weight: 700; }
-  /* Documento vigente — texto verde suave */
-  .doc-img-card.ok .vence { color: #1A7A34; font-weight: 600; }
+  /* Estado del documento según fecha de vencimiento:
+     SÓLO la línea de la fecha (.vence) cambia de color. La tarjeta en sí
+     mantiene su borde y fondo normales. */
+  .doc-img-card.expired .vence { color: #c1272d; font-weight: 700; }
+  .doc-img-card.soon    .vence { color: #b85c00; font-weight: 700; }
+  .doc-img-card.ok      .vence { color: #1A7A34; font-weight: 600; }
   .doc-img-thumb {
     aspect-ratio: 3/4;
     background: #F0F0F5;
