@@ -279,6 +279,54 @@
   .success-screen p { font-size: 14px; color: var(--ink-mute); line-height: 1.6; }
   .success-screen .btn-main { margin-top: 28px; }
 
+  /* ===== MODAL RECUPERAR CONTRASEÑA ===== */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 300; padding: 16px;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .modal-backdrop.show { display: flex; opacity: 1; }
+  .modal-panel {
+    background: var(--surface);
+    border-radius: var(--radius);
+    max-width: 400px; width: 100%;
+    padding: 28px;
+    box-shadow: 0 12px 60px rgba(0,0,0,0.25);
+    transform: translateY(10px);
+    transition: transform 0.2s;
+  }
+  .modal-backdrop.show .modal-panel { transform: translateY(0); }
+  .modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .modal-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px; font-weight: 700; letter-spacing: -0.02em;
+  }
+  .modal-close {
+    background: none; border: none; cursor: pointer;
+    font-size: 22px; color: var(--ink-mute); line-height: 1;
+    padding: 4px 8px; border-radius: 8px;
+    transition: background 0.15s;
+  }
+  .modal-close:hover { background: var(--bg); color: var(--ink); }
+  .modal-sub { font-size: 13px; color: var(--ink-mute); margin-bottom: 20px; line-height: 1.5; }
+  .modal-success {
+    text-align: center; padding: 8px 0;
+  }
+  .modal-success .success-icon {
+    width: 60px; height: 60px; margin: 0 auto 14px; font-size: 28px;
+  }
+  .modal-success h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px; font-weight: 700; margin-bottom: 8px;
+  }
+  .modal-success p { font-size: 13px; color: var(--ink-mute); line-height: 1.6; }
+
   /* ===== TOAST ===== */
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
@@ -423,7 +471,7 @@
         </div>
       </div>
 
-      <div class="forgot"><a href="#">¿Olvidaste tu contraseña?</a></div>
+      <div class="forgot"><a href="#" onclick="event.preventDefault();openForgot();">¿Olvidaste tu contraseña?</a></div>
 
       <button class="btn-main" onclick="doLogin()">
         Ingresar
@@ -591,6 +639,40 @@
   </div>
 </div>
 
+<!-- MODAL RECUPERAR CONTRASEÑA -->
+<div class="modal-backdrop" id="modal-forgot" onclick="if(event.target===this)closeForgot()">
+  <div class="modal-panel">
+    <div id="forgot-form">
+      <div class="modal-head">
+        <div class="modal-title">Recuperar contraseña</div>
+        <button class="modal-close" onclick="closeForgot()" type="button" aria-label="Cerrar">×</button>
+      </div>
+      <p class="modal-sub">Ingresa el correo con el que creaste tu cuenta. Te enviaremos un enlace para crear una nueva contraseña.</p>
+
+      <div class="field">
+        <label>Correo electrónico</label>
+        <div class="input-wrap">
+          <span class="ico">✉️</span>
+          <input type="email" id="forgot-email" placeholder="tu@correo.com" autocomplete="email">
+          <span class="err-msg" id="err-forgot-email">Ingresa un correo válido</span>
+        </div>
+      </div>
+
+      <button class="btn-main" onclick="enviarRecuperacion()">
+        Enviar enlace
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+      </button>
+    </div>
+
+    <div id="forgot-success" class="modal-success" style="display:none;">
+      <div class="success-icon" style="background:#E8F9ED;border-radius:50%;display:flex;align-items:center;justify-content:center;">✉️</div>
+      <h3>Revisa tu correo</h3>
+      <p>Si el correo está registrado, te enviamos un enlace para restablecer tu contraseña.<br>Revisa también tu carpeta de spam.</p>
+      <button class="btn-main" onclick="closeForgot()" style="margin-top:20px;">Entendido</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast">
   <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
@@ -727,6 +809,54 @@
       btn.innerHTML = 'Crear cuenta ✓';
     }
   }
+
+  // Recuperar contraseña (modal)
+  function openForgot() {
+    document.getElementById('forgot-form').style.display = 'block';
+    document.getElementById('forgot-success').style.display = 'none';
+    document.getElementById('err-forgot-email').classList.remove('show');
+    document.getElementById('forgot-email').classList.remove('error');
+    document.getElementById('forgot-email').value = '';
+    document.getElementById('modal-forgot').classList.add('show');
+    setTimeout(() => document.getElementById('forgot-email').focus(), 150);
+  }
+  function closeForgot() {
+    document.getElementById('modal-forgot').classList.remove('show');
+  }
+  async function enviarRecuperacion() {
+    const emailInput = document.getElementById('forgot-email');
+    const email = emailInput.value.trim().toLowerCase();
+    const err = document.getElementById('err-forgot-email');
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!emailOk) {
+      err.classList.add('show');
+      emailInput.classList.add('error');
+      return;
+    }
+    err.classList.remove('show');
+    emailInput.classList.remove('error');
+
+    const btn = event.currentTarget;
+    btn.classList.add('loading');
+    btn.textContent = 'Enviando…';
+    try {
+      await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: location.origin + '/reset-password.html'
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      // Siempre mostramos éxito para no revelar si el correo existe
+      document.getElementById('forgot-form').style.display = 'none';
+      document.getElementById('forgot-success').style.display = 'block';
+      btn.classList.remove('loading');
+    }
+  }
+
+  // ESC cierra el modal
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeForgot();
+  });
 
   // Google login (Supabase OAuth)
   async function loginGoogle() {
