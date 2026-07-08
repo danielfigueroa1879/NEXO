@@ -151,39 +151,64 @@
 
   .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
 
-  /* Notas bajo el CTA del hero: aviso por correo + marco legal */
-  .hero-notes {
-    margin-top: 22px;
+  /* Aviso destacado en rojo dentro del lede */
+  .lede-aviso {
+    display: block;
+    margin-top: 10px;
+    color: var(--red);
+    font-weight: 700;
+    font-size: 15px;
+    line-height: 1.4;
+  }
+  @media (max-width: 480px) {
+    .lede-aviso { font-size: 13px; }
+  }
+
+  /* Trust bar bajo el CTA: aviso por correo + marco legal */
+  .hero-trust {
+    margin-top: 26px;
     max-width: 520px;
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 8px;
   }
-  .hero-note {
-    display: flex;
-    align-items: flex-start;
+  .trust-chip {
+    display: inline-flex;
+    align-items: center;
     gap: 8px;
-    margin: 0;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid var(--line);
+    border-radius: 100px;
     font-size: 11.5px;
-    line-height: 1.5;
-    color: var(--ink-mute);
-    font-weight: 500;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1;
+    letter-spacing: 0.005em;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    transition: border-color 0.15s, transform 0.15s;
   }
-  .hero-note strong { color: var(--ink); font-weight: 700; }
-  .hero-note-ico {
+  .trust-chip:hover { border-color: var(--ink); }
+  .trust-chip .trust-ico {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: #fff;
+    font-size: 10px;
     flex-shrink: 0;
-    font-size: 12px;
-    line-height: 1.5;
-    opacity: 0.85;
   }
-  .hero-note-legal {
-    font-size: 10.5px;
-    opacity: 0.85;
-    padding-top: 6px;
-    border-top: 1px solid var(--line);
-  }
+  .trust-chip.trust-legal .trust-ico { background: var(--red); }
+  .trust-chip .trust-muted { color: var(--ink-mute); font-weight: 500; }
   @media (max-width: 900px) {
-    .hero-notes { margin-left: auto; margin-right: auto; text-align: left; }
+    .hero-trust { justify-content: center; margin-left: auto; margin-right: auto; }
+  }
+  @media (max-width: 480px) {
+    .hero-trust { flex-direction: column; align-items: stretch; }
+    .trust-chip { justify-content: flex-start; }
   }
   .btn-primary {
     background: var(--ink); color: white;
@@ -1532,6 +1557,7 @@
       </h1>
       <p class="lede">
         Una sola tarjeta NFC reúne tus credenciales profesionales, documentos de conducir y permisos comerciales. <strong>Cambia tu identidad en un solo click.</strong>
+        <span class="lede-aviso">✉ Recibirás un aviso por correo cuando tus documentos estén próximos a vencer.</span>
       </p>
       <div class="cta-row">
         <a href="login.html" class="btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
@@ -1541,15 +1567,11 @@
         <a href="#simulador" id="btnComoFunciona" class="btn-secondary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">Ver cómo funciona</a>
       </div>
 
-      <div class="hero-notes">
-        <p class="hero-note">
-          <span class="hero-note-ico" aria-hidden="true">✉️</span>
-          Recibirás un <strong>aviso por correo registrado</strong> cuando tus documentos estén próximos a vencer.
-        </p>
-        <p class="hero-note hero-note-legal">
-          <span class="hero-note-ico" aria-hidden="true">⚖️</span>
-          Amparado por la <strong>Ley N.º 19.799</strong> sobre Documentos Electrónicos, Firma Electrónica y Servicios de Certificación — otorga a tus documentos digitales el mismo valor legal que los documentos en papel.
-        </p>
+      <div class="hero-trust">
+        <span class="trust-chip trust-legal" title="Amparado por la Ley N.º 19.799 sobre Documentos Electrónicos, Firma Electrónica y Servicios de Certificación">
+          <span class="trust-ico" aria-hidden="true">§</span>
+          Ley N.º 19.799 · <span class="trust-muted">Validez legal</span>
+        </span>
       </div>
     </div>
 
