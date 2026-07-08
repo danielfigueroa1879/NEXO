@@ -160,28 +160,32 @@ create policy "documentos_select_admin" on public.documentos
 
 drop policy if exists "cuentas_insert_propia" on public.cuentas;
 create policy "cuentas_insert_propia" on public.cuentas
-  for insert with check (auth.uid() = id);
+  for insert with check (auth.uid() = id or public.es_admin_actual());
 
 drop policy if exists "cuentas_update_propia" on public.cuentas;
 create policy "cuentas_update_propia" on public.cuentas
-  for update using (auth.uid() = id);
+  for update using (auth.uid() = id or public.es_admin_actual());
 
--- Documentos: el usuario ve/edita los suyos
+drop policy if exists "cuentas_delete_admin" on public.cuentas;
+create policy "cuentas_delete_admin" on public.cuentas
+  for delete using (public.es_admin_actual());
+
+-- Documentos: el usuario ve/edita los suyos; admin puede editar/borrar todo
 drop policy if exists "documentos_select_propia" on public.documentos;
 create policy "documentos_select_propia" on public.documentos
   for select using (auth.uid() = cuenta_id);
 
 drop policy if exists "documentos_insert_propia" on public.documentos;
 create policy "documentos_insert_propia" on public.documentos
-  for insert with check (auth.uid() = cuenta_id);
+  for insert with check (auth.uid() = cuenta_id or public.es_admin_actual());
 
 drop policy if exists "documentos_update_propia" on public.documentos;
 create policy "documentos_update_propia" on public.documentos
-  for update using (auth.uid() = cuenta_id);
+  for update using (auth.uid() = cuenta_id or public.es_admin_actual());
 
 drop policy if exists "documentos_delete_propia" on public.documentos;
 create policy "documentos_delete_propia" on public.documentos
-  for delete using (auth.uid() = cuenta_id);
+  for delete using (auth.uid() = cuenta_id or public.es_admin_actual());
 
 -- ------------------------------------------------------------
 -- 4) STORAGE — bucket 'documentos'
@@ -196,26 +200,26 @@ drop policy if exists "docs_select_propio" on storage.objects;
 create policy "docs_select_propio" on storage.objects
   for select using (
     bucket_id = 'documentos'
-    and auth.uid()::text = (storage.foldername(name))[1]
+    and (auth.uid()::text = (storage.foldername(name))[1] or public.es_admin_actual())
   );
 
 drop policy if exists "docs_insert_propio" on storage.objects;
 create policy "docs_insert_propio" on storage.objects
   for insert with check (
     bucket_id = 'documentos'
-    and auth.uid()::text = (storage.foldername(name))[1]
+    and (auth.uid()::text = (storage.foldername(name))[1] or public.es_admin_actual())
   );
 
 drop policy if exists "docs_update_propio" on storage.objects;
 create policy "docs_update_propio" on storage.objects
   for update using (
     bucket_id = 'documentos'
-    and auth.uid()::text = (storage.foldername(name))[1]
+    and (auth.uid()::text = (storage.foldername(name))[1] or public.es_admin_actual())
   );
 
 drop policy if exists "docs_delete_propio" on storage.objects;
 create policy "docs_delete_propio" on storage.objects
   for delete using (
     bucket_id = 'documentos'
-    and auth.uid()::text = (storage.foldername(name))[1]
+    and (auth.uid()::text = (storage.foldername(name))[1] or public.es_admin_actual())
   );
