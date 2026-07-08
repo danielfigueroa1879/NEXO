@@ -827,7 +827,6 @@
             <th style="padding:8px;">Docs</th>
             <th style="padding:8px;">Fecha</th>
             <th style="padding:8px;">🔒 NFC</th>
-            <th style="padding:8px;">Acciones</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -1222,46 +1221,17 @@
           <td>${(c.documentos || []).length}</td>
           <td>${new Date(c.fecha).toLocaleDateString('es-CL')}</td>
           <td>${linkCol}</td>
-          <td>
-            <button onclick="eliminarCuentaAdminUI('${c.id}', '${(c.nombre || '').replace(/'/g, "\\'")}', '${c.rut || ''}')"
-                    class="btn-del-cuenta"
-                    style="padding:4px 10px;font-size:11px;background:#E82127;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;">
-              🗑 Eliminar
-            </button>
-          </td>
         </tr>`;
       }).join('');
       cont.querySelector('tbody').innerHTML = rows ||
-        '<tr><td colspan="11" style="text-align:center;color:#888;">Sin cuentas registradas</td></tr>';
+        '<tr><td colspan="10" style="text-align:center;color:#888;">Sin cuentas registradas</td></tr>';
       cont.querySelector('.count').textContent = cuentas.length + ' cuentas';
     } catch (e) {
       console.error(e);
       cont.querySelector('tbody').innerHTML =
-        `<tr><td colspan="11" style="color:#c00;">Error: ${e.message}</td></tr>`;
+        `<tr><td colspan="10" style="color:#c00;">Error: ${e.message}</td></tr>`;
     }
   }
-
-  // Admin: eliminar cuenta con doble confirmación
-  async function eliminarCuentaAdminUI(cuentaId, nombre, rut) {
-    const etiqueta = (nombre || 'sin nombre') + (rut ? ` (RUT ${rut})` : '');
-    if (!confirm(`⚠️ ¿Eliminar la cuenta de ${etiqueta}?\n\nSe borrarán:\n• Todos sus documentos\n• Sus archivos subidos\n• Su fila de la base de datos\n\nEsta acción NO se puede deshacer.`)) return;
-    const confirmacion = prompt(`Para confirmar, escribe el RUT de la cuenta:\n${rut || '(sin RUT)'}`);
-    if (confirmacion === null) return;
-    if ((confirmacion || '').trim() !== (rut || '').trim()) {
-      showToast('El RUT no coincide. Cancelado.');
-      return;
-    }
-    try {
-      showToast('Eliminando…');
-      await eliminarCuentaAdmin(cuentaId);
-      showToast('Cuenta eliminada');
-      await cargarListaCuentas();
-    } catch (e) {
-      console.error(e);
-      showToast('Error: ' + (e.message || 'no se pudo eliminar'));
-    }
-  }
-  window.eliminarCuentaAdminUI = eliminarCuentaAdminUI;
 
   document.addEventListener('DOMContentLoaded', cargarAdmin);
 </script>

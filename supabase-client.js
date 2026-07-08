@@ -131,37 +131,6 @@ async function asegurarCuenta() {
   return data;
 }
 
-// Admin: elimina una cuenta completa (storage + documentos + fila cuentas).
-// NOTA: El usuario en auth.users NO se puede borrar desde el navegador —
-// eso requiere service_role (Edge Function). El usuario podrá seguir
-// "existiendo" en auth pero sin datos ni acceso a nada, y podrá recrearse.
-async function eliminarCuentaAdmin(cuentaId) {
-  if (!cuentaId) throw new Error('Falta cuentaId');
-  const meActual = await nexoUsuarioActual();
-  if (meActual && meActual.id === cuentaId) {
-    throw new Error('No puedes eliminar tu propia cuenta desde admin.');
-  }
-
-  // 1) Listar y borrar archivos del storage
-  const { data: docs } = await sb.from('documentos')
-    .select('path').eq('cuenta_id', cuentaId);
-  const paths = (docs || []).map(d => d.path).filter(Boolean);
-  if (paths.length) {
-    const { error: eStor } = await sb.storage.from('documentos').remove(paths);
-    if (eStor) console.warn('Storage remove:', eStor.message);
-  }
-
-  // 2) Borrar filas de documentos
-  const { error: eDocs } = await sb.from('documentos').delete().eq('cuenta_id', cuentaId);
-  if (eDocs) throw eDocs;
-
-  // 3) Borrar fila de cuentas
-  const { error: eCta } = await sb.from('cuentas').delete().eq('id', cuentaId);
-  if (eCta) throw eCta;
-
-  return true;
-}
-
 /* ------------------------------------------------------------
    CUENTAS  (tabla `public.cuentas`)
    ------------------------------------------------------------ */
@@ -417,7 +386,7 @@ async function aplicarFotoPerfil() {
 // Exponer al window para poder llamarlas desde inline scripts
 Object.assign(window, {
   nexoSignUp, nexoSignIn, nexoSignOut, nexoUsuarioActual, asegurarCuenta, esperarSesionOAuth,
-  guardarCuenta, obtenerCuenta, listarCuentas, eliminarCuentaAdmin,
+  guardarCuenta, obtenerCuenta, listarCuentas,
   subirDocumento, guardarTituloDocumento, guardarVenceDocumento, listarDocumentos, eliminarDocumento, urlDocumento,
   urlFotoPerfil, aplicarFotoPerfil,
   verificarPublico, urlPublicaDocumento, urlDeMiTarjeta
