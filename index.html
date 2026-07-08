@@ -150,6 +150,41 @@
   }
 
   .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  /* Notas bajo el CTA del hero: aviso por correo + marco legal */
+  .hero-notes {
+    margin-top: 22px;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .hero-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--ink-mute);
+    font-weight: 500;
+  }
+  .hero-note strong { color: var(--ink); font-weight: 700; }
+  .hero-note-ico {
+    flex-shrink: 0;
+    font-size: 12px;
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+  .hero-note-legal {
+    font-size: 10.5px;
+    opacity: 0.85;
+    padding-top: 6px;
+    border-top: 1px solid var(--line);
+  }
+  @media (max-width: 900px) {
+    .hero-notes { margin-left: auto; margin-right: auto; text-align: left; }
+  }
   .btn-primary {
     background: var(--ink); color: white;
     padding: 14px 26px; border-radius: 100px;
@@ -1503,12 +1538,23 @@
           Iniciar sesión
           <span>→</span>
         </a>
-        <a href="verificar.html" class="btn-secondary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">Ver cómo funciona</a>
+        <a href="#simulador" id="btnComoFunciona" class="btn-secondary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">Ver cómo funciona</a>
+      </div>
+
+      <div class="hero-notes">
+        <p class="hero-note">
+          <span class="hero-note-ico" aria-hidden="true">✉️</span>
+          Recibirás un <strong>aviso por correo registrado</strong> cuando tus documentos estén próximos a vencer.
+        </p>
+        <p class="hero-note hero-note-legal">
+          <span class="hero-note-ico" aria-hidden="true">⚖️</span>
+          Amparado por la <strong>Ley N.º 19.799</strong> sobre Documentos Electrónicos, Firma Electrónica y Servicios de Certificación — otorga a tus documentos digitales el mismo valor legal que los documentos en papel.
+        </p>
       </div>
     </div>
 
     <div class="card-stage">
-      <div class="simulator-wrapper">
+      <div class="simulator-wrapper" id="simulador">
         <!-- NFC Wave Transmission Animation -->
         <div class="nfc-wave" id="nfcWave"></div>
 
@@ -2124,6 +2170,31 @@
       nfcCard.className = 'nfc-card';
       cardLabel.textContent = 'Acerca tu tarjeta';
       nfcCard.querySelector('.card-meta').textContent = 'NFC·NX 0001 · CL';
+    });
+  }
+
+  // --- BOTÓN "VER CÓMO FUNCIONA" → DISPARA SIMULACIÓN ---
+  const btnComoFunciona = document.getElementById('btnComoFunciona');
+  if (btnComoFunciona) {
+    btnComoFunciona.addEventListener('click', (e) => {
+      e.preventDefault();
+      const simulador = document.getElementById('simulador');
+      const isMobile = window.innerWidth < 900;
+
+      // En mobile, desplazamos al simulador; en desktop ya está a la vista.
+      if (isMobile && simulador) {
+        simulador.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      // Elegimos un perfil distinto al activo para que se vea la animación.
+      const activeBtn = document.querySelector('.sim-btn.active');
+      const allBtns = Array.from(document.querySelectorAll('.sim-btn'));
+      const nextBtn = allBtns.find(b => b !== activeBtn) || allBtns[0];
+
+      // Delay para que empiece el scroll antes del sweep.
+      setTimeout(() => {
+        if (nextBtn) nextBtn.click();
+      }, isMobile ? 500 : 150);
     });
   }
 
