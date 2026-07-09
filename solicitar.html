@@ -75,16 +75,18 @@
   .back-btn:hover { background: var(--bg); }
   .header-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; cursor: pointer; }
   .header-logo {
-    height: 32px; padding: 0 12px; background: var(--red); color: #fff;
+    height: 32px; padding: 0 12px; background: var(--green); color: #fff;
     border-radius: 10px; display: inline-flex; align-items: center; gap: 6px;
     font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 13px;
     letter-spacing: 0.01em; transition: opacity 0.15s;
+    flex-shrink: 0;
   }
   .header-logo:hover { opacity: 0.88; }
   .header-logo svg { width: 14px; height: 14px; fill: #fff; }
   .header-name {
     font-family: 'Space Grotesk', sans-serif;
     font-weight: 700; font-size: 16px; letter-spacing: -0.02em;
+    white-space: nowrap;
   }
   .header-name span { color: var(--red); }
   .user-chip {
@@ -92,6 +94,19 @@
     padding: 5px 12px; border-radius: 20px;
     font-size: 12px; font-weight: 600;
     display: flex; align-items: center; gap: 6px;
+    flex-shrink: 0; max-width: 40%; overflow: hidden;
+  }
+  .user-chip span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (max-width: 420px) {
+    .header-left { gap: 8px; }
+    .back-btn { width: 32px; height: 32px; }
+    .header-logo { height: 30px; padding: 0 10px; font-size: 12px; }
+    .header-logo svg { width: 13px; height: 13px; }
+    .header-name { font-size: 14px; }
+  }
+  @media (max-width: 360px) {
+    .header-name { display: none; }
+    .header-brand { gap: 0; }
   }
   .user-chip .av {
     width: 22px; height: 22px; border-radius: 50%;
