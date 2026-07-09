@@ -799,6 +799,203 @@
   .webcam-btn.capture-btn:active {
     background: #e5e5ea;
   }
+  /* ===== SELECTOR DE TIPO DE CÁMARA (DOBLE CARA vs LIBRE) ===== */
+  .tipo-modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    z-index: 1200;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .tipo-modal-overlay.show {
+    opacity: 1; pointer-events: auto;
+  }
+  .tipo-modal-box {
+    background: var(--surface);
+    color: var(--ink);
+    width: 100%; max-width: 460px;
+    border-radius: 20px;
+    padding: 22px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.18);
+    display: flex; flex-direction: column; gap: 14px;
+    transform: translateY(20px);
+    transition: transform 0.25s ease;
+  }
+  .tipo-modal-overlay.show .tipo-modal-box { transform: translateY(0); }
+  .tipo-options {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .tipo-option {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px; border-radius: 14px;
+    border: 2px solid var(--line);
+    background: var(--bg); color: var(--ink);
+    cursor: pointer; text-align: left;
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .tipo-option:hover { border-color: var(--green); }
+  .tipo-option:active { transform: scale(0.98); }
+  .tipo-option .tipo-icon {
+    font-size: 30px; flex: 0 0 auto;
+    width: 48px; height: 48px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border-radius: 12px;
+  }
+  .tipo-option .tipo-info strong {
+    display: block; font-size: 14px; margin-bottom: 4px;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .tipo-option .tipo-info p {
+    margin: 0; font-size: 12px; color: var(--ink-mute); line-height: 1.35;
+  }
+  /* ===== SCANNER (CÁMARA LIBRE CON MARCO VERDE + AJUSTE DE ESQUINAS) ===== */
+  .scanner-modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: #000; z-index: 3100;
+    display: none; flex-direction: column;
+  }
+  .scanner-modal-overlay.show { display: flex; }
+  .scanner-stage {
+    position: relative; flex: 1; width: 100%; height: 100%;
+    overflow: hidden;
+    background: #000;
+  }
+  .scanner-video, .scanner-photo {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    object-fit: contain;
+    background: #000;
+  }
+  .scanner-photo { display: none; }
+  .scanner-frame-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    display: flex;
+    align-items: center; justify-content: center;
+    z-index: 3;
+  }
+  .scanner-frame-outline {
+    width: 88%; height: 78%;
+    border: 3px solid #34C759;
+    border-radius: 14px;
+    box-shadow: 0 0 20px rgba(52, 199, 89, 0.4);
+    position: relative;
+  }
+  .scanner-frame-outline::before {
+    content: 'Encuadra el documento dentro del marco verde';
+    position: absolute; top: -34px; left: 0; right: 0;
+    color: #fff; font-size: 13px; font-weight: 600;
+    text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .scanner-quad-svg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 4;
+    pointer-events: none;
+    display: none;
+  }
+  .scanner-quad-svg.active { display: block; }
+  .scanner-quad-svg polygon {
+    fill: rgba(52, 199, 89, 0.15);
+    stroke: #34C759;
+    stroke-width: 2;
+  }
+  .scanner-handle {
+    position: absolute;
+    width: 34px; height: 34px;
+    margin-left: -17px; margin-top: -17px;
+    border-radius: 50%;
+    background: rgba(52, 199, 89, 0.85);
+    border: 3px solid #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    cursor: grab; touch-action: none;
+    z-index: 5;
+    display: none;
+  }
+  .scanner-handle.active { display: block; }
+  .scanner-handle:active { cursor: grabbing; transform: scale(1.15); }
+  .scanner-instructions {
+    position: absolute; top: 20px; left: 20px; right: 20px;
+    color: #fff; font-size: 14px; font-weight: 600;
+    text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    z-index: 10;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .scanner-controls {
+    position: absolute; bottom: 32px; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: space-evenly;
+    z-index: 10;
+  }
+  .scanner-btn {
+    min-width: 56px; height: 56px;
+    padding: 0 18px;
+    border-radius: 28px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 14px; font-weight: 600;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: transform 0.15s, background 0.15s;
+    font-family: 'Space Grotesk', sans-serif;
+    gap: 6px;
+  }
+  .scanner-btn:active { transform: scale(0.94); }
+  .scanner-btn.capture {
+    width: 76px; height: 76px; padding: 0;
+    background: #fff; border-radius: 50%;
+    border: 4px solid rgba(255,255,255,0.3);
+  }
+  .scanner-btn.capture:active { background: #e5e5ea; }
+  .scanner-btn.confirm {
+    background: #34C759;
+    border-color: #34C759;
+  }
+  .scanner-format-modal {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    z-index: 3200;
+    display: none; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .scanner-format-modal.show { display: flex; }
+  .scanner-format-box {
+    background: var(--surface); color: var(--ink);
+    width: 100%; max-width: 400px;
+    border-radius: 18px; padding: 22px;
+    display: flex; flex-direction: column; gap: 14px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  }
+  .scanner-format-box h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px; font-weight: 700; margin: 0;
+  }
+  .scanner-format-opts {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .scanner-format-btn {
+    padding: 14px 10px; border-radius: 12px;
+    border: 2px solid var(--line);
+    background: var(--bg); color: var(--ink);
+    cursor: pointer; font-weight: 600; font-size: 13px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .scanner-format-btn:hover { border-color: var(--green); }
+  .scanner-format-btn:active { transform: scale(0.97); }
+  .scanner-format-btn .icon { font-size: 26px; }
+  .scanner-format-cancel {
+    background: none; border: none; color: var(--ink-mute);
+    font-size: 13px; text-decoration: underline; cursor: pointer;
+    align-self: center;
+  }
 </style>
 <script>(function(){try{var k='nexo_theme',s=sessionStorage.getItem(k);if(!s){var h=new Date().getHours();s=(h>=19||h<7)?'dark':'light';}document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){}})();</script>
 <script src="theme.js" defer></script>
@@ -947,7 +1144,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
             Subir archivo
           </button>
-          <button class="btn-upload secondary" onclick="triggerCamera('foto-input')">📷 Cámara</button>
+          <button class="btn-upload secondary" onclick="abrirSelectorTipoCamara('foto')">📷 Cámara</button>
         </div>
       </div>
     </div>
@@ -982,7 +1179,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
             Subir archivo
           </button>
-          <button class="btn-upload secondary" onclick="triggerCamera('curso-input')">📷 Cámara</button>
+          <button class="btn-upload secondary" onclick="abrirSelectorTipoCamara('curso')">📷 Cámara</button>
         </div>
       </div>
     </div>
@@ -1015,7 +1212,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
             Subir archivo
           </button>
-          <button class="btn-upload secondary" onclick="triggerCamera('antecedentes-input')">📷 Cámara</button>
+          <button class="btn-upload secondary" onclick="abrirSelectorTipoCamara('antecedentes')">📷 Cámara</button>
         </div>
       </div>
     </div>
@@ -1048,7 +1245,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
             Subir archivo
           </button>
-          <button class="btn-upload secondary" onclick="triggerCamera('credencial-input')">📷 Cámara</button>
+          <button class="btn-upload secondary" onclick="abrirSelectorTipoCamara('credencial')">📷 Cámara</button>
         </div>
       </div>
     </div>
@@ -1081,7 +1278,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
             Subir archivo
           </button>
-          <button class="btn-upload secondary" onclick="triggerCamera('contrato-input')">📷 Cámara</button>
+          <button class="btn-upload secondary" onclick="abrirSelectorTipoCamara('contrato')">📷 Cámara</button>
         </div>
       </div>
     </div>
@@ -1114,7 +1311,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
             Subir archivo
           </button>
-          <button class="btn-upload secondary" onclick="triggerCamera('examen-input')">📷 Cámara</button>
+          <button class="btn-upload secondary" onclick="abrirSelectorTipoCamara('examen')">📷 Cámara</button>
         </div>
       </div>
     </div>
@@ -1507,6 +1704,8 @@
 <!-- ===== Supabase (base de datos) ===== -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="supabase-client.js"></script>
+<!-- ===== jsPDF (exportar escaneo como PDF) ===== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
   // Toggle panel expandible
@@ -1599,7 +1798,7 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
               Subir archivo
             </button>
-            <button class="btn-upload secondary" onclick="triggerCamera('${docId}-input')">📷 Cámara</button>
+            <button class="btn-upload secondary" onclick="abrirSelectorTipoCamara('${docId}')">📷 Cámara</button>
           </div>
         </div>
       </div>`;
@@ -2545,5 +2744,499 @@
     <button type="button" class="webcam-btn" onclick="cambiarCamaraMode()" title="Cambiar Cámara">🔄</button>
   </div>
 </div>
+
+<!-- MODAL: SELECTOR DE TIPO DE DOCUMENTO ANTES DE ABRIR CÁMARA -->
+<div class="tipo-modal-overlay" id="tipoCamaraModal" onclick="if(event.target===this) cerrarTipoCamaraModal()">
+  <div class="tipo-modal-box">
+    <div class="merge-modal-header">
+      <h3>¿Qué tipo de documento vas a fotografiar?</h3>
+      <button class="merge-modal-close" onclick="cerrarTipoCamaraModal()">✕</button>
+    </div>
+    <div class="tipo-options">
+      <button class="tipo-option" onclick="elegirTipoCamara('doble')">
+        <div class="tipo-icon">🪪</div>
+        <div class="tipo-info">
+          <strong>Tarjeta de doble cara</strong>
+          <p>Documento pequeño con parte frontal y trasera (por ejemplo credencial, tarjeta de trabajo, etc.)</p>
+        </div>
+      </button>
+      <button class="tipo-option" onclick="elegirTipoCamara('libre')">
+        <div class="tipo-icon">📄</div>
+        <div class="tipo-info">
+          <strong>Otro documento</strong>
+          <p>Documento en hoja u otro tamaño. Ajustarás las orillas después de fotografiar.</p>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ESCÁNER LIBRE (CÁMARA + AJUSTE DE ESQUINAS) -->
+<div class="scanner-modal-overlay" id="scannerModal">
+  <div class="scanner-instructions" id="scannerInstructions">Encuadra el documento dentro del marco verde</div>
+  <div class="scanner-stage" id="scannerStage">
+    <video id="scannerVideo" autoplay playsinline muted class="scanner-video"></video>
+    <img id="scannerPhoto" class="scanner-photo" alt="Foto capturada">
+    <div class="scanner-frame-overlay" id="scannerFrameOverlay">
+      <div class="scanner-frame-outline"></div>
+    </div>
+    <svg class="scanner-quad-svg" id="scannerQuadSvg" preserveAspectRatio="none">
+      <polygon id="scannerQuadPoly" points="0,0 0,0 0,0 0,0"></polygon>
+    </svg>
+    <div class="scanner-handle" data-corner="0" id="scannerHandle0"></div>
+    <div class="scanner-handle" data-corner="1" id="scannerHandle1"></div>
+    <div class="scanner-handle" data-corner="2" id="scannerHandle2"></div>
+    <div class="scanner-handle" data-corner="3" id="scannerHandle3"></div>
+  </div>
+  <div class="scanner-controls" id="scannerControlsCapture">
+    <button type="button" class="scanner-btn" onclick="cerrarScanner()" title="Cancelar">✕</button>
+    <button type="button" class="scanner-btn capture" onclick="scannerCapturar()" title="Capturar">
+      <div style="width:24px;height:24px;border-radius:50%;background:#E82127;"></div>
+    </button>
+    <button type="button" class="scanner-btn" onclick="scannerCambiarCamara()" title="Cambiar Cámara">🔄</button>
+  </div>
+  <div class="scanner-controls" id="scannerControlsAdjust" style="display:none;">
+    <button type="button" class="scanner-btn" onclick="scannerReintentar()">↺ Reintentar</button>
+    <button type="button" class="scanner-btn confirm" onclick="scannerAbrirFormato()">✓ Guardar</button>
+  </div>
+</div>
+
+<!-- MODAL: ELEGIR FORMATO (IMAGEN o PDF) -->
+<div class="scanner-format-modal" id="scannerFormatModal" onclick="if(event.target===this) scannerCerrarFormato()">
+  <div class="scanner-format-box">
+    <h3>¿Cómo quieres guardar el documento?</h3>
+    <div class="scanner-format-opts">
+      <button class="scanner-format-btn" onclick="scannerGuardar('imagen')">
+        <span class="icon">🖼️</span>
+        <span>Como Imagen (JPG)</span>
+      </button>
+      <button class="scanner-format-btn" onclick="scannerGuardar('pdf')">
+        <span class="icon">📄</span>
+        <span>Como PDF</span>
+      </button>
+    </div>
+    <button class="scanner-format-cancel" onclick="scannerCerrarFormato()">Cancelar</button>
+  </div>
+</div>
+
+<script>
+/* ===================== SELECTOR DE TIPO DE CÁMARA + ESCÁNER LIBRE ===================== */
+(function(){
+  let camDocId = null;
+
+  window.abrirSelectorTipoCamara = function(docId) {
+    camDocId = docId;
+    document.getElementById('tipoCamaraModal').classList.add('show');
+  };
+  window.cerrarTipoCamaraModal = function() {
+    document.getElementById('tipoCamaraModal').classList.remove('show');
+  };
+  window.elegirTipoCamara = function(tipo) {
+    const docId = camDocId;
+    cerrarTipoCamaraModal();
+    if (!docId) return;
+    if (tipo === 'doble') {
+      // Reutiliza el mismo modal de dos caras usado por cédula/licencia
+      if (typeof window.abrirModalDosCaras === 'function') {
+        window.abrirModalDosCaras(docId);
+      }
+    } else {
+      iniciarScannerLibre(docId);
+    }
+  };
+
+  /* ---------------- Escáner libre ---------------- */
+  let scannerStream = null;
+  let scannerFacingMode = 'environment';
+  let scannerDocId = null;
+  let scannerCornersImg = null; // corners en coordenadas del <img> mostrado (px del elemento)
+  let scannerCapturedCanvas = null; // canvas con la foto en resolución nativa
+  let scannerImgDisplayRect = null; // rect del <img> pintado con object-fit:contain
+
+  async function iniciarScannerLibre(docId) {
+    scannerDocId = docId;
+    document.getElementById('scannerModal').classList.add('show');
+    mostrarModoCaptura();
+    await abrirStreamScanner();
+  }
+
+  function mostrarModoCaptura() {
+    document.getElementById('scannerVideo').style.display = 'block';
+    document.getElementById('scannerPhoto').style.display = 'none';
+    document.getElementById('scannerFrameOverlay').style.display = 'flex';
+    document.getElementById('scannerQuadSvg').classList.remove('active');
+    for (let i = 0; i < 4; i++) document.getElementById('scannerHandle' + i).classList.remove('active');
+    document.getElementById('scannerControlsCapture').style.display = 'flex';
+    document.getElementById('scannerControlsAdjust').style.display = 'none';
+    document.getElementById('scannerInstructions').textContent = 'Encuadra el documento dentro del marco verde';
+  }
+
+  function mostrarModoAjuste() {
+    document.getElementById('scannerVideo').style.display = 'none';
+    document.getElementById('scannerPhoto').style.display = 'block';
+    document.getElementById('scannerFrameOverlay').style.display = 'none';
+    document.getElementById('scannerQuadSvg').classList.add('active');
+    for (let i = 0; i < 4; i++) document.getElementById('scannerHandle' + i).classList.add('active');
+    document.getElementById('scannerControlsCapture').style.display = 'none';
+    document.getElementById('scannerControlsAdjust').style.display = 'flex';
+    document.getElementById('scannerInstructions').textContent = 'Arrastra las esquinas para ajustar la orilla del documento';
+  }
+
+  async function abrirStreamScanner() {
+    if (scannerStream) scannerStream.getTracks().forEach(t => t.stop());
+    try {
+      scannerStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: scannerFacingMode }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+        audio: false
+      });
+      const video = document.getElementById('scannerVideo');
+      if (video) video.srcObject = scannerStream;
+    } catch (err) {
+      console.error('Error al acceder a la cámara:', err);
+      if (typeof showToast === 'function') showToast('No se pudo acceder a la cámara');
+      cerrarScanner();
+    }
+  }
+
+  window.scannerCambiarCamara = async function() {
+    scannerFacingMode = scannerFacingMode === 'environment' ? 'user' : 'environment';
+    await abrirStreamScanner();
+  };
+
+  window.cerrarScanner = function() {
+    if (scannerStream) { scannerStream.getTracks().forEach(t => t.stop()); scannerStream = null; }
+    document.getElementById('scannerModal').classList.remove('show');
+    const v = document.getElementById('scannerVideo');
+    if (v) v.srcObject = null;
+    scannerCapturedCanvas = null;
+    scannerCornersImg = null;
+    scannerImgDisplayRect = null;
+    scannerDocId = null;
+  };
+
+  window.scannerReintentar = async function() {
+    mostrarModoCaptura();
+    await abrirStreamScanner();
+  };
+
+  window.scannerCapturar = function() {
+    const video = document.getElementById('scannerVideo');
+    if (!video || !scannerStream) return;
+    const vw = video.videoWidth, vh = video.videoHeight;
+    if (!vw || !vh) { if (typeof showToast === 'function') showToast('Cámara no lista'); return; }
+    // Guardamos el frame completo en un canvas para poder aplicar el warp después
+    const canvas = document.createElement('canvas');
+    canvas.width = vw; canvas.height = vh;
+    canvas.getContext('2d').drawImage(video, 0, 0, vw, vh);
+    scannerCapturedCanvas = canvas;
+
+    // Detener stream mientras el usuario ajusta
+    if (scannerStream) { scannerStream.getTracks().forEach(t => t.stop()); scannerStream = null; }
+
+    const photo = document.getElementById('scannerPhoto');
+    photo.src = canvas.toDataURL('image/jpeg', 0.92);
+    photo.onload = () => {
+      mostrarModoAjuste();
+      // Colocar esquinas iniciales con 8% de inset dentro del área pintada del <img>
+      requestAnimationFrame(() => inicializarEsquinas());
+    };
+  };
+
+  function getPhotoDisplayRect() {
+    // Calcula el rectángulo dentro del <img> donde realmente se pinta la foto
+    // (object-fit: contain) — relativo al scannerStage
+    const stage = document.getElementById('scannerStage');
+    const photo = document.getElementById('scannerPhoto');
+    if (!scannerCapturedCanvas) return null;
+    const sw = stage.clientWidth, sh = stage.clientHeight;
+    const iw = scannerCapturedCanvas.width, ih = scannerCapturedCanvas.height;
+    const scale = Math.min(sw / iw, sh / ih);
+    const dw = iw * scale, dh = ih * scale;
+    const dx = (sw - dw) / 2, dy = (sh - dh) / 2;
+    return { x: dx, y: dy, w: dw, h: dh, scale };
+  }
+
+  function inicializarEsquinas() {
+    const rect = getPhotoDisplayRect();
+    if (!rect) return;
+    scannerImgDisplayRect = rect;
+    const inset = 0.06;
+    const x0 = rect.x + rect.w * inset;
+    const y0 = rect.y + rect.h * inset;
+    const x1 = rect.x + rect.w * (1 - inset);
+    const y1 = rect.y + rect.h * (1 - inset);
+    // Orden: 0 = TL, 1 = TR, 2 = BR, 3 = BL
+    scannerCornersImg = [
+      { x: x0, y: y0 }, { x: x1, y: y0 }, { x: x1, y: y1 }, { x: x0, y: y1 }
+    ];
+    dibujarQuad();
+  }
+
+  function dibujarQuad() {
+    if (!scannerCornersImg) return;
+    const svg = document.getElementById('scannerQuadSvg');
+    const stage = document.getElementById('scannerStage');
+    svg.setAttribute('viewBox', `0 0 ${stage.clientWidth} ${stage.clientHeight}`);
+    const poly = document.getElementById('scannerQuadPoly');
+    poly.setAttribute('points', scannerCornersImg.map(p => `${p.x},${p.y}`).join(' '));
+    for (let i = 0; i < 4; i++) {
+      const h = document.getElementById('scannerHandle' + i);
+      h.style.left = scannerCornersImg[i].x + 'px';
+      h.style.top  = scannerCornersImg[i].y + 'px';
+    }
+  }
+
+  // Arrastre táctil y ratón sobre las esquinas
+  function attachHandleEvents() {
+    for (let i = 0; i < 4; i++) {
+      const h = document.getElementById('scannerHandle' + i);
+      const idx = i;
+      const onDown = (ev) => {
+        ev.preventDefault();
+        const move = (mev) => {
+          const stage = document.getElementById('scannerStage');
+          const rect = stage.getBoundingClientRect();
+          const pt = mev.touches ? mev.touches[0] : mev;
+          let x = pt.clientX - rect.left;
+          let y = pt.clientY - rect.top;
+          // Restringir dentro del área pintada de la foto
+          const r = scannerImgDisplayRect;
+          if (r) {
+            x = Math.max(r.x, Math.min(r.x + r.w, x));
+            y = Math.max(r.y, Math.min(r.y + r.h, y));
+          }
+          scannerCornersImg[idx] = { x, y };
+          dibujarQuad();
+        };
+        const up = () => {
+          window.removeEventListener('mousemove', move);
+          window.removeEventListener('mouseup', up);
+          window.removeEventListener('touchmove', move);
+          window.removeEventListener('touchend', up);
+        };
+        window.addEventListener('mousemove', move);
+        window.addEventListener('mouseup', up);
+        window.addEventListener('touchmove', move, { passive: false });
+        window.addEventListener('touchend', up);
+      };
+      h.addEventListener('mousedown', onDown);
+      h.addEventListener('touchstart', onDown, { passive: false });
+    }
+  }
+  attachHandleEvents();
+
+  window.addEventListener('resize', () => {
+    if (scannerCapturedCanvas && document.getElementById('scannerModal').classList.contains('show')) {
+      // Recalcular esquinas proporcionalmente al nuevo tamaño de pantalla
+      const oldRect = scannerImgDisplayRect;
+      const newRect = getPhotoDisplayRect();
+      if (oldRect && newRect && scannerCornersImg) {
+        scannerCornersImg = scannerCornersImg.map(p => ({
+          x: newRect.x + ((p.x - oldRect.x) / oldRect.w) * newRect.w,
+          y: newRect.y + ((p.y - oldRect.y) / oldRect.h) * newRect.h
+        }));
+        scannerImgDisplayRect = newRect;
+        dibujarQuad();
+      }
+    }
+  });
+
+  /* ---------------- Formato de guardado ---------------- */
+  window.scannerAbrirFormato = function() {
+    document.getElementById('scannerFormatModal').classList.add('show');
+  };
+  window.scannerCerrarFormato = function() {
+    document.getElementById('scannerFormatModal').classList.remove('show');
+  };
+
+  window.scannerGuardar = async function(formato) {
+    if (!scannerCapturedCanvas || !scannerCornersImg || !scannerImgDisplayRect || !scannerDocId) return;
+    scannerCerrarFormato();
+    const docId = scannerDocId;
+
+    // Convertir esquinas del espacio del <img> mostrado al espacio de la foto original
+    const r = scannerImgDisplayRect;
+    const cornersSrc = scannerCornersImg.map(p => ({
+      x: ((p.x - r.x) / r.w) * scannerCapturedCanvas.width,
+      y: ((p.y - r.y) / r.h) * scannerCapturedCanvas.height
+    }));
+
+    let outCanvas;
+    try {
+      outCanvas = await warpQuadToRect(scannerCapturedCanvas, cornersSrc);
+    } catch (e) {
+      console.error(e);
+      if (typeof showToast === 'function') showToast('Error procesando la imagen');
+      return;
+    }
+
+    let file, filename;
+    if (formato === 'pdf') {
+      try {
+        const { jsPDF } = window.jspdf || {};
+        if (!jsPDF) throw new Error('jsPDF no disponible');
+        const w = outCanvas.width, h = outCanvas.height;
+        const orientation = w >= h ? 'l' : 'p';
+        const pdf = new jsPDF({ orientation, unit: 'pt', format: [w, h] });
+        const dataUrl = outCanvas.toDataURL('image/jpeg', 0.9);
+        pdf.addImage(dataUrl, 'JPEG', 0, 0, w, h);
+        const blob = pdf.output('blob');
+        filename = `${docId}_escaneo.pdf`;
+        try { file = new File([blob], filename, { type: 'application/pdf', lastModified: Date.now() }); }
+        catch (e2) { file = blob; }
+      } catch (e) {
+        console.error(e);
+        if (typeof showToast === 'function') showToast('No se pudo generar el PDF: ' + e.message);
+        return;
+      }
+    } else {
+      const blob = await new Promise(res => outCanvas.toBlob(res, 'image/jpeg', 0.9));
+      if (!blob) { if (typeof showToast === 'function') showToast('Error al generar la imagen'); return; }
+      filename = `${docId}_escaneo.jpg`;
+      try { file = new File([blob], filename, { type: 'image/jpeg', lastModified: Date.now() }); }
+      catch (e2) { file = blob; }
+    }
+
+    cerrarScanner();
+    await subirEscaneo(docId, file, filename);
+  };
+
+  async function subirEscaneo(docId, file, filename) {
+    const tamKB = (file.size / 1024).toFixed(0);
+    const previewUrl = URL.createObjectURL(file);
+    if (typeof marcarCardSubida === 'function') marcarCardSubida(docId, filename, tamKB, 'Subiendo…', previewUrl, true);
+    const badge = document.querySelector('#card-' + docId + ' .doc-badge');
+    if (badge) { badge.textContent = 'Subiendo…'; badge.className = 'doc-badge'; }
+    if (typeof activarBotonGuardarRojo === 'function') activarBotonGuardarRojo();
+
+    try {
+      const user = typeof nexoUsuarioActual === 'function' ? await nexoUsuarioActual() : null;
+      if (!user) {
+        if (typeof showToast === 'function') showToast('Debes iniciar sesión para subir documentos');
+        if (badge) { badge.className = 'doc-badge miss'; badge.textContent = 'Pendiente'; }
+        return;
+      }
+      const vence = typeof leerVenceDocumento === 'function' ? leerVenceDocumento(docId) : null;
+      const data = await subirDocumento({ tipo: docId, file, nombre: filename, noCompress: true, vence });
+      const realKB = data && data.tamano ? Math.round(data.tamano / 1024) : tamKB;
+      const realNombre = data && data.nombre ? data.nombre : filename;
+      if (typeof marcarCardSubida === 'function') marcarCardSubida(docId, realNombre, realKB, 'Subido ahora', previewUrl, false);
+      if (typeof updateProgress === 'function') updateProgress();
+      if (typeof showToast === 'function') showToast('Documento subido');
+      if (typeof activarBotonGuardarRojo === 'function') activarBotonGuardarRojo();
+    } catch (e) {
+      console.error(e);
+      if (typeof showToast === 'function') showToast('Error al subir: ' + e.message);
+      if (badge) { badge.className = 'doc-badge miss'; badge.textContent = 'Pendiente'; }
+    }
+  }
+
+  /* ---------------- Perspective warp (homografía) ---------------- */
+  function solveLinearSystem(A, b) {
+    const n = A.length;
+    const M = A.map((row, i) => [...row, b[i]]);
+    for (let i = 0; i < n; i++) {
+      let maxRow = i;
+      for (let k = i + 1; k < n; k++) {
+        if (Math.abs(M[k][i]) > Math.abs(M[maxRow][i])) maxRow = k;
+      }
+      [M[i], M[maxRow]] = [M[maxRow], M[i]];
+      if (Math.abs(M[i][i]) < 1e-12) throw new Error('Sistema singular');
+      const piv = M[i][i];
+      for (let j = i; j <= n; j++) M[i][j] /= piv;
+      for (let k = 0; k < n; k++) {
+        if (k !== i) {
+          const f = M[k][i];
+          if (f !== 0) for (let j = i; j <= n; j++) M[k][j] -= f * M[i][j];
+        }
+      }
+    }
+    return M.map(row => row[n]);
+  }
+
+  // Homografía que mapea src -> dst (4 puntos cada uno).
+  function computeHomography(src, dst) {
+    const A = [], b = [];
+    for (let i = 0; i < 4; i++) {
+      const { x, y } = src[i];
+      const xp = dst[i].x, yp = dst[i].y;
+      A.push([x, y, 1, 0, 0, 0, -xp * x, -xp * y]); b.push(xp);
+      A.push([0, 0, 0, x, y, 1, -yp * x, -yp * y]); b.push(yp);
+    }
+    const h = solveLinearSystem(A, b);
+    return [
+      [h[0], h[1], h[2]],
+      [h[3], h[4], h[5]],
+      [h[6], h[7], 1]
+    ];
+  }
+
+  function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+
+  async function warpQuadToRect(srcCanvas, corners) {
+    // corners orden: 0=TL, 1=TR, 2=BR, 3=BL en píxeles del canvas original
+    const [tl, tr, br, bl] = corners;
+    const topW = dist(tl, tr), botW = dist(bl, br);
+    const leftH = dist(tl, bl), rightH = dist(tr, br);
+    let outW = Math.round((topW + botW) / 2);
+    let outH = Math.round((leftH + rightH) / 2);
+    // Limitar el tamaño de salida para mantener el rendimiento
+    const MAX = 1400;
+    if (outW > MAX || outH > MAX) {
+      const s = MAX / Math.max(outW, outH);
+      outW = Math.round(outW * s);
+      outH = Math.round(outH * s);
+    }
+    outW = Math.max(200, outW);
+    outH = Math.max(200, outH);
+
+    const srcCtx = srcCanvas.getContext('2d');
+    const srcData = srcCtx.getImageData(0, 0, srcCanvas.width, srcCanvas.height);
+    const sData = srcData.data;
+    const sw = srcCanvas.width, sh = srcCanvas.height;
+
+    // Homografía dst(rectángulo) -> src(esquinas). Usamos backward mapping.
+    const dstPts = [ {x:0,y:0}, {x:outW,y:0}, {x:outW,y:outH}, {x:0,y:outH} ];
+    const H = computeHomography(dstPts, corners);
+
+    const outCanvas = document.createElement('canvas');
+    outCanvas.width = outW; outCanvas.height = outH;
+    const outCtx = outCanvas.getContext('2d');
+    const outImage = outCtx.createImageData(outW, outH);
+    const dData = outImage.data;
+
+    for (let y = 0; y < outH; y++) {
+      for (let x = 0; x < outW; x++) {
+        const wx = H[0][0] * x + H[0][1] * y + H[0][2];
+        const wy = H[1][0] * x + H[1][1] * y + H[1][2];
+        const ww = H[2][0] * x + H[2][1] * y + 1;
+        const sx = wx / ww;
+        const sy = wy / ww;
+        const dstIdx = (y * outW + x) * 4;
+        if (sx < 0 || sy < 0 || sx >= sw - 1 || sy >= sh - 1) {
+          dData[dstIdx] = 255; dData[dstIdx+1] = 255; dData[dstIdx+2] = 255; dData[dstIdx+3] = 255;
+          continue;
+        }
+        const x0 = Math.floor(sx), y0 = Math.floor(sy);
+        const dx = sx - x0, dy = sy - y0;
+        const i00 = (y0 * sw + x0) * 4;
+        const i01 = (y0 * sw + (x0 + 1)) * 4;
+        const i10 = ((y0 + 1) * sw + x0) * 4;
+        const i11 = ((y0 + 1) * sw + (x0 + 1)) * 4;
+        const w00 = (1 - dx) * (1 - dy);
+        const w01 = dx * (1 - dy);
+        const w10 = (1 - dx) * dy;
+        const w11 = dx * dy;
+        dData[dstIdx]     = sData[i00]     * w00 + sData[i01]     * w01 + sData[i10]     * w10 + sData[i11]     * w11;
+        dData[dstIdx + 1] = sData[i00 + 1] * w00 + sData[i01 + 1] * w01 + sData[i10 + 1] * w10 + sData[i11 + 1] * w11;
+        dData[dstIdx + 2] = sData[i00 + 2] * w00 + sData[i01 + 2] * w01 + sData[i10 + 2] * w10 + sData[i11 + 2] * w11;
+        dData[dstIdx + 3] = 255;
+      }
+    }
+    outCtx.putImageData(outImage, 0, 0);
+    return outCanvas;
+  }
+})();
+</script>
 </body>
 </html>
