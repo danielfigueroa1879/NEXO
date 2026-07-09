@@ -83,12 +83,15 @@
     text-decoration: none; color: inherit; cursor: pointer;
   }
   .header-logo {
-    width: 32px; height: 32px;
-    background: var(--ink);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
+    height: 32px; padding: 0 12px;
+    background: var(--ink); color: #fff;
+    border-radius: 10px;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 13px;
+    letter-spacing: 0.01em; transition: opacity 0.15s;
   }
-  .header-logo svg { width: 18px; height: 18px; fill: #fff; }
+  .header-logo:hover { opacity: 0.88; }
+  .header-logo svg { width: 14px; height: 14px; fill: #fff; }
   .header-name {
     font-family: 'Space Grotesk', sans-serif;
     font-weight: 700; font-size: 17px; letter-spacing: -0.02em;
@@ -1006,8 +1009,9 @@
     <a href="index.html" class="header-brand" title="Ir al inicio">
       <div class="header-logo">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M6 2C4.9 2 4 2.9 4 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 3h8v1.5H8V16zm0-6h3v1.5H8V10z"/>
+          <path d="M12 3l-9 8h3v9h5v-6h2v6h5v-9h3z"/>
         </svg>
+        Inicio
       </div>
       <div class="header-name">NFC <span>NEXO</span></div>
     </a>
