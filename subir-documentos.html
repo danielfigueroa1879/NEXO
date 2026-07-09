@@ -991,6 +991,27 @@
   .scanner-format-btn:hover { border-color: var(--green); }
   .scanner-format-btn:active { transform: scale(0.97); }
   .scanner-format-btn .icon { font-size: 26px; }
+  .scanner-quality-toggle {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    padding: 4px; background: var(--bg); border-radius: 12px;
+    border: 1px solid var(--line);
+  }
+  .quality-btn {
+    padding: 10px 6px; border-radius: 9px;
+    border: none; background: transparent;
+    color: var(--ink-mute); cursor: pointer;
+    font-size: 12px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: background 0.15s, color 0.15s;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .quality-btn.active {
+    background: var(--ink); color: var(--surface);
+  }
+  .scanner-quality-hint {
+    font-size: 11px; color: var(--ink-mute); text-align: center;
+    margin: -6px 0 2px; line-height: 1.3;
+  }
   .scanner-format-cancel {
     background: none; border: none; color: var(--ink-mute);
     font-size: 13px; text-decoration: underline; cursor: pointer;
@@ -2827,10 +2848,15 @@
   </div>
 </div>
 
-<!-- MODAL: ELEGIR FORMATO (IMAGEN o PDF) -->
+<!-- MODAL: ELEGIR FORMATO (IMAGEN o PDF) + AJUSTE DE CALIDAD -->
 <div class="scanner-format-modal" id="scannerFormatModal" onclick="if(event.target===this) scannerCerrarFormato()">
   <div class="scanner-format-box">
     <h3>¿Cómo quieres guardar el documento?</h3>
+    <div class="scanner-quality-toggle" id="scannerQualityToggle">
+      <button type="button" class="quality-btn active" data-quality="doc" onclick="scannerElegirCalidad('doc')">📃 Ajuste documento</button>
+      <button type="button" class="quality-btn" data-quality="raw" onclick="scannerElegirCalidad('raw')">🖼️ Imagen normal</button>
+    </div>
+    <p class="scanner-quality-hint" id="scannerQualityHint">Mejora el contraste y el brillo del papel para que el texto se vea nítido.</p>
     <div class="scanner-format-opts">
       <button class="scanner-format-btn" onclick="scannerGuardar('imagen')">
         <span class="icon">🖼️</span>
@@ -3106,7 +3132,23 @@
   });
 
   /* ---------------- Formato de guardado ---------------- */
+  let scannerQuality = 'doc'; // 'doc' | 'raw'
+  const QUALITY_HINTS = {
+    doc: 'Mejora el contraste y el brillo del papel para que el texto se vea nítido.',
+    raw: 'Guarda la foto tal como se capturó, sin retoques ni realce.'
+  };
+  window.scannerElegirCalidad = function(q) {
+    if (q !== 'doc' && q !== 'raw') return;
+    scannerQuality = q;
+    document.querySelectorAll('#scannerQualityToggle .quality-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.quality === q);
+    });
+    const hint = document.getElementById('scannerQualityHint');
+    if (hint) hint.textContent = QUALITY_HINTS[q];
+  };
   window.scannerAbrirFormato = function() {
+    // Cada vez que se abre, restablece el valor por defecto: "Ajuste documento"
+    window.scannerElegirCalidad('doc');
     document.getElementById('scannerFormatModal').classList.add('show');
   };
   window.scannerCerrarFormato = function() {
@@ -3128,6 +3170,7 @@
     let outCanvas;
     try {
       outCanvas = await warpQuadToRect(scannerCapturedCanvas, cornersSrc);
+      if (scannerQuality === 'doc') enhanceDocument(outCanvas);
     } catch (e) {
       console.error(e);
       if (typeof showToast === 'function') showToast('Error procesando la imagen');
@@ -3202,6 +3245,55 @@
       if (typeof showToast === 'function') showToast('Error al subir: ' + e.message);
       if (badge) { badge.className = 'doc-badge miss'; badge.textContent = 'Pendiente'; }
     }
+  }
+
+  /* ---------------- Realce tipo "documento" ---------------- */
+  // Estira el histograma (percentiles 2%–98%) por canal y aplica un pequeño gamma,
+  // dejando el papel más blanco, las letras más nítidas y sin quemar mucho las tintas.
+  function enhanceDocument(canvas) {
+    const ctx = canvas.getContext('2d');
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = img.data;
+    const n = d.length;
+    const pixels = n / 4;
+
+    // Histograma por canal
+    const hR = new Uint32Array(256), hG = new Uint32Array(256), hB = new Uint32Array(256);
+    for (let i = 0; i < n; i += 4) { hR[d[i]]++; hG[d[i+1]]++; hB[d[i+2]]++; }
+
+    const pct = (hist, target) => {
+      let cum = 0;
+      for (let i = 0; i < 256; i++) { cum += hist[i]; if (cum >= target) return i; }
+      return 255;
+    };
+    const loT = pixels * 0.02, hiT = pixels * 0.98;
+    const rLo = pct(hR, loT), rHi = Math.max(rLo + 1, pct(hR, hiT));
+    const gLo = pct(hG, loT), gHi = Math.max(gLo + 1, pct(hG, hiT));
+    const bLo = pct(hB, loT), bHi = Math.max(bLo + 1, pct(hB, hiT));
+
+    const gamma = 1.15;
+    const buildLUT = (lo, hi) => {
+      const t = new Uint8ClampedArray(256);
+      const range = hi - lo;
+      for (let i = 0; i < 256; i++) {
+        let v = (i - lo) / range;
+        if (v < 0) v = 0; else if (v > 1) v = 1;
+        v = Math.pow(v, 1 / gamma);
+        t[i] = Math.round(v * 255);
+      }
+      return t;
+    };
+    const lutR = buildLUT(rLo, rHi);
+    const lutG = buildLUT(gLo, gHi);
+    const lutB = buildLUT(bLo, bHi);
+
+    for (let i = 0; i < n; i += 4) {
+      d[i]     = lutR[d[i]];
+      d[i + 1] = lutG[d[i + 1]];
+      d[i + 2] = lutB[d[i + 2]];
+    }
+    ctx.putImageData(img, 0, 0);
+    return canvas;
   }
 
   /* ---------------- Perspective warp (homografía) ---------------- */
