@@ -2771,6 +2771,32 @@
   </div>
 </div>
 
+<!-- MODAL: TAMAÑO DE HOJA (OFICIO / CARTA) ANTES DE ABRIR LA CÁMARA -->
+<div class="tipo-modal-overlay" id="tamanoHojaModal" onclick="if(event.target===this) cerrarTamanoHojaModal()">
+  <div class="tipo-modal-box">
+    <div class="merge-modal-header">
+      <h3>¿Qué tamaño tiene la hoja?</h3>
+      <button class="merge-modal-close" onclick="cerrarTamanoHojaModal()">✕</button>
+    </div>
+    <div class="tipo-options">
+      <button class="tipo-option" onclick="elegirTamanoHoja('carta')">
+        <div class="tipo-icon">📃</div>
+        <div class="tipo-info">
+          <strong>Carta</strong>
+          <p>Tamaño estándar 21,6 × 27,9 cm (8,5 × 11 pulgadas)</p>
+        </div>
+      </button>
+      <button class="tipo-option" onclick="elegirTamanoHoja('oficio')">
+        <div class="tipo-icon">📄</div>
+        <div class="tipo-info">
+          <strong>Oficio</strong>
+          <p>Tamaño largo 21,6 × 33 cm (8,5 × 13 pulgadas)</p>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: ESCÁNER LIBRE (CÁMARA + AJUSTE DE ESQUINAS) -->
 <div class="scanner-modal-overlay" id="scannerModal">
   <div class="scanner-instructions" id="scannerInstructions">Encuadra el documento dentro del marco verde</div>
@@ -2841,9 +2867,47 @@
         window.abrirModalDosCaras(docId);
       }
     } else {
-      iniciarScannerLibre(docId);
+      // Antes de abrir la cámara, preguntamos por el tamaño de hoja (Oficio o Carta)
+      abrirTamanoHojaModal(docId);
     }
   };
+
+  /* ---------------- Selector de tamaño de hoja ---------------- */
+  // Tamaños en pulgadas (portrait): [ancho, alto]
+  const HOJA_PT = {
+    carta:  { in: [8.5, 11], label: 'Carta'  },
+    oficio: { in: [8.5, 13], label: 'Oficio' }
+  };
+  let hojaTamano = 'carta'; // por defecto
+
+  function abrirTamanoHojaModal(docId) {
+    camDocId = docId;
+    document.getElementById('tamanoHojaModal').classList.add('show');
+  }
+  window.cerrarTamanoHojaModal = function() {
+    document.getElementById('tamanoHojaModal').classList.remove('show');
+  };
+  window.elegirTamanoHoja = function(tam) {
+    if (!HOJA_PT[tam]) return;
+    hojaTamano = tam;
+    const docId = camDocId;
+    cerrarTamanoHojaModal();
+    if (!docId) return;
+    aplicarAspectoMarco(tam);
+    iniciarScannerLibre(docId);
+  };
+
+  function aplicarAspectoMarco(tam) {
+    // El contorno verde se adapta al aspecto de la hoja elegida (retrato)
+    const outline = document.querySelector('.scanner-frame-outline');
+    if (!outline) return;
+    const [w, h] = HOJA_PT[tam].in;
+    outline.style.aspectRatio = `${w} / ${h}`;
+    outline.style.height = 'auto';
+    outline.style.width = 'auto';
+    outline.style.maxWidth = '88%';
+    outline.style.maxHeight = '82%';
+  }
 
   /* ---------------- Escáner libre ---------------- */
   let scannerStream = null;
@@ -3075,13 +3139,22 @@
       try {
         const { jsPDF } = window.jspdf || {};
         if (!jsPDF) throw new Error('jsPDF no disponible');
-        const w = outCanvas.width, h = outCanvas.height;
-        const orientation = w >= h ? 'l' : 'p';
-        const pdf = new jsPDF({ orientation, unit: 'pt', format: [w, h] });
+        // Página del PDF con el tamaño elegido antes (Oficio o Carta)
+        const [inW, inH] = HOJA_PT[hojaTamano].in;
+        // Elige orientación según la forma del escaneo (más ancho que alto → apaisado)
+        const imgW = outCanvas.width, imgH = outCanvas.height;
+        const landscape = imgW > imgH;
+        const pageW = (landscape ? Math.max(inW, inH) : Math.min(inW, inH)) * 72; // pt
+        const pageH = (landscape ? Math.min(inW, inH) : Math.max(inW, inH)) * 72;
+        const pdf = new jsPDF({ orientation: landscape ? 'l' : 'p', unit: 'pt', format: [pageW, pageH] });
+        // Encajar el escaneo dentro de la página respetando su aspecto (letterbox)
+        const scale = Math.min(pageW / imgW, pageH / imgH);
+        const drawW = imgW * scale, drawH = imgH * scale;
+        const dx = (pageW - drawW) / 2, dy = (pageH - drawH) / 2;
         const dataUrl = outCanvas.toDataURL('image/jpeg', 0.9);
-        pdf.addImage(dataUrl, 'JPEG', 0, 0, w, h);
+        pdf.addImage(dataUrl, 'JPEG', dx, dy, drawW, drawH);
         const blob = pdf.output('blob');
-        filename = `${docId}_escaneo.pdf`;
+        filename = `${docId}_escaneo_${hojaTamano}.pdf`;
         try { file = new File([blob], filename, { type: 'application/pdf', lastModified: Date.now() }); }
         catch (e2) { file = blob; }
       } catch (e) {
