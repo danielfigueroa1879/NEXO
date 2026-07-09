@@ -679,7 +679,7 @@
     background: var(--ink); color: #fff; border-color: var(--ink);
     opacity: 1; z-index: 2;
     box-shadow: 0 8px 20px rgba(0,0,0,0.28);
-    transform: scale(1.28);
+    transform: scale(1.05, 1.22);
   }
   .veh-chip.active .veh-chip-lbl { display: block; color: rgba(255,255,255,0.7); font-size: 7px; }
   .veh-chip.active .veh-chip-plate { letter-spacing: 0.08em; text-shadow: 0 2px 6px rgba(0,0,0,0.35); }
@@ -687,7 +687,7 @@
   @media (max-width: 380px) {
     .veh-chip .veh-chip-plate { font-size: 12px; }
     .veh-chip { padding: 5px 6px; }
-    .veh-chip.active { transform: scale(1.2); }
+    .veh-chip.active { transform: scale(1.04, 1.18); }
     .veh-selector { gap: 8px; padding: 12px 14px 8px; }
   }
   .doc-img-info {
@@ -1813,7 +1813,7 @@
   function renderCardTabs(activos, patente) {
     const orden = ['conductor', 'guardia', 'comerciante', 'empresa'];
     const meta = {
-      conductor:   { ico: '🚗', label: patente ? patente : 'Vehículo' },
+      conductor:   { ico: '🚗', label: 'Vehículo' },
       guardia:     { ico: '🤵', label: 'Particular' },
       comerciante: { ico: '🏪', label: 'Comerciante' },
       empresa:     { ico: '🏢', label: 'Empresa' }
