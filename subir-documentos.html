@@ -1146,7 +1146,7 @@
           <label>Vencimiento</label>
           <input type="date">
         </div>
-        <div class="upload-zone" onclick="abrirModalDosCaras('cedula')"
+        <div class="upload-zone" onclick="triggerUpload('cedula-input')"
              ondragover="dragOver(event,this)" ondragleave="dragLeave(this)" ondrop="dropFile(event,'cedula')">
           <div class="icon">📁</div>
           <h5>Arrastra aquí o toca para subir</h5>
@@ -1154,7 +1154,7 @@
           <input type="file" class="upload-input" id="cedula-input" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'cedula')">
         </div>
         <div class="upload-actions">
-          <button class="btn-upload primary" onclick="abrirModalDosCaras('cedula')">
+          <button class="btn-upload primary" onclick="triggerUpload('cedula-input')">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
             Subir archivo
           </button>
