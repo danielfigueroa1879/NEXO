@@ -283,6 +283,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  /* Título del documento — cursor normal por defecto, editable solo con el lápiz */
+  .doc-title {
+    cursor: default;
+  }
   .doc-title[contenteditable="true"] {
     cursor: text;
     outline: none;
@@ -299,18 +303,19 @@
   [data-theme="dark"] .doc-title[contenteditable="true"]:hover { background: rgba(255,255,255,0.06); }
   [data-theme="dark"] .doc-title[contenteditable="true"]:focus { background: rgba(255,255,255,0.08); }
 
-  /* Ícono lápiz junto al título (afordancia de "toca para editar") */
+  /* Ícono lápiz junto al título: siempre visible, toca para editar */
   .edit-pencil {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 20px; height: 20px;
-    background: none; border: none; padding: 0;
+    width: 22px; height: 22px;
+    background: none; border: none; padding: 3px;
     color: var(--ink-mute); cursor: pointer;
     flex-shrink: 0;
-    opacity: 0.7;
-    transition: opacity 0.12s, color 0.12s;
+    opacity: 1;
+    border-radius: 6px;
+    transition: opacity 0.12s, color 0.12s, background 0.12s;
   }
-  .edit-pencil:hover { opacity: 1; color: var(--ink); }
-  .edit-pencil svg { width: 14px; height: 14px; }
+  .edit-pencil:hover { opacity: 1; color: var(--blue); background: rgba(0, 51, 160, 0.08); }
+  .edit-pencil svg { width: 13px; height: 13px; }
 
   /* Handle de arrastre (⋮⋮) a la izquierda de la tarjeta */
   .drag-handle {
@@ -2712,6 +2717,8 @@
           pencil.innerHTML = SVG_PENCIL;
           pencil.addEventListener('click', (e) => {
             e.stopPropagation();
+            // Activar edición solo al presionar el lápiz
+            h4.setAttribute('contenteditable', 'true');
             h4.focus();
             const sel = window.getSelection();
             const r = document.createRange();
@@ -2722,20 +2729,24 @@
           wrap.appendChild(h4);
           wrap.appendChild(pencil);
         }
-        // 2) Hacer el título editable in-place
-        if (h4 && h4.getAttribute('contenteditable') !== 'true') {
-          h4.setAttribute('contenteditable', 'true');
+        // 2) Configurar el h4 pero SIN contenteditable por defecto (solo se activa con el lápiz)
+        if (h4 && !h4.dataset.renameReady) {
+          h4.dataset.renameReady = 'true';
           h4.setAttribute('spellcheck', 'false');
           h4.setAttribute('data-tipo', tipo);
           h4.classList.add('doc-title');
-          h4.title = 'Toca para renombrar';
+          // Evitar que el clic directo abra edición o propague eventos
           const stop = e => e.stopPropagation();
-          h4.addEventListener('click', stop);
+          h4.addEventListener('click', (e) => { e.stopPropagation(); if (h4.getAttribute('contenteditable') !== 'true') e.preventDefault(); });
           h4.addEventListener('mousedown', stop);
           h4.addEventListener('touchstart', stop, { passive: true });
-          h4.addEventListener('blur', () => guardarTitulo(h4));
+          h4.addEventListener('blur', () => {
+            h4.removeAttribute('contenteditable');
+            guardarTitulo(h4);
+          });
           h4.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') { e.preventDefault(); h4.blur(); }
+            if (e.key === 'Escape') { h4.blur(); }
           });
         }
         // 3) Handle de arrastre al inicio de la .doc-row
@@ -2930,13 +2941,15 @@
   }
   window.handleClockClick = handleClockClick;
 
-  // Manejador de click en lápiz (coloca el foco en el título h4 y lo selecciona completo)
+  // Manejador de click en lápiz (activa contenteditable, coloca el foco y selecciona todo el texto)
   function handleRenameClick(e, docId) {
     e.stopPropagation();
+    e.preventDefault();
     const card = document.getElementById('card-' + docId);
     const h4 = card ? (card.querySelector('.doc-title') || card.querySelector('h4')) : null;
     if (h4) {
-      // Si el panel del acordeón está cerrado, lo abrimos o mantenemos
+      // Activar edición solo cuando se presiona el lápiz
+      h4.setAttribute('contenteditable', 'true');
       h4.focus();
       const sel = window.getSelection();
       const r = document.createRange();
@@ -3037,24 +3050,26 @@
             info.insertBefore(titleRow, h4);
             titleRow.appendChild(h4);
             
-            if (esRenombrable) {
-              h4.setAttribute('contenteditable', 'true');
+            // Configurar el h4 para todos los documentos, pero SIN contenteditable por defecto
+            if (!h4.dataset.renameReady) {
+              h4.dataset.renameReady = 'true';
               h4.setAttribute('spellcheck', 'false');
               h4.setAttribute('data-tipo', docId);
               h4.classList.add('doc-title');
-              h4.title = 'Toca para renombrar';
-              
-              // Detener propagación para evitar toggles en click/táctil directo en el texto
-              const stopBubble = e => { e.stopPropagation(); };
+              // Evitar que el clic directo abra edición o propague al acordeón
+              const stopBubble = e => { e.stopPropagation(); if (h4.getAttribute('contenteditable') !== 'true') e.preventDefault(); };
               h4.addEventListener('click', stopBubble);
-              h4.addEventListener('mousedown', stopBubble);
-              h4.addEventListener('pointerdown', stopBubble);
-              h4.addEventListener('touchstart', stopBubble, { passive: true });
-              h4.addEventListener('touchend', stopBubble, { passive: true });
-              
-              h4.addEventListener('blur', () => guardarTitulo(h4));
+              h4.addEventListener('mousedown', e => e.stopPropagation());
+              h4.addEventListener('pointerdown', e => e.stopPropagation());
+              h4.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
+              h4.addEventListener('touchend', e => e.stopPropagation(), { passive: true });
+              h4.addEventListener('blur', () => {
+                h4.removeAttribute('contenteditable');
+                guardarTitulo(h4);
+              });
               h4.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') { e.preventDefault(); h4.blur(); }
+                if (e.key === 'Escape') { h4.blur(); }
               });
             }
           }
@@ -3068,10 +3083,8 @@
           actionsRow.className = 'doc-card-actions';
           actionsRow.onclick = e => e.stopPropagation();
 
-          // El primer botón es Lápiz para renombrables, o Diseño para no-renombrables
-          const primerBoton = esRenombrable
-            ? `<span class="action-btn" title="Renombrar" onclick="handleRenameClick(event, '${docId}')">${SVG_PENCIL}</span>`
-            : `<span class="action-btn" title="Diseño"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span>`;
+          // El primer botón siempre es el Lápiz para renombrar
+          const primerBoton = `<span class="action-btn" title="Renombrar" onclick="handleRenameClick(event, '${docId}')">${SVG_PENCIL}</span>`;
 
           actionsRow.innerHTML = `
             ${primerBoton}
