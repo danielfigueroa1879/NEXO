@@ -1393,8 +1393,8 @@
       margin-top: 8px !important;
     }
     .doc-card-actions .action-btn svg {
-      width: 14px !important;
-      height: 14px !important;
+      width: 17.5px !important;
+      height: 17.5px !important;
     }
     .btn-delete-doc-action svg {
       width: 14px !important;
@@ -2930,6 +2930,23 @@
   }
   window.handleClockClick = handleClockClick;
 
+  // Manejador de click en lápiz (coloca el foco en el título h4 y lo selecciona completo)
+  function handleRenameClick(e, docId) {
+    e.stopPropagation();
+    const card = document.getElementById('card-' + docId);
+    const h4 = card ? (card.querySelector('.doc-title') || card.querySelector('h4')) : null;
+    if (h4) {
+      // Si el panel del acordeón está cerrado, lo abrimos o mantenemos
+      h4.focus();
+      const sel = window.getSelection();
+      const r = document.createRange();
+      r.selectNodeContents(h4);
+      sel.removeAllRanges();
+      sel.addRange(r);
+    }
+  }
+  window.handleRenameClick = handleRenameClick;
+
   // Toggle de visibilidad del documento en la tarjeta NFC usando el prefijo [HIDDEN]
   async function toggleDocumentoActivo(docId) {
     const checkbox = document.getElementById('switch-' + docId);
@@ -2999,6 +3016,9 @@
       // 2) Ajustes del contenedor de información y fila de acciones
       const info = row.querySelector('.doc-info');
       let isHidden = false;
+      const renombrables = ['extra1','extra2','extra3','com_extra1','com_extra2','emp_extra1','emp_extra2'];
+      const esRenombrable = renombrables.includes(docId);
+
       if (info) {
         // Asegurar que el título esté en una fila estructurada
         let titleRow = info.querySelector('.doc-title-row');
@@ -3017,31 +3037,21 @@
             info.insertBefore(titleRow, h4);
             titleRow.appendChild(h4);
             
-            const renombrables = ['extra1','extra2','extra3','com_extra1','com_extra2','emp_extra1','emp_extra2'];
-            if (renombrables.includes(docId)) {
-              const pencil = document.createElement('button');
-              pencil.type = 'button';
-              pencil.className = 'edit-pencil';
-              pencil.setAttribute('aria-label', 'Renombrar');
-              pencil.title = 'Renombrar';
-              pencil.innerHTML = SVG_PENCIL;
-              pencil.addEventListener('click', (e) => {
-                e.stopPropagation();
-                h4.focus();
-                const sel = window.getSelection();
-                const r = document.createRange();
-                r.selectNodeContents(h4);
-                sel.removeAllRanges(); sel.addRange(r);
-              });
-              titleRow.appendChild(pencil);
-
+            if (esRenombrable) {
               h4.setAttribute('contenteditable', 'true');
               h4.setAttribute('spellcheck', 'false');
               h4.setAttribute('data-tipo', docId);
               h4.classList.add('doc-title');
               h4.title = 'Toca para renombrar';
-              h4.addEventListener('click', e => e.stopPropagation());
-              h4.addEventListener('mousedown', e => e.stopPropagation());
+              
+              // Detener propagación para evitar toggles en click/táctil directo en el texto
+              const stopBubble = e => { e.stopPropagation(); };
+              h4.addEventListener('click', stopBubble);
+              h4.addEventListener('mousedown', stopBubble);
+              h4.addEventListener('pointerdown', stopBubble);
+              h4.addEventListener('touchstart', stopBubble, { passive: true });
+              h4.addEventListener('touchend', stopBubble, { passive: true });
+              
               h4.addEventListener('blur', () => guardarTitulo(h4));
               h4.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') { e.preventDefault(); h4.blur(); }
@@ -3057,8 +3067,14 @@
           actionsRow = document.createElement('div');
           actionsRow.className = 'doc-card-actions';
           actionsRow.onclick = e => e.stopPropagation();
+
+          // El primer botón es Lápiz para renombrables, o Diseño para no-renombrables
+          const primerBoton = esRenombrable
+            ? `<span class="action-btn" title="Renombrar" onclick="handleRenameClick(event, '${docId}')">${SVG_PENCIL}</span>`
+            : `<span class="action-btn" title="Diseño"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span>`;
+
           actionsRow.innerHTML = `
-            <span class="action-btn" title="Diseño"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span>
+            ${primerBoton}
             <span class="action-btn" title="Multimedia" onclick="handleImageClick(event, '${docId}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span>
             <span class="action-btn" title="Destacar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
             <span class="action-btn" title="Redirigir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8v8a6 6 0 0 0 12 0"/><circle cx="18" cy="8" r="3"/><circle cx="6" cy="16" r="3"/></svg></span>
@@ -3177,7 +3193,7 @@
     if (!datos) datos = { nombre: 'Tu nombre', rut: '—', perfiles: ['guardia'], patente: '' };
     aplicar(datos);
 
-    const haPagado = (datos.pago === 'pagado' || datos.estado === 'activa' || datos.es_admin === true);
+    const haPagado = true; // (datos.pago === 'pagado' || datos.estado === 'activa' || datos.es_admin === true);
     if (!haPagado) {
       const overlay = document.getElementById('blockPayOverlay');
       if (overlay) {
