@@ -1808,6 +1808,13 @@
     });
   }
 
+  // Nombres legibles para tipos del perfil Particular que se muestran en extrasGuardia
+  const NOMBRES_PARTICULAR = {
+    credencial: 'Certificado de Residencia / Domicilio',
+    contrato:   'Contrato de trabajo',
+    examen:     'Examen preocupacional'
+  };
+
   // Renderiza en PARALELO los "documentos extras" del perfil guardia.
   async function renderizarExtrasGuardia(extras) {
     const cont = document.getElementById('extrasGuardia');
@@ -1818,8 +1825,9 @@
     for (const d of extrasOrdenados) {
       const url = urls.get(d.path);
       if (!url) continue;
+      // Nombre legible: titulo personalizado > nombre bonito del tipo > fallback genérico
       const num = d.tipo.replace('extra', '');
-      const titulo = d.titulo || ('Documento extra ' + num);
+      const titulo = d.titulo || NOMBRES_PARTICULAR[d.tipo] || ('Documento extra ' + num);
       const est = estadoVence(d.vence);
       const sub = est.text || d.nombre || '';
       const div = document.createElement('div');
@@ -2012,6 +2020,11 @@
           continue;
         }
         if (/^extra\d+$/.test(d.tipo)) { extras.push(d); continue; }
+        // Tipos del perfil Particular que no tienen tarjeta estática → mostrar en extrasGuardia
+        // (la foto de perfil se excluye: es solo para el avatar, no un documento verificable)
+        if (d.tipo === 'credencial' || d.tipo === 'contrato' || d.tipo === 'examen') {
+          extras.push(d); continue;
+        }
         if (d.tipo === 'patente_alcoholes' || d.tipo === 'patente_comercial' || /^com_extra\d+$/.test(d.tipo)) {
           comerciante.push(d); continue;
         }
