@@ -252,6 +252,31 @@
   }
   .doc-card.open .doc-row { background: rgba(52,199,89,0.08); }
   .doc-card.open .doc-chevron { color: var(--green); }
+  /* Modo noche: el borde/tinte verde deben ganarle al gris que fuerza theme.js,
+     y el resplandor se ve un poco más vivo sobre el fondo oscuro */
+  :root[data-theme="dark"] .doc-card.open {
+    border-color: var(--green) !important;
+    box-shadow:
+      0 0 0 1px rgba(61,220,106,0.45),
+      0 0 10px rgba(61,220,106,0.30),
+      0 4px 18px rgba(61,220,106,0.18) !important;
+    animation: docNeonPulseDark 2.6s ease-in-out infinite;
+  }
+  :root[data-theme="dark"] .doc-card.open .doc-row { background: rgba(61,220,106,0.12) !important; }
+  @keyframes docNeonPulseDark {
+    0%, 100% {
+      box-shadow:
+        0 0 0 1px rgba(61,220,106,0.45),
+        0 0 10px rgba(61,220,106,0.26),
+        0 4px 18px rgba(61,220,106,0.16);
+    }
+    50% {
+      box-shadow:
+        0 0 0 1px rgba(61,220,106,0.55),
+        0 0 16px rgba(61,220,106,0.40),
+        0 4px 20px rgba(61,220,106,0.22);
+    }
+  }
 
   .doc-row {
     display: flex; align-items: center; gap: 12px;
@@ -3681,7 +3706,7 @@
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js')
-        .then((reg) => console.log('Service Worker registrado con éxito:', reg.scope))
+        .then(() => {})
         .catch((err) => console.error('Error al registrar Service Worker:', err));
     });
   }

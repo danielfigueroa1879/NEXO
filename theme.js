@@ -120,7 +120,6 @@
     :root[data-theme="dark"] .btn-ep.primary,
     :root[data-theme="dark"] .pwa-btn-primary,
     :root[data-theme="dark"] .nav-cta,
-    :root[data-theme="dark"] .header-logo,
     :root[data-theme="dark"] .brand-logo,
     :root[data-theme="dark"] .user-badge,
     :root[data-theme="dark"] .admin-badge,
@@ -145,6 +144,14 @@
       color: #ffffff !important;
       border-color: #47474f !important;
     }
+    /* Botón "Inicio" (logo verde de marca): mantener el verde, con texto oscuro
+       para buen contraste sobre el verde más brillante del modo noche */
+    :root[data-theme="dark"] .header-logo {
+      background: var(--green) !important;
+      color: #0A0A0A !important;
+      border-color: transparent !important;
+    }
+    :root[data-theme="dark"] .header-logo svg { fill: #0A0A0A !important; }
     /* Sección "flujo" (fondo negro en claro) → mantener oscura y legible */
     :root[data-theme="dark"] .flow-section {
       background: #202027 !important;

@@ -86,8 +86,23 @@ async function nexoSignOut() {
 }
 
 async function nexoUsuarioActual() {
-  const { data } = await sb.auth.getUser();
-  return data.user || null;
+  // getUser() hace una petición de red a /auth/v1/user. Ante un fallo puntual de
+  // red ("Failed to fetch") reintentamos una vez y, si sigue fallando, devolvemos
+  // null en vez de dejar que el error se propague sin capturar a la consola.
+  for (let intento = 0; intento < 2; intento++) {
+    try {
+      const { data } = await sb.auth.getUser();
+      return data.user || null;
+    } catch (e) {
+      if (intento === 0) {
+        await new Promise(r => setTimeout(r, 600));
+        continue;
+      }
+      console.warn('No se pudo verificar la sesión (red):', e && e.message ? e.message : e);
+      return null;
+    }
+  }
+  return null;
 }
 
 // Espera a que la sesión OAuth se establezca (después del redirect de Google).
@@ -100,8 +115,12 @@ async function esperarSesionOAuth() {
   if (!tieneCode) return;
   const tope = Date.now() + 2500;
   while (Date.now() < tope) {
-    const { data } = await sb.auth.getSession();
-    if (data && data.session) break;
+    try {
+      const { data } = await sb.auth.getSession();
+      if (data && data.session) break;
+    } catch (e) {
+      // Fallo de red puntual: seguimos intentando hasta agotar el tope.
+    }
     await new Promise(r => setTimeout(r, 100));
   }
   // Limpiar el ?code=... de la URL para que quede prolija
