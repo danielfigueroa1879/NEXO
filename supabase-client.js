@@ -178,10 +178,11 @@ async function listarCuentas() {
   return data || [];
 }
 
-// Comprime imágenes en el cliente (max 1600px de ancho/alto, 80% calidad JPEG)
-function comprimirImagenClientSide(file, maxDim = 1600, calidad = 0.8) {
+// Comprime imágenes en el cliente (max 1800px de ancho/alto, 82% calidad JPEG).
+// Acepta jpg, png, jpeg, webp y cualquier otro image/*. Devuelve el archivo
+// original si la recomprimida termina siendo del mismo peso o mayor.
+function comprimirImagenClientSide(file, maxDim = 1800, calidad = 0.82) {
   return new Promise((resolve) => {
-    // Si no es imagen (ej. PDF) o no hay soporte en el entorno actual, omitir
     if (!file || !file.type || !file.type.startsWith('image/') || typeof FileReader === 'undefined') {
       resolve(file);
       return;
@@ -207,11 +208,10 @@ function comprimirImagenClientSide(file, maxDim = 1600, calidad = 0.8) {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
         canvas.toBlob((blob) => {
-          if (!blob) {
+          if (!blob || blob.size >= file.size) {
             resolve(file);
             return;
           }
-          // Cambiar extensión a .jpg en el nombre del archivo
           let nuevoNombre = file.name || 'documento.jpg';
           const extIndex = nuevoNombre.lastIndexOf('.');
           if (extIndex !== -1) {
@@ -239,6 +239,65 @@ function comprimirImagenClientSide(file, maxDim = 1600, calidad = 0.8) {
   });
 }
 
+// Comprime PDFs rasterizando cada página con pdf.js y reconstruyéndolo con jsPDF.
+// Requiere `window.pdfjsLib` y `window.jspdf`; si no están cargados o el PDF ya
+// era más liviano, devuelve el archivo original.
+async function comprimirPdfClientSide(file, dpi = 150, calidad = 0.78) {
+  if (!file || file.type !== 'application/pdf') return file;
+  if (typeof window === 'undefined' || !window.pdfjsLib || !window.jspdf) return file;
+  try {
+    // Espera a que el worker de pdf.js esté disponible (blob URL same-origin).
+    if (window.__pdfjsWorkerReady && typeof window.__pdfjsWorkerReady.then === 'function') {
+      try { await window.__pdfjsWorkerReady; } catch (_) {}
+    }
+    const arrayBuf = await file.arrayBuffer();
+    const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuf });
+    const pdfDoc = await loadingTask.promise;
+    const { jsPDF } = window.jspdf;
+    const scale = dpi / 72;
+    let outPdf = null;
+    for (let i = 1; i <= pdfDoc.numPages; i++) {
+      const page = await pdfDoc.getPage(i);
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(viewport.width);
+      canvas.height = Math.round(viewport.height);
+      const ctx = canvas.getContext('2d');
+      await page.render({ canvasContext: ctx, viewport, intent: 'print' }).promise;
+      const imgData = canvas.toDataURL('image/jpeg', calidad);
+      const wPt = canvas.width * 72 / dpi;
+      const hPt = canvas.height * 72 / dpi;
+      const orient = wPt > hPt ? 'l' : 'p';
+      if (!outPdf) {
+        outPdf = new jsPDF({ orientation: orient, unit: 'pt', format: [wPt, hPt], compress: true });
+      } else {
+        outPdf.addPage([wPt, hPt], orient);
+      }
+      outPdf.addImage(imgData, 'JPEG', 0, 0, wPt, hPt, undefined, 'FAST');
+    }
+    if (!outPdf) return file;
+    const blob = outPdf.output('blob');
+    if (!blob || blob.size >= file.size) return file;
+    try {
+      return new File([blob], file.name || 'documento.pdf', { type: 'application/pdf', lastModified: Date.now() });
+    } catch (e) {
+      return blob;
+    }
+  } catch (e) {
+    console.warn('No se pudo comprimir el PDF, se sube el original:', e);
+    return file;
+  }
+}
+
+// Dispatcher: aplica la compresión según el tipo. Siempre intenta reducir el peso
+// y, si no se logra o falla algo, devuelve el archivo original intacto.
+async function comprimirArchivoClientSide(file) {
+  if (!file || !file.type) return file;
+  if (file.type === 'application/pdf') return comprimirPdfClientSide(file);
+  if (file.type.startsWith('image/')) return comprimirImagenClientSide(file);
+  return file;
+}
+
 /* ------------------------------------------------------------
    DOCUMENTOS  (Storage + tabla `public.documentos`)
    ------------------------------------------------------------ */
@@ -246,8 +305,8 @@ async function subirDocumento({ tipo, file, titulo, nombre, noCompress, vence })
   const user = await nexoUsuarioActual();
   if (!user) throw new Error('Debes iniciar sesión para subir documentos');
 
-  // Comprimir imagen si aplica (cámara de celular, PNGs pesados, etc.), excepto si se salta
-  const fileToUpload = noCompress ? file : await comprimirImagenClientSide(file);
+  // Comprimir (imagen o PDF) para reducir peso manteniendo la calidad, excepto si se pide saltar.
+  const fileToUpload = noCompress ? file : await comprimirArchivoClientSide(file);
 
   const nombreOriginal = nombre || file.name || (fileToUpload && fileToUpload.name) || `${tipo}.jpg`;
   const ext  = (nombreOriginal.split('.').pop() || 'jpg').toLowerCase();

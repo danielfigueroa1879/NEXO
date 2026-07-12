@@ -1749,6 +1749,25 @@
 <script src="supabase-client.js"></script>
 <!-- ===== jsPDF (exportar escaneo como PDF) ===== -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- ===== pdf.js (rasterizar PDFs para recomprimirlos al subir) ===== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script>
+  // El navegador bloquea Worker() con URLs de otro origen, así que descargamos
+  // el worker de pdf.js y lo servimos como blob del mismo origen.
+  (function () {
+    if (!window.pdfjsLib) return;
+    const CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    window.__pdfjsWorkerReady = fetch(CDN)
+      .then(r => r.ok ? r.blob() : Promise.reject(new Error('HTTP ' + r.status)))
+      .then(blob => {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
+      })
+      .catch(err => {
+        console.warn('No se pudo cargar el worker de pdf.js:', err);
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = CDN;
+      });
+  })();
+</script>
 
 <script>
   // Toggle panel expandible
