@@ -1943,6 +1943,7 @@
       const fijos = [];
       for (const d of docs) {
         if (!d.path) continue;
+        if (d.titulo && d.titulo.startsWith('[HIDDEN]')) continue;
         const vm = /^(permiso|revision|soap|padron)(?:_v([23]))?$/.exec(d.tipo || '');
         if (vm) {
           const idx = vm[2] ? parseInt(vm[2], 10) : 1;

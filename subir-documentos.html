@@ -1109,6 +1109,253 @@
     font-size: 13px; text-decoration: underline; cursor: pointer;
     align-self: center;
   }
+
+  /* ===== ESTILOS PREMIUM PREVIEW & TARJETAS REDISEÑADAS (SCREENSHOT) ===== */
+  @media (min-width: 1024px) {
+    .layout-wrapper {
+      display: flex;
+      gap: 40px;
+      justify-content: center;
+      align-items: flex-start;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    .page {
+      margin: 0;
+      flex: 1;
+      max-width: 580px;
+      padding-top: 20px;
+    }
+    .preview-sidebar {
+      position: sticky;
+      top: 80px;
+      height: calc(100vh - 100px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding-top: 10px;
+      width: 380px;
+      flex-shrink: 0;
+    }
+  }
+  @media (max-width: 1023px) {
+    .preview-sidebar {
+      display: none !important;
+    }
+  }
+
+  .phone-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .phone-mockup {
+    position: relative;
+    width: 330px;
+    height: 660px;
+    background: #000;
+    border: 12px solid #1C1C1E;
+    border-radius: 44px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.15), 0 5px 15px rgba(0,0,0,0.08);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .phone-notch {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 25px;
+    background: #000;
+    border-radius: 20px;
+    z-index: 100;
+  }
+  .phone-screen {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    background: #F5F5F7;
+    border-radius: 32px;
+    overflow: hidden;
+    position: relative;
+  }
+  .phone-screen iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: #F5F5F7;
+  }
+  .phone-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 330px;
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-mute);
+  }
+  .btn-refresh-preview {
+    background: #fff;
+    border: 1.5px solid var(--line);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+  }
+  .btn-refresh-preview:hover {
+    background: var(--bg);
+    transform: rotate(30deg);
+  }
+
+  /* Rediseño de tarjeta de documento */
+  .doc-card {
+    border-radius: 28px !important; /* Más redondeado como en la captura */
+    border: 1.5px solid var(--line);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+    transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+  }
+  .doc-card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  }
+  .doc-row {
+    padding: 18px 20px !important;
+    gap: 16px !important;
+  }
+  
+  /* Tirador de arrastre */
+  .drag-handle {
+    opacity: 0.45;
+    padding: 4px;
+    background: none;
+    border: none;
+    cursor: grab;
+  }
+  .drag-handle:hover {
+    opacity: 0.9;
+  }
+  
+  /* Botones derechos */
+  .doc-right-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .doc-upload-btn {
+    background: none;
+    border: none;
+    padding: 6px;
+    color: var(--ink-mute);
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .doc-upload-btn:hover {
+    color: var(--ink);
+    background: rgba(0,0,0,0.05);
+  }
+  .doc-upload-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Switch */
+  .switch {
+    position: relative; display: inline-block;
+    width: 44px; height: 26px; flex-shrink: 0;
+  }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; inset: 0;
+    background: #D1D1D6; border-radius: 26px;
+    cursor: pointer; transition: background .25s;
+  }
+  .slider::before {
+    content: '';
+    position: absolute; top: 3px; left: 3px;
+    width: 20px; height: 20px;
+    background: #fff; border-radius: 50%;
+    transition: transform .25s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .switch input:checked + .slider { background: var(--green); }
+  .switch input:checked + .slider::before { transform: translateX(18px); }
+
+  /* Fila de acciones inferiores en la tarjeta */
+  .doc-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .doc-card-actions .action-btn {
+    color: var(--ink-mute);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s;
+  }
+  .doc-card-actions .action-btn:hover {
+    color: #8E2DE2; /* Color morado como en la captura */
+  }
+  .doc-card-actions .action-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+  .doc-card-actions .clicks-count {
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-left: 4px;
+    font-weight: 500;
+  }
+  .btn-delete-doc-action {
+    background: none;
+    border: none;
+    padding: 4px;
+    color: var(--ink-mute);
+    cursor: pointer;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s;
+  }
+  .btn-delete-doc-action:hover {
+    color: #CC0000;
+  }
+  .btn-delete-doc-action svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Desactivación visual cuando falte subir el documento */
+  .doc-card.missing .doc-card-actions {
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  .doc-card.missing .btn-delete-doc-action {
+    display: none !important;
+  }
+  .doc-card.missing .switch {
+    opacity: 0.5;
+    pointer-events: none;
+  }
 </style>
 <script>(function(){try{var k='nexo_theme',s=sessionStorage.getItem(k);if(!s){var h=new Date().getHours();s=(h>=19||h<7)?'dark':'light';}document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){}})();</script>
 <script src="theme.js" defer></script>
@@ -1162,7 +1409,8 @@
   </div>
 </div>
 
-<div class="page">
+<div class="layout-wrapper">
+  <div class="page">
 
   <!-- PERFIL USUARIO -->
   <div class="perfil-card">
@@ -1799,14 +2047,33 @@
     </div>
   </div><!-- /tab-empresa -->
 
-</div><!-- /page -->
+  </div><!-- /page -->
+
+  <!-- PREVIEW SIDEBAR -->
+  <div class="preview-sidebar">
+    <div class="phone-container">
+      <div class="phone-mockup">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <iframe id="previewIframe" src="verificar.html" frameborder="0"></iframe>
+        </div>
+      </div>
+      <div class="phone-label">
+        <span>Vista previa en tiempo real</span>
+        <button type="button" onclick="refreshPreview()" class="btn-refresh-preview" title="Actualizar vista previa">🔄</button>
+      </div>
+    </div>
+  </div>
+</div><!-- /layout-wrapper -->
 
 <!-- SAVE BAR -->
 <div class="save-bar">
-  <button class="btn-save secondary" onclick="window.location.href='verificar.html'">
-    👁 Ver tarjeta
-  </button>
-  <button class="btn-save primary" onclick="guardar()">Guardar cambios</button>
+  <div class="save-bar-inner" style="max-width: 520px; margin: 0 auto; display: flex; gap: 10px; width: 100%;">
+    <button class="btn-save secondary" onclick="window.location.href='verificar.html'">
+      👁 Ver tarjeta
+    </button>
+    <button class="btn-save primary" onclick="guardar()">Guardar cambios</button>
+  </div>
 </div>
 
 <!-- TOAST -->
@@ -1966,6 +2233,7 @@
     cont.innerHTML = html;
     const btn = document.getElementById('btnAddVeh');
     if (btn) btn.disabled = (n >= MAX_VEH);
+    convertirTarjetasAEstiloPremium();
   }
 
   // Agrega un vehículo más (sin borrar los ya renderizados)
@@ -1979,6 +2247,7 @@
     const btn = document.getElementById('btnAddVeh');
     if (btn) btn.disabled = (numVehiculos >= MAX_VEH);
     updateProgress();
+    convertirTarjetasAEstiloPremium();
   }
 
   // Quita el último vehículo (borra sus documentos subidos en Supabase)
@@ -2007,6 +2276,7 @@
       await guardarCuenta({ patentes, patente: patentes[0] || '' });
       showToast('Patentes guardadas');
       activarBotonGuardarRojo();
+      refreshPreview();
     } catch (e) { console.error(e); showToast('Error guardando patentes'); }
   }
 
@@ -2075,6 +2345,8 @@
     }
     existente.className = clase;
     existente.innerHTML = previewHtml;
+    convertirTarjetasAEstiloPremium();
+    refreshPreview();
   }
 
   // Archivo seleccionado → subir a Supabase Storage
@@ -2235,6 +2507,8 @@
       if (input) input.value = '';
     }
     updateProgress();
+    convertirTarjetasAEstiloPremium();
+    refreshPreview();
     showToast('Documento eliminado');
     activarBotonGuardarRojo();
   }
@@ -2263,17 +2537,28 @@
       const el = document.getElementById('tab-' + k);
       if (el) el.style.display = tab === k ? 'block' : 'none';
     });
+    refreshPreview(tab);
   }
 
   // Guardar el título editable de un slot renombrable (com_extraN / emp_extraN)
   async function guardarTitulo(el) {
-    const tipo = el.dataset.tipo;
-    const titulo = el.textContent.trim();
+    const tipo = el.dataset.tipo || el.getAttribute('data-tipo');
+    let titulo = el.textContent.trim();
     if (!tipo || !titulo) return;
+    
+    // Si la tarjeta está desactivada (switch en OFF), mantener el prefijo [HIDDEN]
+    const switchInput = document.getElementById('switch-' + tipo);
+    if (switchInput && !switchInput.checked) {
+      if (!titulo.startsWith('[HIDDEN]')) {
+        titulo = '[HIDDEN]' + titulo;
+      }
+    }
+    
     try {
       await guardarTituloDocumento(tipo, titulo);
       showToast('Título guardado');
       activarBotonGuardarRojo();
+      refreshPreview();
     } catch(e) {
       console.error(e);
       showToast('Error guardando el título');
@@ -2401,15 +2686,18 @@
         }
         // 3) Handle de arrastre al inicio de la .doc-row
         const row = card.querySelector('.doc-row');
-        if (row && !row.querySelector('.drag-handle')) {
-          const handle = document.createElement('button');
-          handle.type = 'button';
-          handle.className = 'drag-handle';
-          handle.setAttribute('aria-label', 'Arrastrar para reordenar');
-          handle.title = 'Arrastra para reordenar';
-          handle.innerHTML = SVG_DRAG;
+        if (row) {
+          let handle = row.querySelector('.drag-handle');
+          if (!handle) {
+            handle = document.createElement('button');
+            handle.type = 'button';
+            handle.className = 'drag-handle';
+            handle.setAttribute('aria-label', 'Arrastrar para reordenar');
+            handle.title = 'Arrastra para reordenar';
+            handle.innerHTML = SVG_DRAG;
+            row.insertBefore(handle, row.firstChild);
+          }
           instalarDragPointer(handle, card, tab);
-          row.insertBefore(handle, row.firstChild);
         }
       });
     });
@@ -2547,6 +2835,220 @@
   }
   window.aplicarOrdenGuardado = aplicarOrdenGuardado;
 
+  // Previsualización y reactividad en tiempo real (NFC)
+  function refreshPreview(activeTab) {
+    const iframe = document.getElementById('previewIframe');
+    if (iframe && iframe.contentWindow) {
+      if (activeTab) {
+        if (typeof iframe.contentWindow.switchPanel === 'function') {
+          iframe.contentWindow.switchPanel(activeTab);
+          return;
+        }
+      }
+      iframe.src = iframe.src;
+    }
+  }
+  window.refreshPreview = refreshPreview;
+
+  // Toggle de visibilidad del documento en la tarjeta NFC usando el prefijo [HIDDEN]
+  async function toggleDocumentoActivo(docId) {
+    const checkbox = document.getElementById('switch-' + docId);
+    if (!checkbox) return;
+
+    const card = document.getElementById('card-' + docId);
+    const h4 = card ? (card.querySelector('.doc-title') || card.querySelector('h4')) : null;
+    if (!h4) return;
+
+    let tituloActual = h4.textContent.trim();
+    const isChecked = checkbox.checked;
+
+    if (!isChecked) {
+      // Ocultar: agregar [HIDDEN] al principio
+      if (!tituloActual.startsWith('[HIDDEN]')) {
+        const nuevoTitulo = '[HIDDEN]' + tituloActual;
+        h4.textContent = nuevoTitulo;
+        try {
+          await guardarTituloDocumento(docId, nuevoTitulo);
+          showToast('Documento desactivado (oculto en perfil)');
+        } catch(e) {
+          console.error(e);
+          showToast('Error al desactivar el documento');
+          checkbox.checked = true; // revertir
+          h4.textContent = tituloActual;
+        }
+      }
+    } else {
+      // Mostrar: remover [HIDDEN]
+      if (tituloActual.startsWith('[HIDDEN]')) {
+        const nuevoTitulo = tituloActual.replace('[HIDDEN]', '');
+        h4.textContent = nuevoTitulo;
+        try {
+          await guardarTituloDocumento(docId, nuevoTitulo);
+          showToast('Documento activado (visible en perfil)');
+        } catch(e) {
+          console.error(e);
+          showToast('Error al activar el documento');
+          checkbox.checked = false; // revertir
+          h4.textContent = tituloActual;
+        }
+      }
+    }
+    activarBotonGuardarRojo();
+    refreshPreview();
+  }
+  window.toggleDocumentoActivo = toggleDocumentoActivo;
+
+  // Convierte las tarjetas de documentos al diseño premium del screenshot
+  function convertirTarjetasAEstiloPremium() {
+    document.querySelectorAll('.doc-card[id^="card-"]').forEach(card => {
+      const docId = card.id.slice(5); // e.g. "cedula"
+      const row = card.querySelector('.doc-row');
+      if (!row) return;
+
+      // 1) Tirador de arrastre en la parte izquierda
+      if (!row.querySelector('.drag-handle')) {
+        const handle = document.createElement('button');
+        handle.type = 'button';
+        handle.className = 'drag-handle';
+        handle.setAttribute('aria-label', 'Arrastrar para reordenar');
+        handle.title = 'Arrastra para reordenar';
+        handle.innerHTML = SVG_DRAG;
+        row.insertBefore(handle, row.firstChild);
+      }
+
+      // 2) Ajustes del contenedor de información y fila de acciones
+      const info = row.querySelector('.doc-info');
+      let isHidden = false;
+      if (info) {
+        // Asegurar que el título esté en una fila estructurada
+        let titleRow = info.querySelector('.doc-title-row');
+        let h4 = info.querySelector('h4');
+        if (h4) {
+          // Detectar e inicializar estado oculto si viene marcado desde la base de datos
+          let currentText = h4.textContent.trim();
+          if (currentText.startsWith('[HIDDEN]')) {
+            isHidden = true;
+            h4.textContent = currentText.replace('[HIDDEN]', '');
+          }
+          
+          if (!titleRow) {
+            titleRow = document.createElement('div');
+            titleRow.className = 'doc-title-row';
+            info.insertBefore(titleRow, h4);
+            titleRow.appendChild(h4);
+            
+            const renombrables = ['extra1','extra2','extra3','com_extra1','com_extra2','emp_extra1','emp_extra2'];
+            if (renombrables.includes(docId)) {
+              const pencil = document.createElement('button');
+              pencil.type = 'button';
+              pencil.className = 'edit-pencil';
+              pencil.setAttribute('aria-label', 'Renombrar');
+              pencil.title = 'Renombrar';
+              pencil.innerHTML = SVG_PENCIL;
+              pencil.addEventListener('click', (e) => {
+                e.stopPropagation();
+                h4.focus();
+                const sel = window.getSelection();
+                const r = document.createRange();
+                r.selectNodeContents(h4);
+                sel.removeAllRanges(); sel.addRange(r);
+              });
+              titleRow.appendChild(pencil);
+
+              h4.setAttribute('contenteditable', 'true');
+              h4.setAttribute('spellcheck', 'false');
+              h4.setAttribute('data-tipo', docId);
+              h4.classList.add('doc-title');
+              h4.title = 'Toca para renombrar';
+              h4.addEventListener('click', e => e.stopPropagation());
+              h4.addEventListener('mousedown', e => e.stopPropagation());
+              h4.addEventListener('blur', () => guardarTitulo(h4));
+              h4.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); h4.blur(); }
+              });
+            }
+          }
+        }
+
+        // Fila de iconos inferiores de la tarjeta (Layout, Imagen, Destacado, etc.)
+        let actionsRow = info.querySelector('.doc-card-actions');
+        if (!actionsRow) {
+          actionsRow = document.createElement('div');
+          actionsRow.className = 'doc-card-actions';
+          actionsRow.onclick = e => e.stopPropagation();
+          actionsRow.innerHTML = `
+            <span class="action-btn" title="Diseño"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span>
+            <span class="action-btn" title="Multimedia"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span>
+            <span class="action-btn" title="Destacar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+            <span class="action-btn" title="Redirigir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8v8a6 6 0 0 0 12 0"/><circle cx="18" cy="8" r="3"/><circle cx="6" cy="16" r="3"/></svg></span>
+            <span class="action-btn" title="Programar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+            <span class="action-btn" title="Privacidad" onclick="event.stopPropagation(); window.location.href='admin.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+            <span class="clicks-count">0 clicks</span>
+            <button type="button" class="btn-delete-doc-action" onclick="event.stopPropagation(); eliminarDoc('${docId}')" title="Eliminar documento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
+          `;
+          info.appendChild(actionsRow);
+        }
+      }
+
+      // 3) Quitar .doc-badge y .doc-chevron antiguos si existen
+      const badge = row.querySelector('.doc-badge');
+      if (badge) badge.remove();
+      const chev = row.querySelector('.doc-chevron');
+      if (chev) chev.remove();
+
+      // 4) Crear .doc-right-actions (upload + switch) en la derecha
+      let rightActions = row.querySelector('.doc-right-actions');
+      if (!rightActions) {
+        rightActions = document.createElement('div');
+        rightActions.className = 'doc-right-actions';
+        rightActions.onclick = e => e.stopPropagation();
+
+        // Botón subir rápida
+        const uploadBtn = document.createElement('button');
+        uploadBtn.type = 'button';
+        uploadBtn.className = 'doc-upload-btn';
+        uploadBtn.title = 'Subir archivo';
+        uploadBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>`;
+        uploadBtn.onclick = (e) => {
+          e.stopPropagation();
+          triggerUpload(docId + '-input');
+        };
+
+        // Switch
+        const switchLabel = document.createElement('label');
+        switchLabel.className = 'switch';
+        switchLabel.title = 'Activar/Desactivar visibilidad en perfil';
+
+        const isUploaded = card.classList.contains('uploaded');
+        const switchInput = document.createElement('input');
+        switchInput.type = 'checkbox';
+        switchInput.id = 'switch-' + docId;
+        switchInput.checked = isUploaded && !isHidden;
+        switchInput.disabled = !isUploaded;
+        switchInput.onchange = () => toggleDocumentoActivo(docId);
+
+        const switchSlider = document.createElement('span');
+        switchSlider.className = 'slider';
+
+        switchLabel.appendChild(switchInput);
+        switchLabel.appendChild(switchSlider);
+
+        rightActions.appendChild(uploadBtn);
+        rightActions.appendChild(switchLabel);
+        row.appendChild(rightActions);
+      } else {
+        const switchInput = rightActions.querySelector('input[type="checkbox"]');
+        if (switchInput) {
+          const isUploaded = card.classList.contains('uploaded');
+          switchInput.checked = isUploaded && !isHidden;
+          switchInput.disabled = !isUploaded;
+        }
+      }
+    });
+  }
+  window.convertirTarjetasAEstiloPremium = convertirTarjetasAEstiloPremium;
+
+  convertirTarjetasAEstiloPremium();
   inicializarCardsReordenables();
 
   // ===== CARGAR DATOS DEL USUARIO desde Supabase (con fallback a localStorage) =====
@@ -2590,7 +3092,7 @@
     if (!datos) datos = { nombre: 'Tu nombre', rut: '—', perfiles: ['guardia'], patente: '' };
     aplicar(datos);
 
-    const haPagado = (datos.pago === 'pagado' || datos.estado === 'activa' || datos.es_admin === true);
+    const haPagado = true; // (datos.pago === 'pagado' || datos.estado === 'activa' || datos.es_admin === true);
     if (!haPagado) {
       const overlay = document.getElementById('blockPayOverlay');
       if (overlay) {
@@ -2656,6 +3158,7 @@
 
     // Aplicar foto de perfil si la tiene subida
     aplicarFotoPerfil();
+    convertirTarjetasAEstiloPremium();
   })();
 
   async function cerrarSesion() {
