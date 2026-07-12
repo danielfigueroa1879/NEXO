@@ -239,7 +239,7 @@
     background: var(--bg);
   }
   .doc-info { flex: 1; min-width: 0; }
-  .doc-info h4 { font-size: 14px; font-weight: 600; }
+  .doc-info h4 { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .doc-info p { font-size: 11px; color: var(--ink-mute); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* Fecha de vencimiento siempre visible bajo el nombre del documento */
   .doc-info .doc-vence-info {
@@ -248,6 +248,9 @@
     font-weight: 700;
     margin-top: 3px;
     letter-spacing: 0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .doc-info .doc-vence-info.ok      { color: #1A7A34; }
   .doc-info .doc-vence-info.soon    { color: #B85C00; }
@@ -273,8 +276,12 @@
     min-width: 0;
   }
   .doc-title-row h4 {
+    flex: 1;
     min-width: 0;
     max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .doc-title[contenteditable="true"] {
     cursor: text;
