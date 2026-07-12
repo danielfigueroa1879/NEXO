@@ -1263,6 +1263,8 @@
     height: 100%;
     border: none;
     background: #F5F5F7;
+    opacity: 1;
+    transition: opacity 0.25s ease;
   }
   .btn-refresh-preview {
     background: #fff;
@@ -2954,17 +2956,28 @@
   window.aplicarOrdenGuardado = aplicarOrdenGuardado;
 
   // Previsualización y reactividad en tiempo real (NFC)
+  let _refreshPreviewTimer = null;
   function refreshPreview(activeTab) {
     const iframe = document.getElementById('previewIframe');
-    if (iframe && iframe.contentWindow) {
-      if (activeTab) {
-        if (typeof iframe.contentWindow.switchPanel === 'function') {
-          iframe.contentWindow.switchPanel(activeTab);
-          return;
-        }
-      }
-      iframe.src = iframe.src;
+    if (!iframe) return;
+    // Cambio de pestaña sin recargar el iframe (no produce destello)
+    if (activeTab && iframe.contentWindow && typeof iframe.contentWindow.switchPanel === 'function') {
+      iframe.contentWindow.switchPanel(activeTab);
+      return;
     }
+    // Recarga real: agrupamos las llamadas seguidas (debounce) para que al cargar
+    // no se produzcan varias recargas encadenadas (los "flashazos"), y hacemos un
+    // fundido suave en vez del destello blanco de la recarga.
+    clearTimeout(_refreshPreviewTimer);
+    _refreshPreviewTimer = setTimeout(() => {
+      if (!iframe.contentWindow) return;
+      iframe.style.opacity = '0';
+      iframe.addEventListener('load', function onLoad() {
+        iframe.removeEventListener('load', onLoad);
+        iframe.style.opacity = '1';
+      });
+      iframe.src = iframe.src;
+    }, 350);
   }
   window.refreshPreview = refreshPreview;
 
