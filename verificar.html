@@ -994,26 +994,32 @@
     to { transform: translateY(0); opacity: 1; }
   }
 
-  /* Botones ↑ / ↓ para reordenar en la tarjeta (sólo dueño) */
-  .doc-img-reorder {
+  /* Handle de arrastre (⋮⋮) para reordenar en la tarjeta (sólo dueño) */
+  .doc-img-drag {
     position: absolute; top: 8px; left: 8px; z-index: 4;
-    display: flex; flex-direction: column; gap: 3px;
-  }
-  .doc-img-reorder button {
-    width: 26px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    width: 26px; height: 30px;
     background: rgba(255,255,255,0.92);
     border: 1px solid rgba(0,0,0,0.12);
-    border-radius: 6px;
-    font-size: 11px; line-height: 1;
-    color: #111; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    padding: 0; font-weight: 700;
+    border-radius: 8px;
+    color: #333; cursor: grab;
+    touch-action: none;
+    padding: 0;
     box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     transition: background 0.12s, opacity 0.12s;
   }
-  .doc-img-reorder button:hover { background: #fff; }
-  .doc-img-reorder button:disabled { opacity: 0.35; cursor: not-allowed; }
-  .doc-img-reorder button:active { transform: scale(0.94); }
+  .doc-img-drag:hover { background: #fff; }
+  .doc-img-drag:active { cursor: grabbing; }
+  .doc-img-drag svg { width: 10px; height: 18px; pointer-events: none; }
+  .doc-img-card.sortable-dragging {
+    opacity: 0.88;
+    z-index: 30;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.24);
+  }
+  .doc-img-card.sortable-target {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+  }
 </style>
 <script>
 (function(){
@@ -1619,74 +1625,90 @@
     }).map(x => x.d);
   }
 
-  // Inyecta los botones ↑ / ↓ dentro de un contenedor .docs-grid.
+  const SVG_DRAG_TARJETA =
+    '<svg viewBox="0 0 8 20" fill="currentColor" aria-hidden="true">' +
+    '<circle cx="2" cy="4"  r="1.4"/><circle cx="6" cy="4"  r="1.4"/>' +
+    '<circle cx="2" cy="10" r="1.4"/><circle cx="6" cy="10" r="1.4"/>' +
+    '<circle cx="2" cy="16" r="1.4"/><circle cx="6" cy="16" r="1.4"/></svg>';
+
+  // Inyecta el drag-handle (⋮⋮) dentro de un contenedor .docs-grid.
   // Sólo se llama cuando el visitante es el dueño de la tarjeta.
   function agregarFlechasReorden(grid, perfil) {
     if (!grid) return;
-    const cards = grid.querySelectorAll('.doc-img-card:not([style*="display:none"]):not([style*="display: none"])');
+    const cards = grid.querySelectorAll('.doc-img-card');
     cards.forEach(card => {
-      // Evitar duplicar
-      if (card.querySelector('.doc-img-reorder')) return;
+      if (card.style.display === 'none') return;
+      if (card.querySelector('.doc-img-drag')) return;
       const thumb = card.querySelector('.doc-img-thumb');
       if (!thumb) return;
-      // Necesitamos position:relative dentro del thumb para anclar los botones
       thumb.style.position = thumb.style.position || 'relative';
-      const wrap = document.createElement('div');
-      wrap.className = 'doc-img-reorder';
-      wrap.innerHTML =
-        '<button type="button" aria-label="Subir" title="Subir" data-dir="-1">▲</button>' +
-        '<button type="button" aria-label="Bajar" title="Bajar" data-dir="1">▼</button>';
-      const stopper = e => { e.stopPropagation(); };
-      wrap.addEventListener('click', stopper);
-      wrap.addEventListener('mousedown', stopper);
-      wrap.querySelectorAll('button').forEach(b => {
-        b.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const dir = parseInt(b.dataset.dir, 10) || 0;
-          moverCardTarjeta(card, dir, perfil);
-        });
-      });
-      thumb.appendChild(wrap);
-    });
-    actualizarFlechasReorden(grid);
-  }
-
-  function actualizarFlechasReorden(grid) {
-    const cards = Array.from(grid.querySelectorAll('.doc-img-card')).filter(c => c.style.display !== 'none');
-    cards.forEach((c, i) => {
-      const btns = c.querySelectorAll('.doc-img-reorder button');
-      if (btns.length !== 2) return;
-      btns[0].disabled = i === 0;
-      btns[1].disabled = i === cards.length - 1;
+      const handle = document.createElement('button');
+      handle.type = 'button';
+      handle.className = 'doc-img-drag';
+      handle.setAttribute('aria-label', 'Arrastrar para reordenar');
+      handle.title = 'Arrastra para reordenar';
+      handle.innerHTML = SVG_DRAG_TARJETA;
+      instalarDragPointerTarjeta(handle, card, grid);
+      thumb.appendChild(handle);
     });
   }
 
-  async function moverCardTarjeta(card, dir, perfil) {
-    if (!card || !dir) return;
-    const grid = card.parentElement;
-    if (!grid) return;
-    let hermano = card;
-    do {
-      hermano = dir < 0 ? hermano.previousElementSibling : hermano.nextElementSibling;
-    } while (hermano && hermano.style && hermano.style.display === 'none');
-    if (!hermano || !hermano.classList.contains('doc-img-card')) return;
-    if (dir < 0) grid.insertBefore(card, hermano);
-    else grid.insertBefore(hermano, card);
-    actualizarFlechasReorden(grid);
-    // Persistir orden de las tarjetas VISIBLES
-    const cards = Array.from(grid.querySelectorAll('.doc-img-card')).filter(c => c.style.display !== 'none');
-    const mapa = {};
-    cards.forEach((c, i) => {
-      const tipo = c.dataset.tipo;
-      if (tipo) mapa[tipo] = i;
+  function instalarDragPointerTarjeta(handle, card, grid) {
+    handle.addEventListener('click', (e) => { e.stopPropagation(); e.preventDefault(); });
+    handle.addEventListener('pointerdown', (e) => {
+      if (e.button !== undefined && e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      handle.setPointerCapture(e.pointerId);
+      const startY = e.clientY;
+      card.classList.add('sortable-dragging');
+      card.style.transition = 'none';
+
+      const visibles = () => Array.from(grid.querySelectorAll('.doc-img-card'))
+        .filter(c => c.style.display !== 'none' && c !== card);
+
+      const onMove = (ev) => {
+        const dy = ev.clientY - startY;
+        card.style.transform = 'translateY(' + dy + 'px)';
+        const otros = visibles();
+        otros.forEach(o => o.classList.remove('sortable-target'));
+        const py = ev.clientY;
+        let target = null;
+        for (const s of otros) {
+          const r = s.getBoundingClientRect();
+          if (py < r.top + r.height / 2) { target = s; break; }
+        }
+        if (target) target.classList.add('sortable-target');
+        else if (otros.length) otros[otros.length - 1].classList.add('sortable-target');
+      };
+      const onUp = async (ev) => {
+        card.classList.remove('sortable-dragging');
+        card.style.transform = '';
+        card.style.transition = '';
+        const otros = visibles();
+        otros.forEach(o => o.classList.remove('sortable-target'));
+        const py = ev.clientY;
+        let insertBefore = null;
+        for (const s of otros) {
+          const r = s.getBoundingClientRect();
+          if (py < r.top + r.height / 2) { insertBefore = s; break; }
+        }
+        if (insertBefore) grid.insertBefore(card, insertBefore);
+        else if (otros.length) grid.insertBefore(card, otros[otros.length - 1].nextSibling);
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onUp);
+        const finales = Array.from(grid.querySelectorAll('.doc-img-card')).filter(c => c.style.display !== 'none');
+        const mapa = {};
+        finales.forEach((c, i) => { if (c.dataset.tipo) mapa[c.dataset.tipo] = i; });
+        try { await guardarOrdenDocumentos(mapa); }
+        catch (e) { console.warn('No se pudo guardar orden en la tarjeta:', e.message); }
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+      window.addEventListener('pointercancel', onUp);
     });
-    try {
-      await guardarOrdenDocumentos(mapa);
-    } catch (e) {
-      console.warn('No se pudo guardar orden en la tarjeta:', e.message);
-    }
   }
-  window.moverCardTarjeta = moverCardTarjeta;
 
   // Reordena los hijos visibles de un .docs-grid según el mapa tipo→orden.
   function reordenarGrid(grid, docsConOrden) {
