@@ -1020,6 +1020,67 @@
     outline: 2px solid var(--blue);
     outline-offset: 2px;
   }
+
+  /* Compact banner / profile overrides for small screens & iframe */
+  @media (max-width: 480px) {
+    .header {
+      padding: 8px 12px !important;
+    }
+    .header-logo {
+      height: 26px !important;
+      padding: 0 8px !important;
+      font-size: 11px !important;
+    }
+    .header-name {
+      font-size: 13px !important;
+    }
+    .timestamp {
+      font-size: 10px !important;
+      padding: 2px 6px !important;
+    }
+    .card-header {
+      padding: 8px 12px !important;
+      gap: 8px !important;
+    }
+    .avatar {
+      width: 32px !important;
+      height: 32px !important;
+      font-size: 12px !important;
+    }
+    .card-identity h2 {
+      font-size: 13px !important;
+    }
+    .card-identity .rut {
+      font-size: 8.5px !important;
+    }
+    .card-tab {
+      padding: 5px 8px !important;
+      font-size: 10px !important;
+    }
+    .card-body {
+      padding: 0 !important;
+    }
+    .info-section {
+      padding: 10px 14px !important;
+    }
+    .docs-grid {
+      gap: 8px !important;
+      padding: 10px !important;
+    }
+    .doc-img-info {
+      padding: 8px 10px !important;
+    }
+    .doc-img-info .nombre {
+      font-size: 12px !important;
+    }
+    .doc-img-info .vence {
+      font-size: 10px !important;
+    }
+    .nexo-footer {
+      margin-top: 14px !important;
+      padding-top: 10px !important;
+    }
+  }
 </style>
 <script>
 (function(){

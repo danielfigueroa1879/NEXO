@@ -1114,10 +1114,10 @@
   @media (min-width: 1024px) {
     .layout-wrapper {
       display: flex;
-      gap: 40px;
+      gap: 30px;
       justify-content: center;
       align-items: flex-start;
-      max-width: 1100px;
+      max-width: 1120px;
       margin: 0 auto;
       padding: 0 20px;
     }
@@ -1129,15 +1129,40 @@
     }
     .preview-sidebar {
       position: sticky;
-      top: 80px;
-      height: calc(100vh - 100px);
+      top: 50px;
+      height: calc(100vh - 70px);
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       padding-top: 10px;
-      width: 380px;
+      width: 360px; /* compact sidebar width */
       flex-shrink: 0;
+    }
+    .phone-mockup {
+      position: relative;
+      width: 414px;
+      height: 896px;
+      background: #000;
+      border: 12px solid #1C1C1E;
+      border-radius: 48px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.15), 0 5px 15px rgba(0,0,0,0.08);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transform: scale(0.72); /* scaled down to fit on laptop screens */
+      transform-origin: top center;
+      margin-bottom: -250px; /* offset bottom height overlap */
+    }
+    .phone-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 298px; /* matches scaled visual width (414 * 0.72) */
+      margin-top: 4px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-mute);
     }
   }
   @media (max-width: 1023px) {
@@ -1151,27 +1176,15 @@
     flex-direction: column;
     align-items: center;
   }
-  .phone-mockup {
-    position: relative;
-    width: 330px;
-    height: 660px;
-    background: #000;
-    border: 12px solid #1C1C1E;
-    border-radius: 44px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.15), 0 5px 15px rgba(0,0,0,0.08);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
   .phone-notch {
     position: absolute;
     top: 10px;
     left: 50%;
     transform: translateX(-50%);
-    width: 100px;
-    height: 25px;
+    width: 120px;
+    height: 26px;
     background: #000;
-    border-radius: 20px;
+    border-radius: 18px;
     z-index: 100;
   }
   .phone-screen {
@@ -1179,7 +1192,7 @@
     width: 100%;
     height: 100%;
     background: #F5F5F7;
-    border-radius: 32px;
+    border-radius: 36px;
     overflow: hidden;
     position: relative;
   }
@@ -1188,16 +1201,6 @@
     height: 100%;
     border: none;
     background: #F5F5F7;
-  }
-  .phone-label {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 330px;
-    margin-top: 12px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ink-mute);
   }
   .btn-refresh-preview {
     background: #fff;
@@ -1355,6 +1358,48 @@
   .doc-card.missing .switch {
     opacity: 0.5;
     pointer-events: none;
+  }
+
+  /* Responsive styles for doc-cards on mobile */
+  @media (max-width: 480px) {
+    .doc-card {
+      border-radius: 22px !important;
+    }
+    .doc-row {
+      padding: 12px 14px !important;
+      gap: 10px !important;
+    }
+    .doc-icon-wrap {
+      width: 32px !important;
+      height: 32px !important;
+      font-size: 15px !important;
+    }
+    .doc-info h4 {
+      font-size: 13px !important;
+      line-height: 1.2 !important;
+    }
+    .doc-subtitle {
+      font-size: 11px !important;
+    }
+    .doc-card-actions {
+      gap: 8px !important;
+      margin-top: 8px !important;
+    }
+    .doc-card-actions .action-btn svg {
+      width: 14px !important;
+      height: 14px !important;
+    }
+    .btn-delete-doc-action svg {
+      width: 14px !important;
+      height: 14px !important;
+    }
+    .doc-right-actions {
+      gap: 6px !important;
+    }
+    .doc-upload-btn svg {
+      width: 18px !important;
+      height: 18px !important;
+    }
   }
 </style>
 <script>(function(){try{var k='nexo_theme',s=sessionStorage.getItem(k);if(!s){var h=new Date().getHours();s=(h>=19||h<7)?'dark':'light';}document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){}})();</script>
@@ -2115,10 +2160,12 @@
     const isOpen = panel.classList.contains('open');
     // Cierra todos
     document.querySelectorAll('.upload-panel').forEach(p => p.classList.remove('open'));
-    document.querySelectorAll('.doc-chevron').forEach(c => c.style.transform = '');
+    document.querySelectorAll('.doc-chevron').forEach(c => {
+      if (c) c.style.transform = '';
+    });
     if (!isOpen) {
       panel.classList.add('open');
-      chev.style.transform = 'rotate(90deg)';
+      if (chev) chev.style.transform = 'rotate(90deg)';
       panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }
@@ -2850,6 +2897,32 @@
   }
   window.refreshPreview = refreshPreview;
 
+  // Manejador de click en icono de imagen (despliega/contrae el panel de subida)
+  function handleImageClick(e, docId) {
+    e.stopPropagation();
+    togglePanel(docId);
+  }
+  window.handleImageClick = handleImageClick;
+
+  // Manejador de click en icono de tiempo (despliega panel y enfoca input de fecha de vencimiento)
+  function handleClockClick(e, docId) {
+    e.stopPropagation();
+    const panel = document.getElementById('panel-' + docId);
+    if (panel) {
+      if (!panel.classList.contains('open')) {
+        togglePanel(docId);
+      }
+      setTimeout(() => {
+        const inp = panel.querySelector('.vence-row input[type="date"]');
+        if (inp) {
+          inp.focus();
+          inp.click();
+        }
+      }, 150);
+    }
+  }
+  window.handleClockClick = handleClockClick;
+
   // Toggle de visibilidad del documento en la tarjeta NFC usando el prefijo [HIDDEN]
   async function toggleDocumentoActivo(docId) {
     const checkbox = document.getElementById('switch-' + docId);
@@ -2970,23 +3043,28 @@
           }
         }
 
-        // Fila de iconos inferiores de la tarjeta (Layout, Imagen, Destacado, etc.)
+        // Fila de iconos inferiores de la tarjeta (primeros 5)
         let actionsRow = info.querySelector('.doc-card-actions');
+        const tieneVencimiento = !!card.querySelector('.vence-row');
         if (!actionsRow) {
           actionsRow = document.createElement('div');
           actionsRow.className = 'doc-card-actions';
           actionsRow.onclick = e => e.stopPropagation();
           actionsRow.innerHTML = `
             <span class="action-btn" title="Diseño"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span>
-            <span class="action-btn" title="Multimedia"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span>
+            <span class="action-btn" title="Multimedia" onclick="handleImageClick(event, '${docId}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span>
             <span class="action-btn" title="Destacar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
             <span class="action-btn" title="Redirigir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8v8a6 6 0 0 0 12 0"/><circle cx="18" cy="8" r="3"/><circle cx="6" cy="16" r="3"/></svg></span>
-            <span class="action-btn" title="Programar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
-            <span class="action-btn" title="Privacidad" onclick="event.stopPropagation(); window.location.href='admin.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-            <span class="clicks-count">0 clicks</span>
+            <span class="action-btn" title="Programar Vencimiento" onclick="handleClockClick(event, '${docId}')" style="${tieneVencimiento ? '' : 'display:none;'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
             <button type="button" class="btn-delete-doc-action" onclick="event.stopPropagation(); eliminarDoc('${docId}')" title="Eliminar documento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
           `;
           info.appendChild(actionsRow);
+        } else {
+          // Asegurarse de que el clock-btn tiene la visibilidad correcta al redibujarse
+          const clockBtn = actionsRow.querySelector('[title="Programar Vencimiento"]');
+          if (clockBtn) {
+            clockBtn.style.display = tieneVencimiento ? '' : 'none';
+          }
         }
       }
 
@@ -3092,7 +3170,7 @@
     if (!datos) datos = { nombre: 'Tu nombre', rut: '—', perfiles: ['guardia'], patente: '' };
     aplicar(datos);
 
-    const haPagado = true; // (datos.pago === 'pagado' || datos.estado === 'activa' || datos.es_admin === true);
+    const haPagado = (datos.pago === 'pagado' || datos.estado === 'activa' || datos.es_admin === true);
     if (!haPagado) {
       const overlay = document.getElementById('blockPayOverlay');
       if (overlay) {
