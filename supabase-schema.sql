@@ -79,8 +79,9 @@ returns json language sql stable security definer set search_path = public as $$
          'titulo', d.titulo,
          'nombre', d.nombre,
          'path',   d.path,
-         'vence',  d.vence
-       ))
+         'vence',  d.vence,
+         'orden',  d.orden
+       ) order by d.orden nulls last, d.tipo)
        from public.documentos d
        where d.cuenta_id = c.id and d.path <> ''), '[]'::json)
   )
@@ -129,6 +130,10 @@ alter table public.documentos add column if not exists vence date;
 -- Migración: último "hito" de aviso enviado (30, 15, 7, 1, 0, -1=vencido).
 -- Se usa para no volver a mandar el mismo correo dos veces.
 alter table public.documentos add column if not exists notif_hito integer;
+
+-- Migración: posición manual del documento dentro de su perfil (particular,
+-- comerciante, empresa). Menor = arriba. NULL = mantener orden por defecto.
+alter table public.documentos add column if not exists orden integer;
 
 create index if not exists documentos_cuenta_idx on public.documentos (cuenta_id);
 create index if not exists documentos_vence_idx  on public.documentos (vence)

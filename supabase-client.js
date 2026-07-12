@@ -377,6 +377,32 @@ async function listarDocumentos() {
   return data || [];
 }
 
+// Persiste el orden manual de varios documentos a la vez. Recibe un objeto
+// { tipo: posicionEntera, ... }. Crea filas placeholder si un tipo aún no tiene archivo.
+async function guardarOrdenDocumentos(mapa) {
+  const user = await nexoUsuarioActual();
+  if (!user) throw new Error('Sin sesión');
+  const entradas = Object.entries(mapa || {}).filter(([t]) => t);
+  if (!entradas.length) return;
+  const { data: existentes } = await sb.from('documentos')
+    .select('id, tipo').eq('cuenta_id', user.id);
+  const porTipo = new Map((existentes || []).map(d => [d.tipo, d.id]));
+  const updates = [];
+  const inserts = [];
+  for (const [tipo, orden] of entradas) {
+    const val = Number.isFinite(+orden) ? +orden : null;
+    if (porTipo.has(tipo)) {
+      updates.push({ id: porTipo.get(tipo), orden: val });
+    } else {
+      inserts.push({ cuenta_id: user.id, tipo, nombre: '', path: '', orden: val });
+    }
+  }
+  await Promise.all([
+    ...updates.map(u => sb.from('documentos').update({ orden: u.orden }).eq('id', u.id)),
+    inserts.length ? sb.from('documentos').insert(inserts) : Promise.resolve()
+  ]);
+}
+
 async function eliminarDocumento(tipo) {
   const user = await nexoUsuarioActual();
   if (!user) throw new Error('Sin sesión');
@@ -446,7 +472,7 @@ async function aplicarFotoPerfil() {
 Object.assign(window, {
   nexoSignUp, nexoSignIn, nexoSignOut, nexoUsuarioActual, asegurarCuenta, esperarSesionOAuth,
   guardarCuenta, obtenerCuenta, listarCuentas,
-  subirDocumento, guardarTituloDocumento, guardarVenceDocumento, listarDocumentos, eliminarDocumento, urlDocumento,
+  subirDocumento, guardarTituloDocumento, guardarVenceDocumento, guardarOrdenDocumentos, listarDocumentos, eliminarDocumento, urlDocumento,
   urlFotoPerfil, aplicarFotoPerfil,
   verificarPublico, urlPublicaDocumento, urlDeMiTarjeta
 });

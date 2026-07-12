@@ -267,6 +267,40 @@
   .doc-card.expired .vence-row input { border-color: #c1272d; color: #c1272d; }
   .doc-chevron { color: var(--ink-mute); font-size: 16px; flex-shrink: 0; }
 
+  /* Título editable in-place (renombrar tarjeta) */
+  .doc-title[contenteditable="true"] {
+    cursor: text;
+    outline: none;
+    border-radius: 6px;
+    padding: 2px 6px;
+    margin: -2px -6px;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .doc-title[contenteditable="true"]:hover { background: rgba(0,0,0,0.04); }
+  .doc-title[contenteditable="true"]:focus {
+    background: #fff;
+    box-shadow: inset 0 0 0 1.5px var(--blue);
+  }
+  [data-theme="dark"] .doc-title[contenteditable="true"]:hover { background: rgba(255,255,255,0.06); }
+  [data-theme="dark"] .doc-title[contenteditable="true"]:focus { background: rgba(255,255,255,0.08); }
+
+  /* Botones ↑ / ↓ para reordenar tarjetas */
+  .doc-reorder {
+    display: flex; flex-direction: column; gap: 3px; flex-shrink: 0;
+    margin-right: 4px;
+  }
+  .doc-reorder button {
+    width: 24px; height: 18px;
+    background: transparent; border: 1px solid var(--line);
+    border-radius: 5px; font-size: 10px; line-height: 1;
+    color: var(--ink); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0; transition: background 0.12s, opacity 0.12s;
+  }
+  .doc-reorder button:hover { background: var(--bg); }
+  .doc-reorder button:disabled { opacity: 0.28; cursor: not-allowed; }
+  .doc-reorder button:active { transform: scale(0.94); }
+
   /* ===== UPLOAD PANEL (expandible) ===== */
   .upload-panel {
     display: none; padding: 0 16px 16px;
@@ -2252,6 +2286,142 @@
 
   updateProgress();
 
+  /* =====================================================================
+     RENOMBRAR + REORDENAR tarjetas en Particular / Comerciante / Empresa
+     ===================================================================== */
+  const TABS_REORDENABLES = ['tab-guardia', 'tab-comerciante', 'tab-empresa'];
+
+  // Instala contenteditable y botones ↑/↓ en cada .doc-card de esos tabs.
+  function inicializarCardsReordenables() {
+    TABS_REORDENABLES.forEach(tabId => {
+      const tab = document.getElementById(tabId);
+      if (!tab) return;
+      tab.querySelectorAll('.doc-card[id^="card-"]').forEach(card => {
+        const tipo = card.id.slice(5);
+        // 1) Hacer el título editable in-place
+        const h4 = card.querySelector('.doc-info h4');
+        if (h4 && h4.getAttribute('contenteditable') !== 'true') {
+          h4.setAttribute('contenteditable', 'true');
+          h4.setAttribute('spellcheck', 'false');
+          h4.setAttribute('data-tipo', tipo);
+          h4.classList.add('doc-title');
+          h4.title = 'Toca para renombrar';
+          const stop = e => e.stopPropagation();
+          h4.addEventListener('click', stop);
+          h4.addEventListener('mousedown', stop);
+          h4.addEventListener('touchstart', stop, { passive: true });
+          h4.addEventListener('blur', () => guardarTitulo(h4));
+          h4.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); h4.blur(); }
+          });
+        }
+        // 2) Botones ↑ / ↓ antes del badge
+        const row = card.querySelector('.doc-row');
+        if (row && !row.querySelector('.doc-reorder')) {
+          const reord = document.createElement('div');
+          reord.className = 'doc-reorder';
+          reord.innerHTML =
+            '<button type="button" aria-label="Subir tarjeta" title="Subir" onclick="event.stopPropagation();moverCard(this,-1)">▲</button>' +
+            '<button type="button" aria-label="Bajar tarjeta" title="Bajar" onclick="event.stopPropagation();moverCard(this,1)">▼</button>';
+          const badge = row.querySelector('.doc-badge');
+          if (badge) row.insertBefore(reord, badge);
+          else row.appendChild(reord);
+        }
+      });
+      actualizarEstadoFlechas(tab);
+    });
+  }
+
+  // Deshabilita ▲ en la primera card de cada sección y ▼ en la última.
+  function actualizarEstadoFlechas(tab) {
+    const cards = Array.from(tab.querySelectorAll('.doc-card[id^="card-"]'));
+    cards.forEach((c) => {
+      const btns = c.querySelectorAll('.doc-reorder button');
+      if (!btns.length) return;
+      const prev = c.previousElementSibling;
+      const next = c.nextElementSibling;
+      const puedeSubir = prev && prev.classList && prev.classList.contains('doc-card');
+      const puedeBajar = next && next.classList && next.classList.contains('doc-card');
+      btns[0].disabled = !puedeSubir;
+      btns[1].disabled = !puedeBajar;
+    });
+  }
+
+  // Mueve una tarjeta arriba/abajo dentro de su sección y persiste el orden.
+  function moverCard(btn, dir) {
+    const card = btn.closest('.doc-card');
+    if (!card) return;
+    const hermano = dir < 0 ? card.previousElementSibling : card.nextElementSibling;
+    if (!hermano || !hermano.classList.contains('doc-card')) return;
+    if (dir < 0) card.parentNode.insertBefore(card, hermano);
+    else card.parentNode.insertBefore(hermano, card);
+    const tab = card.closest('#tab-guardia, #tab-comerciante, #tab-empresa');
+    if (tab) {
+      actualizarEstadoFlechas(tab);
+      persistirOrdenTab(tab);
+    }
+  }
+  window.moverCard = moverCard;
+
+  // Guarda el orden actual del tab en Supabase.
+  async function persistirOrdenTab(tab) {
+    const cards = tab.querySelectorAll('.doc-card[id^="card-"]');
+    const mapa = {};
+    cards.forEach((c, i) => {
+      const tipo = c.id.slice(5);
+      if (tipo) mapa[tipo] = i;
+    });
+    try {
+      await guardarOrdenDocumentos(mapa);
+      activarBotonGuardarRojo();
+    } catch (e) {
+      console.warn('No se pudo guardar el orden:', e.message);
+    }
+  }
+
+  // Aplica el orden guardado en Supabase a las tarjetas ya presentes.
+  // Respeta las secciones (`.section-title`): reordena solo dentro de cada bloque.
+  function aplicarOrdenGuardado(docs) {
+    const orderMap = new Map();
+    (docs || []).forEach(d => { if (d.orden != null) orderMap.set(d.tipo, d.orden); });
+    if (!orderMap.size) return;
+    TABS_REORDENABLES.forEach(tabId => {
+      const tab = document.getElementById(tabId);
+      if (!tab) return;
+      const hijos = Array.from(tab.children);
+      let bloque = [];
+      const seccionesLimites = [];
+      hijos.forEach((h, i) => {
+        if (h.classList && h.classList.contains('doc-card') && h.id.startsWith('card-')) {
+          bloque.push({ el: h, idx: i });
+        } else if (bloque.length) {
+          seccionesLimites.push(bloque);
+          bloque = [];
+        }
+      });
+      if (bloque.length) seccionesLimites.push(bloque);
+      seccionesLimites.forEach(cards => {
+        const ordenados = cards.slice().sort((a, b) => {
+          const ta = a.el.id.slice(5), tb = b.el.id.slice(5);
+          const oa = orderMap.has(ta) ? orderMap.get(ta) : Infinity;
+          const ob = orderMap.has(tb) ? orderMap.get(tb) : Infinity;
+          if (oa === ob) return cards.indexOf(a) - cards.indexOf(b);
+          return oa - ob;
+        });
+        // Recolocar en el rango original respetando la sección de arriba.
+        // Guardamos el nodo que iba justo después del último card ORIGINAL:
+        // ese es el punto de anclaje estable.
+        const ultOriginal = cards[cards.length - 1].el;
+        const refFinal = ultOriginal.nextSibling; // sección siguiente o null
+        ordenados.forEach(o => tab.insertBefore(o.el, refFinal));
+      });
+      actualizarEstadoFlechas(tab);
+    });
+  }
+  window.aplicarOrdenGuardado = aplicarOrdenGuardado;
+
+  inicializarCardsReordenables();
+
   // ===== CARGAR DATOS DEL USUARIO desde Supabase (con fallback a localStorage) =====
   (async function() {
     function iniciales(n) {
@@ -2352,6 +2522,8 @@
         // El estado rojo/naranjo se aplica DESPUÉS de marcarCardSubida para ganarle al badge "Cargado"
         if (d.vence) actualizarEstadoVencimiento(d.tipo, d.vence);
       }
+      // Reordenar las tarjetas de particular/comerciante/empresa según lo guardado
+      aplicarOrdenGuardado(docs);
       updateProgress();
     } catch (e) { console.warn('No se pudieron cargar documentos previos:', e.message); }
 

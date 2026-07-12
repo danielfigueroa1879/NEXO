@@ -993,6 +993,27 @@
     from { transform: translateY(15px); opacity: 0.8; }
     to { transform: translateY(0); opacity: 1; }
   }
+
+  /* Botones ↑ / ↓ para reordenar en la tarjeta (sólo dueño) */
+  .doc-img-reorder {
+    position: absolute; top: 8px; left: 8px; z-index: 4;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .doc-img-reorder button {
+    width: 26px; height: 22px;
+    background: rgba(255,255,255,0.92);
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 6px;
+    font-size: 11px; line-height: 1;
+    color: #111; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0; font-weight: 700;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    transition: background 0.12s, opacity 0.12s;
+  }
+  .doc-img-reorder button:hover { background: #fff; }
+  .doc-img-reorder button:disabled { opacity: 0.35; cursor: not-allowed; }
+  .doc-img-reorder button:active { transform: scale(0.94); }
 </style>
 <script>
 (function(){
@@ -1565,7 +1586,8 @@
   // Actualiza una tarjeta demo estática con el documento REAL subido por el usuario
   function actualizarCard(card, d, url) {
     card.style.display = '';
-    const titulo = card.dataset.titulo || d.nombre || d.tipo;
+    // Prioridad: nombre personalizado del usuario > dataset > nombre archivo > tipo
+    const titulo = d.titulo || card.dataset.titulo || d.nombre || d.tipo;
     const est    = estadoVence(d.vence);
     const sub    = est.text || d.nombre || 'Documento subido';
     const thumb  = card.querySelector('.doc-img-thumb');
@@ -1576,9 +1598,110 @@
     if (venceEl) venceEl.textContent = sub;
     card.classList.remove('expired', 'soon', 'ok');
     if (est.cls) card.classList.add(est.cls);
+    card.dataset.tipo = d.tipo;
+    card.dataset.orden = (d.orden != null) ? d.orden : '';
     card.setAttribute('onclick',
       "abrirDoc('" + url.replace(/'/g, "\\'") + "','" +
       titulo.replace(/'/g, "\\'") + "','" + sub.replace(/'/g, "\\'") + "')");
+  }
+
+  // ¿Estamos viendo NUESTRA propia tarjeta? (no un link público de otro)
+  function esDueño() { return !codigoPublico; }
+
+  // Ordena una lista de docs por `orden` (nulls al final) manteniendo el
+  // orden original como desempate estable.
+  function ordenarPorOrden(lista) {
+    return lista.map((d, i) => ({ d, i })).sort((a, b) => {
+      const oa = (a.d.orden == null) ? Number.POSITIVE_INFINITY : a.d.orden;
+      const ob = (b.d.orden == null) ? Number.POSITIVE_INFINITY : b.d.orden;
+      if (oa === ob) return a.i - b.i;
+      return oa - ob;
+    }).map(x => x.d);
+  }
+
+  // Inyecta los botones ↑ / ↓ dentro de un contenedor .docs-grid.
+  // Sólo se llama cuando el visitante es el dueño de la tarjeta.
+  function agregarFlechasReorden(grid, perfil) {
+    if (!grid) return;
+    const cards = grid.querySelectorAll('.doc-img-card:not([style*="display:none"]):not([style*="display: none"])');
+    cards.forEach(card => {
+      // Evitar duplicar
+      if (card.querySelector('.doc-img-reorder')) return;
+      const thumb = card.querySelector('.doc-img-thumb');
+      if (!thumb) return;
+      // Necesitamos position:relative dentro del thumb para anclar los botones
+      thumb.style.position = thumb.style.position || 'relative';
+      const wrap = document.createElement('div');
+      wrap.className = 'doc-img-reorder';
+      wrap.innerHTML =
+        '<button type="button" aria-label="Subir" title="Subir" data-dir="-1">▲</button>' +
+        '<button type="button" aria-label="Bajar" title="Bajar" data-dir="1">▼</button>';
+      const stopper = e => { e.stopPropagation(); };
+      wrap.addEventListener('click', stopper);
+      wrap.addEventListener('mousedown', stopper);
+      wrap.querySelectorAll('button').forEach(b => {
+        b.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const dir = parseInt(b.dataset.dir, 10) || 0;
+          moverCardTarjeta(card, dir, perfil);
+        });
+      });
+      thumb.appendChild(wrap);
+    });
+    actualizarFlechasReorden(grid);
+  }
+
+  function actualizarFlechasReorden(grid) {
+    const cards = Array.from(grid.querySelectorAll('.doc-img-card')).filter(c => c.style.display !== 'none');
+    cards.forEach((c, i) => {
+      const btns = c.querySelectorAll('.doc-img-reorder button');
+      if (btns.length !== 2) return;
+      btns[0].disabled = i === 0;
+      btns[1].disabled = i === cards.length - 1;
+    });
+  }
+
+  async function moverCardTarjeta(card, dir, perfil) {
+    if (!card || !dir) return;
+    const grid = card.parentElement;
+    if (!grid) return;
+    let hermano = card;
+    do {
+      hermano = dir < 0 ? hermano.previousElementSibling : hermano.nextElementSibling;
+    } while (hermano && hermano.style && hermano.style.display === 'none');
+    if (!hermano || !hermano.classList.contains('doc-img-card')) return;
+    if (dir < 0) grid.insertBefore(card, hermano);
+    else grid.insertBefore(hermano, card);
+    actualizarFlechasReorden(grid);
+    // Persistir orden de las tarjetas VISIBLES
+    const cards = Array.from(grid.querySelectorAll('.doc-img-card')).filter(c => c.style.display !== 'none');
+    const mapa = {};
+    cards.forEach((c, i) => {
+      const tipo = c.dataset.tipo;
+      if (tipo) mapa[tipo] = i;
+    });
+    try {
+      await guardarOrdenDocumentos(mapa);
+    } catch (e) {
+      console.warn('No se pudo guardar orden en la tarjeta:', e.message);
+    }
+  }
+  window.moverCardTarjeta = moverCardTarjeta;
+
+  // Reordena los hijos visibles de un .docs-grid según el mapa tipo→orden.
+  function reordenarGrid(grid, docsConOrden) {
+    if (!grid) return;
+    const orderMap = new Map();
+    (docsConOrden || []).forEach(d => { if (d.orden != null) orderMap.set(d.tipo, d.orden); });
+    if (!orderMap.size) return;
+    const cards = Array.from(grid.querySelectorAll('.doc-img-card[data-tipo]'));
+    const anclaFinal = cards.length ? cards[cards.length - 1].nextSibling : null;
+    cards.slice().sort((a, b) => {
+      const oa = orderMap.has(a.dataset.tipo) ? orderMap.get(a.dataset.tipo) : Number.POSITIVE_INFINITY;
+      const ob = orderMap.has(b.dataset.tipo) ? orderMap.get(b.dataset.tipo) : Number.POSITIVE_INFINITY;
+      if (oa === ob) return cards.indexOf(a) - cards.indexOf(b);
+      return oa - ob;
+    }).forEach(c => grid.insertBefore(c, anclaFinal));
   }
 
   // Muestra un mensaje en los grids estáticos que quedaron sin documentos
@@ -1606,17 +1729,19 @@
   async function renderizarExtrasGuardia(extras) {
     const cont = document.getElementById('extrasGuardia');
     if (!cont || !extras.length) return;
-    const urls = await resolverUrls(extras);
+    const extrasOrdenados = ordenarPorOrden(extras);
+    const urls = await resolverUrls(extrasOrdenados);
     const frag = document.createDocumentFragment();
-    for (const d of extras) {
+    for (const d of extrasOrdenados) {
       const url = urls.get(d.path);
       if (!url) continue;
       const num = d.tipo.replace('extra', '');
-      const titulo = 'Documento extra ' + num;
+      const titulo = d.titulo || ('Documento extra ' + num);
       const est = estadoVence(d.vence);
       const sub = est.text || d.nombre || '';
       const div = document.createElement('div');
       div.className = 'doc-img-card' + (est.cls ? ' ' + est.cls : '');
+      div.dataset.tipo = d.tipo;
       div.setAttribute('onclick',
         "abrirDoc('" + url.replace(/'/g, "\\'") + "','" +
         titulo.replace(/'/g, "\\'") + "','" + sub.replace(/'/g, "\\'") + "')");
@@ -1634,16 +1759,18 @@
     cont.style.display = '';
     cont.innerHTML = '';
     cont.appendChild(frag);
+    if (esDueño()) agregarFlechasReorden(cont, 'guardia');
   }
 
   // Renderiza en PARALELO los grids dinámicos (comerciante/empresa).
-  async function renderizarGridDinamico(contId, docs) {
+  async function renderizarGridDinamico(contId, docs, perfil) {
     const cont = document.getElementById(contId);
     if (!cont) return;
     if (!docs.length) return;
-    const urls = await resolverUrls(docs);
+    const docsOrdenados = ordenarPorOrden(docs);
+    const urls = await resolverUrls(docsOrdenados);
     const frag = document.createDocumentFragment();
-    for (const d of docs) {
+    for (const d of docsOrdenados) {
       const url = urls.get(d.path);
       if (!url) continue;
       const titulo = d.titulo || NOMBRES_DOC[d.tipo] || d.tipo;
@@ -1651,6 +1778,7 @@
       const sub    = est.text || d.nombre || '';
       const div = document.createElement('div');
       div.className = 'doc-img-card' + (est.cls ? ' ' + est.cls : '');
+      div.dataset.tipo = d.tipo;
       div.setAttribute('onclick',
         "abrirDoc('" + url.replace(/'/g, "\\'") + "','" +
         titulo.replace(/'/g, "\\'") + "','" + sub.replace(/'/g, "\\'") + "')");
@@ -1667,6 +1795,7 @@
     }
     cont.innerHTML = '';
     cont.appendChild(frag);
+    if (esDueño()) agregarFlechasReorden(cont, perfil);
   }
 
   // Nombres visibles de los documentos de vehículo
@@ -1818,10 +1947,15 @@
         if (card) actualizarCard(card, d, url);
       }
 
+      // Aplicar el orden personalizado a la grilla estática de Particular
+      const gridGuardia = document.querySelector('#panel-guardia .docs-grid');
+      reordenarGrid(gridGuardia, fijos);
+      if (esDueño() && gridGuardia) agregarFlechasReorden(gridGuardia, 'guardia');
+
       await Promise.all([
         renderVehiculosVerif(vehiculos),
-        renderizarGridDinamico('gridComerciante', comerciante),
-        renderizarGridDinamico('gridEmpresa', empresa),
+        renderizarGridDinamico('gridComerciante', comerciante, 'comerciante'),
+        renderizarGridDinamico('gridEmpresa', empresa, 'empresa'),
         renderizarExtrasGuardia(extras)
       ]);
 
