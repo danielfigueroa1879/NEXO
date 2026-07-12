@@ -227,6 +227,31 @@
     border-color: #e07b00;
     background: linear-gradient(0deg, rgba(224,123,0,0.06), rgba(224,123,0,0.06)), var(--surface);
   }
+  /* Tarjeta abierta (panel desplegado) — se resalta con borde verde */
+  .doc-card.open {
+    border-color: var(--green);
+    box-shadow:
+      0 0 0 1px rgba(52,199,89,0.40),
+      0 0 8px rgba(52,199,89,0.22),
+      0 4px 16px rgba(52,199,89,0.14);
+    animation: docNeonPulse 2.6s ease-in-out infinite;
+  }
+  @keyframes docNeonPulse {
+    0%, 100% {
+      box-shadow:
+        0 0 0 1px rgba(52,199,89,0.40),
+        0 0 8px rgba(52,199,89,0.18),
+        0 4px 16px rgba(52,199,89,0.12);
+    }
+    50% {
+      box-shadow:
+        0 0 0 1px rgba(52,199,89,0.48),
+        0 0 12px rgba(52,199,89,0.30),
+        0 4px 18px rgba(52,199,89,0.16);
+    }
+  }
+  .doc-card.open .doc-row { background: rgba(52,199,89,0.08); }
+  .doc-card.open .doc-chevron { color: var(--green); }
 
   .doc-row {
     display: flex; align-items: center; gap: 12px;
@@ -2172,11 +2197,14 @@
     const isOpen = panel.classList.contains('open');
     // Cierra todos
     document.querySelectorAll('.upload-panel').forEach(p => p.classList.remove('open'));
+    document.querySelectorAll('.doc-card.open').forEach(c => c.classList.remove('open'));
     document.querySelectorAll('.doc-chevron').forEach(c => {
       if (c) c.style.transform = '';
     });
     if (!isOpen) {
       panel.classList.add('open');
+      const card = panel.closest('.doc-card');
+      if (card) card.classList.add('open');
       if (chev) chev.style.transform = 'rotate(90deg)';
       panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
