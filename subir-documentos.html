@@ -1206,9 +1206,14 @@
       width: 414px;
       height: 896px;
       background: #000;
-      border: 12px solid #1C1C1E;
-      border-radius: 48px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.15), 0 5px 15px rgba(0,0,0,0.08);
+      /* iPhone 17 Pro: bisel fino y uniforme + marco tipo titanio */
+      border: 10px solid #1d1d1f;
+      border-radius: 58px;
+      box-shadow:
+        0 20px 50px rgba(0,0,0,0.18),
+        0 5px 15px rgba(0,0,0,0.09),
+        inset 0 0 0 2px #3a3a3c,
+        0 0 0 1px rgba(255,255,255,0.05);
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -1238,23 +1243,38 @@
     flex-direction: column;
     align-items: center;
   }
+  /* Dynamic Island del iPhone 17 Pro: píldora negra flotando sobre la pantalla */
   .phone-notch {
     position: absolute;
-    top: 10px;
+    top: 14px;
     left: 50%;
     transform: translateX(-50%);
-    width: 120px;
-    height: 26px;
+    width: 104px;
+    height: 30px;
     background: #000;
-    border-radius: 18px;
+    border-radius: 20px;
     z-index: 100;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+  }
+  /* Lente de cámara dentro del Dynamic Island */
+  .phone-notch::after {
+    content: '';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 32% 30%, #3b3b52 0%, #10101a 65%, #000 100%);
+    box-shadow: inset 0 0 2px rgba(120,120,170,0.5);
   }
   .phone-screen {
     flex: 1;
     width: 100%;
     height: 100%;
     background: #F5F5F7;
-    border-radius: 36px;
+    border-radius: 46px;
     overflow: hidden;
     position: relative;
   }
