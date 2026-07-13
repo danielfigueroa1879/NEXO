@@ -36,6 +36,14 @@ alter table public.cuentas add column if not exists codigo_publico text unique;
 -- para compatibilidad con lo ya existente). patentes[1]=vehículo 1, etc.
 alter table public.cuentas add column if not exists patentes text[] default '{}';
 
+-- Datos bancarios del comerciante (para recibir transferencias al escanear NFC).
+-- Se muestran públicamente sólo cuando el visitante toca "Mostrar datos para transferir".
+alter table public.cuentas add column if not exists banco                text;
+alter table public.cuentas add column if not exists titular_cuenta       text;
+alter table public.cuentas add column if not exists tipo_cuenta          text;   -- 'Cuenta Vista' | 'Cuenta Corriente' | 'Cuenta RUT' | 'Cuenta Ahorro'
+alter table public.cuentas add column if not exists numero_cuenta        text;
+alter table public.cuentas add column if not exists email_transferencia  text;
+
 -- Trigger: auto-generar codigo_publico en cada insert si viene NULL
 create or replace function public.generar_codigo_publico() returns trigger
   language plpgsql as $$
@@ -73,6 +81,11 @@ returns json language sql stable security definer set search_path = public as $$
     'patentes',  c.patentes,
     'estado',    c.estado,
     'codigo',    c.codigo_publico,
+    'banco',               c.banco,
+    'titular_cuenta',      c.titular_cuenta,
+    'tipo_cuenta',         c.tipo_cuenta,
+    'numero_cuenta',       c.numero_cuenta,
+    'email_transferencia', c.email_transferencia,
     'documentos', coalesce(
       (select json_agg(json_build_object(
          'tipo',   d.tipo,

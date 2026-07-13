@@ -534,6 +534,44 @@
   }
   .vence-row input:focus { border-color: var(--blue); }
 
+  /* ===== DATOS BANCARIOS (Comerciante) ===== */
+  .banco-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 12px;
+  }
+  .banco-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .banco-field-full { grid-column: 1 / -1; }
+  .banco-field label {
+    font-size: 11px; font-weight: 600; color: var(--ink-mute);
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .banco-field input,
+  .banco-field select {
+    padding: 10px 12px; border-radius: 10px;
+    border: 1.5px solid var(--line);
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px; font-weight: 500;
+    background: #fff; color: var(--ink);
+    outline: none;
+    width: 100%;
+  }
+  .banco-field input:focus,
+  .banco-field select:focus { border-color: var(--blue); }
+  .banco-actions {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; margin-top: 14px; flex-wrap: wrap;
+  }
+  .banco-status {
+    font-size: 12px; font-weight: 600; color: var(--ink-mute);
+    min-height: 16px;
+  }
+  .banco-status.ok  { color: #1A7A34; }
+  .banco-status.err { color: #C00; }
+  @media (max-width: 480px) {
+    .banco-grid { grid-template-columns: 1fr; }
+  }
+
   /* ===== PERFIL TABS ===== */
   .perfil-tabs {
     display: flex; gap: 8px; margin-bottom: 20px;
@@ -1941,6 +1979,50 @@
 
   <!-- ===== DOCUMENTOS COMERCIANTE ===== -->
   <div id="tab-comerciante" style="display:none">
+
+    <!-- Datos bancarios para recibir transferencias al escanear NFC -->
+    <div class="section-title">Datos para transferencia <span class="section-count">Bancarios</span></div>
+    <div class="doc-card" id="card-datos-bancarios" style="padding:16px;">
+      <p style="font-size:12px;color:var(--ink-mute);margin-bottom:12px;line-height:1.5;">
+        Cuando alguien escanee tu tarjeta NFC verá primero tu perfil de comerciante.
+        Al tocar <strong>"Mostrar datos para transferir"</strong> podrá ver estos datos y copiarlos.
+      </p>
+      <div class="banco-grid">
+        <div class="banco-field">
+          <label for="banco-banco">Banco</label>
+          <input type="text" id="banco-banco" placeholder="Ej: Banco Estado" autocomplete="off">
+        </div>
+        <div class="banco-field">
+          <label for="banco-titular">Nombre del titular</label>
+          <input type="text" id="banco-titular" placeholder="Nombre completo" autocomplete="off">
+        </div>
+        <div class="banco-field">
+          <label for="banco-tipo">Tipo de cuenta</label>
+          <select id="banco-tipo">
+            <option value="">Seleccionar…</option>
+            <option>Cuenta Vista</option>
+            <option>Cuenta Corriente</option>
+            <option>Cuenta RUT</option>
+            <option>Cuenta Ahorro</option>
+          </select>
+        </div>
+        <div class="banco-field">
+          <label for="banco-numero">Número de cuenta</label>
+          <input type="text" id="banco-numero" placeholder="Ej: 12345678" inputmode="numeric" autocomplete="off">
+        </div>
+        <div class="banco-field banco-field-full">
+          <label for="banco-email">Correo para transferencia</label>
+          <input type="email" id="banco-email" placeholder="correo@ejemplo.cl" autocomplete="off">
+        </div>
+      </div>
+      <div class="banco-actions">
+        <span id="banco-status" class="banco-status"></span>
+        <button type="button" class="btn-upload primary" id="banco-guardar" onclick="guardarDatosBancariosUI()">
+          💾 Guardar datos bancarios
+        </button>
+      </div>
+    </div>
+
     <div class="section-title">Documentos comerciales <span class="section-count">Comerciante</span></div>
 
     <!-- Patente de Alcoholes -->
@@ -3298,6 +3380,21 @@
     if (!datos) datos = { nombre: 'Tu nombre', rut: '—', perfiles: ['guardia'], patente: '' };
     aplicar(datos);
 
+    // Rellenar el formulario bancario con los datos guardados
+    (function poblarBancarios() {
+      const map = {
+        'banco-banco':   datos.banco,
+        'banco-titular': datos.titular_cuenta,
+        'banco-tipo':    datos.tipo_cuenta,
+        'banco-numero':  datos.numero_cuenta,
+        'banco-email':   datos.email_transferencia
+      };
+      Object.entries(map).forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (el && val != null) el.value = val;
+      });
+    })();
+
     const haPagado = true; // (datos.pago === 'pagado' || datos.estado === 'activa' || datos.es_admin === true);
     if (!haPagado) {
       const overlay = document.getElementById('blockPayOverlay');
@@ -3372,6 +3469,35 @@
     window.location.href = 'login.html';
   }
   window.cerrarSesion = cerrarSesion;
+
+  // Guardar los datos bancarios del comerciante
+  async function guardarDatosBancariosUI() {
+    const btn    = document.getElementById('banco-guardar');
+    const status = document.getElementById('banco-status');
+    if (!btn || !status) return;
+    const payload = {
+      banco:               document.getElementById('banco-banco').value.trim(),
+      titular_cuenta:      document.getElementById('banco-titular').value.trim(),
+      tipo_cuenta:         document.getElementById('banco-tipo').value,
+      numero_cuenta:       document.getElementById('banco-numero').value.trim(),
+      email_transferencia: document.getElementById('banco-email').value.trim()
+    };
+    btn.disabled = true;
+    status.className = 'banco-status';
+    status.textContent = 'Guardando…';
+    try {
+      await guardarDatosBancarios(payload);
+      status.className = 'banco-status ok';
+      status.textContent = '✓ Datos guardados';
+      setTimeout(() => { status.textContent = ''; status.className = 'banco-status'; }, 3000);
+    } catch (e) {
+      status.className = 'banco-status err';
+      status.textContent = '⚠ Error: ' + (e && e.message ? e.message : 'no se pudo guardar');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+  window.guardarDatosBancariosUI = guardarDatosBancariosUI;
 
   // Chevron volver arriba
 

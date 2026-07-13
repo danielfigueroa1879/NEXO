@@ -161,7 +161,8 @@ async function guardarCuenta(datos) {
   // campos que el caller no pasó (para no sobrescribirlos con null).
   const alias = { mail: 'email', tel: 'telefono', dir: 'direccion' };
   const columnas = ['rut','nombre','email','telefono','direccion','patente','patentes',
-                    'perfiles','tema','pago','tipo','empresa','estado'];
+                    'perfiles','tema','pago','tipo','empresa','estado',
+                    'banco','titular_cuenta','tipo_cuenta','numero_cuenta','email_transferencia'];
   const payload = { id: user.id };
   for (const [k, v] of Object.entries(datos || {})) {
     const col = alias[k] || k;
@@ -440,6 +441,17 @@ async function urlDocumento(path) {
   return data.signedUrl;
 }
 
+// Guardar sólo los datos bancarios del comerciante
+async function guardarDatosBancarios({ banco, titular_cuenta, tipo_cuenta, numero_cuenta, email_transferencia }) {
+  return guardarCuenta({
+    banco: banco || null,
+    titular_cuenta: titular_cuenta || null,
+    tipo_cuenta: tipo_cuenta || null,
+    numero_cuenta: numero_cuenta || null,
+    email_transferencia: email_transferencia || null
+  });
+}
+
 // ============ ACCESO PÚBLICO (para el link del NFC) ============
 // Lee datos verificables por codigo_publico SIN necesidad de sesión.
 async function verificarPublico(codigo) {
@@ -490,7 +502,7 @@ async function aplicarFotoPerfil() {
 // Exponer al window para poder llamarlas desde inline scripts
 Object.assign(window, {
   nexoSignUp, nexoSignIn, nexoSignOut, nexoUsuarioActual, asegurarCuenta, esperarSesionOAuth,
-  guardarCuenta, obtenerCuenta, listarCuentas,
+  guardarCuenta, obtenerCuenta, listarCuentas, guardarDatosBancarios,
   subirDocumento, guardarTituloDocumento, guardarVenceDocumento, guardarOrdenDocumentos, listarDocumentos, eliminarDocumento, urlDocumento,
   urlFotoPerfil, aplicarFotoPerfil,
   verificarPublico, urlPublicaDocumento, urlDeMiTarjeta
