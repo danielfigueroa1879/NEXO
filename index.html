@@ -1205,6 +1205,95 @@
     .aviso-bullets li { font-size: 14px; }
   }
 
+  /* ===== SHOWCASE CAROUSEL — hero + aviso + precios en scroll horizontal ===== */
+  .showcase-carousel {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    min-height: 640px;
+    overflow: hidden;
+  }
+  .showcase-track {
+    display: flex;
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .showcase-track::-webkit-scrollbar { display: none; }
+  .showcase-slide {
+    min-width: 100vw;
+    height: 100%;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .showcase-slide::-webkit-scrollbar { width: 4px; }
+  .showcase-slide::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
+  /* Cada sección dentro del carrusel: ocupa exactamente 100vw sin herencia rara */
+  .showcase-slide > .hero,
+  .showcase-slide > .aviso-section,
+  .showcase-slide > #precios {
+    width: 100vw;
+    max-width: 100vw;
+    box-sizing: border-box;
+    min-height: auto;
+  }
+  /* Reducir el padding excesivo del hero cuando está dentro del carrusel */
+  .showcase-slide > .hero { padding: 100px 32px 60px; min-height: 100%; }
+  .showcase-slide > .aviso-section,
+  .showcase-slide > #precios { padding-top: 80px; padding-bottom: 80px; }
+  /* Dots de navegación (fijos abajo del carrusel) */
+  .showcase-nav {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 40;
+    background: rgba(10,10,10,0.78);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 8px 16px;
+    border-radius: 100px;
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+  }
+  .showcase-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.35);
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.3s;
+  }
+  .showcase-dot.active {
+    background: var(--red);
+    width: 26px;
+    border-radius: 4px;
+  }
+  .showcase-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding-left: 10px;
+    margin-left: 4px;
+    border-left: 1px solid rgba(255,255,255,0.18);
+  }
+  :root[data-theme="dark"] .showcase-nav {
+    background: rgba(255,255,255,0.14);
+    border-color: rgba(255,255,255,0.18);
+  }
+
   /* ===== CTA FOOTER ===== */
   .cta-final {
     padding: 120px 32px;
@@ -1670,6 +1759,10 @@
   .home-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 </style>
 
+<!-- SHOWCASE CAROUSEL (hero + aviso + precios) -->
+<div class="showcase-carousel" id="showcaseCarousel">
+<div class="showcase-track" id="showcaseTrack">
+<div class="showcase-slide">
 <!-- HERO -->
 <section class="hero">
   <div class="hero-inner">
@@ -1683,7 +1776,7 @@
         <span class="lede-aviso">✉ Recibirás un aviso por correo cuando tus documentos estén próximos a vencer.</span>
       </p>
       <div class="cta-row">
-        <a href="login.html" class="btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+        <a href="login.html" id="heroLoginBtn" class="btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
           Iniciar sesión
           <span>→</span>
         </a>
@@ -1922,6 +2015,95 @@
     </div>
   </div>
 </section>
+</div><!-- /showcase-slide 1: Hero -->
+
+<div class="showcase-slide">
+<!-- AVISO DE VENCIMIENTO -->
+<section class="section aviso-section" id="avisos">
+  <div class="section-inner">
+    <div class="aviso-grid">
+      <div class="aviso-copy">
+        <span class="aviso-eyebrow"><span class="aviso-dot"></span>Valor agregado · Automático</span>
+        <h2>Te avisamos por correo <span class="accent">antes que venzan.</span></h2>
+        <p class="aviso-lede">
+          NEXO monitorea las fechas de vencimiento de tus documentos y te envía un correo automático a medida que se acercan. Nunca más te fiscalizan con papeles vencidos por descuido.
+        </p>
+
+        <div class="aviso-hitos">
+          <span class="aviso-hito"><span class="aviso-hito-num">30</span> días antes</span>
+          <span class="aviso-hito"><span class="aviso-hito-num">15</span> días antes</span>
+          <span class="aviso-hito"><span class="aviso-hito-num">7</span> días antes</span>
+          <span class="aviso-hito"><span class="aviso-hito-num">1</span> día antes</span>
+          <span class="aviso-hito"><span class="aviso-hito-num">Día</span> del vencimiento</span>
+        </div>
+
+        <ul class="aviso-bullets">
+          <li>Recibes un correo por cada documento — cédula, licencia, permiso de circulación, revisión técnica, SOAP, patente comercial, y más.</li>
+          <li>Al renovar y actualizar la fecha en tu perfil, el ciclo de avisos se reinicia automáticamente.</li>
+          <li>Cero configuración: si tu documento tiene fecha de vencimiento, ya está monitoreado.</li>
+        </ul>
+      </div>
+
+      <div class="aviso-media">
+        <div class="aviso-frame">
+          <div class="aviso-badge-float">Notificación real</div>
+          <img src="images/AVISO.webp" alt="Correo de NEXO avisando que un documento venció" loading="lazy" decoding="async">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</div><!-- /showcase-slide 2: Avisos -->
+
+<div class="showcase-slide">
+<!-- PRICING -->
+<section class="section" id="precios">
+  <div class="section-inner">
+    <div class="section-eyebrow">Para ti, no para tu empresa</div>
+    <h2 class="section-title">Planes pensados para el profesional individual.</h2>
+    <p class="section-lede">Pago único según los perfiles que necesites. Sin cobros mensuales.</p>
+
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="price-name">Tarjeta</div>
+        <div><span class="price-amount">Desde $10.000</span><span class="price-period">/ única vez</span></div>
+        <div class="price-tagline">La tarjeta NFC física, lista para usar. Precio según los perfiles que elijas.</div>
+        <ul class="price-features">
+          <li>Tarjeta PVC con chip NFC y QR</li>
+          <li>Vehículo · $10.000</li>
+          <li>Empresa · $30.000</li>
+          <li>Particular · $10.000</li>
+          <li>Comerciante · $10.000</li>
+          <li>Todos los perfiles · $60.000</li>
+          <li>Perfil web verificable y en tiempo real</li>
+        </ul>
+      </div>
+
+      <div class="pricing-card">
+        <div class="price-name">Empresa</div>
+        <div><span class="price-amount" style="font-size:32px;">A medida</span></div>
+        <div class="price-tagline">Para empresas con varios profesionales, técnicos o colaboradores y puntos de control.</div>
+        <ul class="price-features">
+          <li>Tarjetas para personal + directiva</li>
+          <li>Base de datos independiente</li>
+          <li>Panel de administración corporativo</li>
+          <li>Reportes de cumplimiento</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+</div><!-- /showcase-slide 3: Precios -->
+
+</div><!-- /showcase-track -->
+
+<div class="showcase-nav" id="showcaseNav">
+  <button class="showcase-dot active" data-slide="0" aria-label="Inicio"></button>
+  <button class="showcase-dot" data-slide="1" aria-label="Avisos"></button>
+  <button class="showcase-dot" data-slide="2" aria-label="Precios"></button>
+  <span class="showcase-label" id="showcaseLabel">Inicio</span>
+</div>
+</div><!-- /showcase-carousel -->
 
 <!-- STATS -->
 <section class="stats">
@@ -2072,80 +2254,6 @@
         <div class="flow-step-num">03</div>
         <div class="flow-step-title">Te fiscalizan, escaneas, listo</div>
         <div class="flow-step-desc">Acercas la tarjeta a un celular. Aparece el perfil correspondiente: conductor, empresa o particular. Todo verificado en tiempo real.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- AVISO DE VENCIMIENTO -->
-<section class="section aviso-section" id="avisos">
-  <div class="section-inner">
-    <div class="aviso-grid">
-      <div class="aviso-copy">
-        <span class="aviso-eyebrow"><span class="aviso-dot"></span>Valor agregado · Automático</span>
-        <h2>Te avisamos por correo <span class="accent">antes que venzan.</span></h2>
-        <p class="aviso-lede">
-          NEXO monitorea las fechas de vencimiento de tus documentos y te envía un correo automático a medida que se acercan. Nunca más te fiscalizan con papeles vencidos por descuido.
-        </p>
-
-        <div class="aviso-hitos">
-          <span class="aviso-hito"><span class="aviso-hito-num">30</span> días antes</span>
-          <span class="aviso-hito"><span class="aviso-hito-num">15</span> días antes</span>
-          <span class="aviso-hito"><span class="aviso-hito-num">7</span> días antes</span>
-          <span class="aviso-hito"><span class="aviso-hito-num">1</span> día antes</span>
-          <span class="aviso-hito"><span class="aviso-hito-num">Día</span> del vencimiento</span>
-        </div>
-
-        <ul class="aviso-bullets">
-          <li>Recibes un correo por cada documento — cédula, licencia, permiso de circulación, revisión técnica, SOAP, patente comercial, y más.</li>
-          <li>Al renovar y actualizar la fecha en tu perfil, el ciclo de avisos se reinicia automáticamente.</li>
-          <li>Cero configuración: si tu documento tiene fecha de vencimiento, ya está monitoreado.</li>
-        </ul>
-      </div>
-
-      <div class="aviso-media">
-        <div class="aviso-frame">
-          <div class="aviso-badge-float">Notificación real</div>
-          <img src="images/AVISO.webp" alt="Correo de NEXO avisando que un documento venció" loading="lazy" decoding="async">
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- PRICING -->
-<section class="section" id="precios">
-  <div class="section-inner">
-    <div class="section-eyebrow">Para ti, no para tu empresa</div>
-    <h2 class="section-title">Planes pensados para el profesional individual.</h2>
-    <p class="section-lede">Pago único según los perfiles que necesites. Sin cobros mensuales.</p>
-
-    <div class="pricing-grid">
-      <div class="pricing-card">
-        <div class="price-name">Tarjeta</div>
-        <div><span class="price-amount">Desde $10.000</span><span class="price-period">/ única vez</span></div>
-        <div class="price-tagline">La tarjeta NFC física, lista para usar. Precio según los perfiles que elijas.</div>
-        <ul class="price-features">
-          <li>Tarjeta PVC con chip NFC y QR</li>
-          <li>Vehículo · $10.000</li>
-          <li>Empresa · $30.000</li>
-          <li>Particular · $10.000</li>
-          <li>Comerciante · $10.000</li>
-          <li>Todos los perfiles · $60.000</li>
-          <li>Perfil web verificable y en tiempo real</li>
-        </ul>
-      </div>
-
-      <div class="pricing-card">
-        <div class="price-name">Empresa</div>
-        <div><span class="price-amount" style="font-size:32px;">A medida</span></div>
-        <div class="price-tagline">Para empresas con varios profesionales, técnicos o colaboradores y puntos de control.</div>
-        <ul class="price-features">
-          <li>Tarjetas para personal + directiva</li>
-          <li>Base de datos independiente</li>
-          <li>Panel de administración corporativo</li>
-          <li>Reportes de cumplimiento</li>
-        </ul>
       </div>
     </div>
   </div>
@@ -2459,6 +2567,14 @@
     });
     // Foto de perfil como avatar redondo
     aplicarFotoPerfil();
+
+    // El botón grande del hero también cambia: en vez de "Iniciar sesión"
+    // lleva a la tarjeta / documentos del usuario ya logueado.
+    const heroBtn = document.getElementById('heroLoginBtn');
+    if (heroBtn) {
+      heroBtn.href = 'verificar.html';
+      heroBtn.innerHTML = '👁 Ver mi tarjeta <span>→</span>';
+    }
   }
   async function cerrarSesion() {
     try { await nexoSignOut(); } catch(e) {}
@@ -2670,6 +2786,83 @@
       pwaBanner.style.display = 'none';
     }, 500);
   }
+</script>
+
+<script>
+// ===== CARRUSEL HORIZONTAL DE LA PORTADA (hero + aviso + precios) =====
+(function() {
+  const track = document.getElementById('showcaseTrack');
+  const nav   = document.getElementById('showcaseNav');
+  const label = document.getElementById('showcaseLabel');
+  if (!track || !nav) return;
+
+  const dots    = nav.querySelectorAll('.showcase-dot');
+  const labels  = ['Inicio', 'Avisos', 'Precios'];
+  const INTERVAL = 7000;
+  let autoTimer = null;
+  let paused    = false;
+
+  function currentIdx() {
+    const w = track.clientWidth;
+    return w ? Math.round(track.scrollLeft / w) : 0;
+  }
+  function goTo(i) {
+    track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' });
+  }
+  function refreshDots() {
+    const i = currentIdx();
+    dots.forEach((d, k) => d.classList.toggle('active', k === i));
+    if (label && labels[i]) label.textContent = labels[i];
+  }
+  function startAuto() {
+    stopAuto();
+    autoTimer = setInterval(() => {
+      if (paused) return;
+      const total = track.children.length;
+      goTo((currentIdx() + 1) % total);
+    }, INTERVAL);
+  }
+  function stopAuto() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+  }
+
+  dots.forEach((btn, i) => btn.addEventListener('click', () => { goTo(i); startAuto(); }));
+  track.addEventListener('scroll', refreshDots, { passive: true });
+
+  // Pausa al pasar mouse; reanuda al salir.
+  const carousel = document.getElementById('showcaseCarousel');
+  if (carousel) {
+    carousel.addEventListener('mouseenter', () => { paused = true; });
+    carousel.addEventListener('mouseleave', () => { paused = false; });
+  }
+  // Pausa mientras el usuario está tocando; reanuda 3s después.
+  track.addEventListener('touchstart', () => { paused = true; }, { passive: true });
+  track.addEventListener('touchend', () => {
+    setTimeout(() => { paused = false; }, 3000);
+  }, { passive: true });
+
+  // Si el usuario hace click en los enlaces del menú #avisos / #precios,
+  // en vez de scroll vertical, deslizamos el carrusel al slide correcto.
+  document.querySelectorAll('a[href="#avisos"], a[href="#precios"], a[href="#simulador"]').forEach(a => {
+    a.addEventListener('click', (e) => {
+      const href = a.getAttribute('href');
+      const idx = href === '#avisos' ? 1 : href === '#precios' ? 2 : 0;
+      // Scroll al top del carrusel y luego desliza al slide
+      const rect = document.getElementById('showcaseCarousel').getBoundingClientRect();
+      if (rect.top < 0 || rect.top > 40) {
+        e.preventDefault();
+        window.scrollTo({ top: window.pageYOffset + rect.top, behavior: 'smooth' });
+        setTimeout(() => goTo(idx), 400);
+      } else {
+        e.preventDefault();
+        goTo(idx);
+      }
+      startAuto();
+    });
+  });
+
+  startAuto();
+})();
 </script>
 </body>
 </html>
