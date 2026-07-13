@@ -162,7 +162,8 @@ async function guardarCuenta(datos) {
   const alias = { mail: 'email', tel: 'telefono', dir: 'direccion' };
   const columnas = ['rut','nombre','email','telefono','direccion','patente','patentes',
                     'perfiles','tema','pago','tipo','empresa','estado',
-                    'banco','titular_cuenta','tipo_cuenta','numero_cuenta','email_transferencia'];
+                    'banco','titular_cuenta','tipo_cuenta','numero_cuenta','email_transferencia',
+                    'perfil_principal'];
   const payload = { id: user.id };
   for (const [k, v] of Object.entries(datos || {})) {
     const col = alias[k] || k;

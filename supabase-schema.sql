@@ -44,6 +44,11 @@ alter table public.cuentas add column if not exists tipo_cuenta          text;  
 alter table public.cuentas add column if not exists numero_cuenta        text;
 alter table public.cuentas add column if not exists email_transferencia  text;
 
+-- Perfil que se abre primero al escanear el NFC. Uno de:
+--   'comerciante' | 'conductor' | 'guardia' | 'empresa'
+-- Si es NULL o el perfil elegido no está activo, cae al orden por defecto.
+alter table public.cuentas add column if not exists perfil_principal    text;
+
 -- Trigger: auto-generar codigo_publico en cada insert si viene NULL
 create or replace function public.generar_codigo_publico() returns trigger
   language plpgsql as $$
@@ -86,6 +91,7 @@ returns json language sql stable security definer set search_path = public as $$
     'tipo_cuenta',         c.tipo_cuenta,
     'numero_cuenta',       c.numero_cuenta,
     'email_transferencia', c.email_transferencia,
+    'perfil_principal',    c.perfil_principal,
     'documentos', coalesce(
       (select json_agg(json_build_object(
          'tipo',   d.tipo,

@@ -572,6 +572,59 @@
     .banco-grid { grid-template-columns: 1fr; }
   }
 
+  /* ===== SELECTOR PERFIL PRINCIPAL ===== */
+  .principal-block {
+    background: #fff;
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  .principal-head { margin-bottom: 10px; }
+  .principal-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px; font-weight: 700; color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .principal-sub {
+    font-size: 12px; color: var(--ink-mute);
+    margin-top: 2px; line-height: 1.4;
+  }
+  .principal-opts {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .principal-opt {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1.5px solid var(--line);
+    background: #fff;
+    color: var(--ink-mute);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.12s;
+  }
+  .principal-opt:hover { background: var(--bg); }
+  .principal-opt:active { transform: scale(0.97); }
+  .principal-opt.active {
+    background: var(--ink);
+    color: #fff;
+    border-color: var(--ink);
+  }
+  .principal-opt .star { opacity: 0; font-size: 12px; }
+  .principal-opt.active .star { opacity: 1; }
+  .principal-status {
+    display: block;
+    font-size: 12px; font-weight: 600;
+    color: var(--ink-mute);
+    margin-top: 8px; min-height: 14px;
+  }
+  .principal-status.ok  { color: #1A7A34; }
+  .principal-status.err { color: #C00; }
+
   /* ===== PERFIL TABS ===== */
   .perfil-tabs {
     display: flex; gap: 8px; margin-bottom: 20px;
@@ -1608,6 +1661,18 @@
     <div class="progress-bar">
       <div class="progress-fill" id="prog-fill"></div>
     </div>
+  </div>
+
+  <!-- SELECTOR DE PERFIL DE INICIO (visible sólo si hay 2+ perfiles activos) -->
+  <div class="principal-block" id="principalBlock" style="display:none;">
+    <div class="principal-head">
+      <div>
+        <div class="principal-title">Perfil de inicio</div>
+        <div class="principal-sub">Este perfil se muestra primero cuando alguien escanea tu tarjeta NFC.</div>
+      </div>
+    </div>
+    <div class="principal-opts" id="principalOpts"></div>
+    <span id="principal-status" class="principal-status"></span>
   </div>
 
   <!-- TABS PERFIL -->
@@ -3365,10 +3430,75 @@
         if (tabs[k]) tabs[k].style.display = activos[k] ? '' : 'none';
       });
       if (activos.conductor && datos.patente) tabs.conductor.innerHTML = '🚗 ' + datos.patente;
+
+      // Renderizar el selector de perfil principal (sólo si hay 2+ perfiles)
+      renderPrincipalSelector(activos, datos.perfil_principal);
+
       // Activar el primer tab disponible (Vehículo tiene prioridad)
       const primero = ['conductor','guardia','comerciante','empresa'].find(k => activos[k]);
       if (primero && tabs[primero]) switchTab(primero, tabs[primero]);
     }
+
+    // Renderiza los botones del selector de perfil principal
+    function renderPrincipalSelector(activos, seleccionado) {
+      const bloque = document.getElementById('principalBlock');
+      const cont   = document.getElementById('principalOpts');
+      if (!bloque || !cont) return;
+      const disponibles = Object.entries(activos).filter(([, on]) => on).map(([k]) => k);
+      if (disponibles.length < 2) { bloque.style.display = 'none'; return; }
+      bloque.style.display = '';
+      const meta = {
+        conductor:   { ico: '🚗', label: 'Vehículo' },
+        guardia:     { ico: '🤵', label: 'Particular' },
+        comerciante: { ico: '🏪', label: 'Comerciante' },
+        empresa:     { ico: '🏢', label: 'Empresa' }
+      };
+      // Si no hay seleccionado, o el elegido ya no está activo, tomar el primero disponible
+      const actual = (seleccionado && disponibles.includes(seleccionado))
+        ? seleccionado
+        : disponibles[0];
+      cont.innerHTML = '';
+      disponibles.forEach(k => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'principal-opt' + (k === actual ? ' active' : '');
+        btn.dataset.perfil = k;
+        btn.innerHTML = '<span class="star">★</span>' +
+                        '<span>' + meta[k].ico + ' ' + meta[k].label + '</span>';
+        btn.onclick = () => guardarPerfilPrincipal(k);
+        cont.appendChild(btn);
+      });
+    }
+
+    async function guardarPerfilPrincipal(perfil) {
+      const status = document.getElementById('principal-status');
+      const opts   = document.querySelectorAll('.principal-opt');
+      opts.forEach(o => o.classList.toggle('active', o.dataset.perfil === perfil));
+      if (status) {
+        status.className = 'principal-status';
+        status.textContent = 'Guardando…';
+      }
+      try {
+        await guardarCuenta({ perfil_principal: perfil });
+        if (status) {
+          status.className = 'principal-status ok';
+          status.textContent = '✓ Perfil de inicio guardado';
+          setTimeout(() => { status.textContent = ''; status.className = 'principal-status'; }, 2500);
+        }
+        // Actualiza el caché local para reflejar la elección al recargar
+        try {
+          const cache = JSON.parse(localStorage.getItem('nexo_cuenta') || '{}');
+          cache.perfil_principal = perfil;
+          localStorage.setItem('nexo_cuenta', JSON.stringify(cache));
+        } catch(e) {}
+      } catch (e) {
+        if (status) {
+          status.className = 'principal-status err';
+          status.textContent = '⚠ Error: ' + (e && e.message ? e.message : 'no se pudo guardar');
+        }
+      }
+    }
+    window.guardarPerfilPrincipal = guardarPerfilPrincipal;
 
     let datos = null;
     try { datos = await obtenerCuenta(); } catch(e) { console.warn(e); }
