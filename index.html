@@ -1294,6 +1294,48 @@
     border-color: rgba(255,255,255,0.18);
   }
 
+  /* ===== MODO NOCHE: chips "avisos de vencimiento" y precios =====
+     En claro estas píldoras tienen fondo blanco y texto oscuro. En oscuro,
+     mantenían el fondo blanco pero el texto se volvía claro → invisible. */
+  :root[data-theme="dark"] .aviso-hito {
+    background: #2c2c34 !important;
+    border-color: rgba(255,255,255,0.14) !important;
+    color: #f2f2f4 !important;
+  }
+  :root[data-theme="dark"] .aviso-hito .aviso-hito-num {
+    color: #ff6468 !important;
+  }
+  /* Copy y bullets del aviso: ya se leen bien con var(--ink), pero forzamos
+     por si alguna sobreescritura los deja pálidos. */
+  :root[data-theme="dark"] .aviso-bullets li {
+    color: #d6d6db !important;
+  }
+  :root[data-theme="dark"] .aviso-copy h2 {
+    color: #f2f2f4 !important;
+  }
+  /* Pricing card: forzar el fondo claro que tenía en día → oscuro elevado. */
+  :root[data-theme="dark"] .pricing-card {
+    background: #26262d !important;
+    border-color: rgba(255,255,255,0.14) !important;
+    color: #f2f2f4 !important;
+  }
+  :root[data-theme="dark"] .price-amount,
+  :root[data-theme="dark"] .price-features li {
+    color: #f2f2f4 !important;
+  }
+  :root[data-theme="dark"] .price-name,
+  :root[data-theme="dark"] .price-tagline,
+  :root[data-theme="dark"] .price-period {
+    color: #a8a8b0 !important;
+  }
+  :root[data-theme="dark"] .price-features li::before {
+    color: #ff6468 !important;
+  }
+  /* Título de la sección precios en oscuro */
+  :root[data-theme="dark"] h2.section-title {
+    color: #f2f2f4 !important;
+  }
+
   /* ===== CTA FOOTER ===== */
   .cta-final {
     padding: 120px 32px;
