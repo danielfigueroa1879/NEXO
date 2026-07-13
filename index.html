@@ -1083,6 +1083,128 @@
   .price-features li { font-size: 14px; padding: 8px 0; display: flex; gap: 10px; align-items: flex-start; color: var(--ink-soft); }
   .price-features li::before { content: '→'; color: var(--red); flex-shrink: 0; }
 
+  /* ===== ALERTA DE VENCIMIENTOS ===== */
+  .aviso-section { background: var(--bg); }
+  .aviso-grid {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 72px;
+    align-items: center;
+    margin-top: 48px;
+  }
+  .aviso-copy .aviso-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--red);
+    background: rgba(232,33,39,0.08);
+    border: 1px solid rgba(232,33,39,0.18);
+    padding: 6px 12px; border-radius: 100px;
+    margin-bottom: 20px;
+  }
+  .aviso-eyebrow .aviso-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--red); animation: pulse 2s infinite;
+  }
+  .aviso-copy h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(30px, 3.8vw, 46px);
+    font-weight: 600; letter-spacing: -0.025em;
+    line-height: 1.08;
+    margin-bottom: 20px;
+  }
+  .aviso-copy h2 .accent {
+    color: var(--red); font-style: italic; font-weight: 500;
+  }
+  .aviso-copy .aviso-lede {
+    font-size: 17px; color: var(--ink-mute);
+    line-height: 1.55; margin-bottom: 28px;
+    max-width: 520px;
+  }
+  .aviso-hitos {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 28px;
+  }
+  .aviso-hito {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px; font-weight: 600;
+    color: var(--ink);
+  }
+  .aviso-hito .aviso-hito-num {
+    color: var(--red); font-weight: 700;
+  }
+  .aviso-bullets { list-style: none; padding: 0; }
+  .aviso-bullets li {
+    display: flex; gap: 12px; align-items: flex-start;
+    font-size: 15px; line-height: 1.5;
+    color: var(--ink-soft);
+    padding: 8px 0;
+  }
+  .aviso-bullets li::before {
+    content: '✓';
+    color: #1A7A34;
+    font-weight: 700;
+    flex-shrink: 0;
+    background: rgba(52,199,89,0.12);
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    margin-top: 2px;
+  }
+  .aviso-media {
+    position: relative;
+    display: flex; justify-content: center;
+  }
+  .aviso-frame {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #1C1C1E;
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow:
+      0 30px 80px rgba(0,0,0,0.25),
+      0 10px 30px rgba(0,0,0,0.15);
+    transform: rotate(-1.2deg);
+    transition: transform 0.4s ease;
+  }
+  .aviso-frame:hover { transform: rotate(0deg) scale(1.015); }
+  .aviso-frame img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .aviso-badge-float {
+    position: absolute;
+    top: -14px; right: -8px;
+    background: var(--red);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 100px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.04em;
+    box-shadow: 0 8px 24px rgba(232,33,39,0.35);
+    z-index: 3;
+    transform: rotate(4deg);
+  }
+  @media (max-width: 900px) {
+    .aviso-grid { grid-template-columns: 1fr; gap: 40px; }
+    .aviso-media { order: -1; }
+    .aviso-frame { transform: rotate(0); max-width: 420px; }
+    .aviso-badge-float { top: -12px; right: 8px; }
+  }
+  @media (max-width: 480px) {
+    .aviso-copy .aviso-lede { font-size: 15px; }
+    .aviso-bullets li { font-size: 14px; }
+  }
+
   /* ===== CTA FOOTER ===== */
   .cta-final {
     padding: 120px 32px;
@@ -1448,6 +1570,7 @@
     <div class="nav-links">
       <a href="#como-funciona">Cómo funciona</a>
       <a href="#perfiles">Perfiles</a>
+      <a href="#avisos">Avisos</a>
       <a href="#precios">Precios</a>
       <a href="#contacto">Contacto</a>
     </div>
@@ -1949,6 +2072,42 @@
         <div class="flow-step-num">03</div>
         <div class="flow-step-title">Te fiscalizan, escaneas, listo</div>
         <div class="flow-step-desc">Acercas la tarjeta a un celular. Aparece el perfil correspondiente: conductor, empresa o particular. Todo verificado en tiempo real.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AVISO DE VENCIMIENTO -->
+<section class="section aviso-section" id="avisos">
+  <div class="section-inner">
+    <div class="aviso-grid">
+      <div class="aviso-copy">
+        <span class="aviso-eyebrow"><span class="aviso-dot"></span>Valor agregado · Automático</span>
+        <h2>Te avisamos por correo <span class="accent">antes que venzan.</span></h2>
+        <p class="aviso-lede">
+          NEXO monitorea las fechas de vencimiento de tus documentos y te envía un correo automático a medida que se acercan. Nunca más te fiscalizan con papeles vencidos por descuido.
+        </p>
+
+        <div class="aviso-hitos">
+          <span class="aviso-hito"><span class="aviso-hito-num">30</span> días antes</span>
+          <span class="aviso-hito"><span class="aviso-hito-num">15</span> días antes</span>
+          <span class="aviso-hito"><span class="aviso-hito-num">7</span> días antes</span>
+          <span class="aviso-hito"><span class="aviso-hito-num">1</span> día antes</span>
+          <span class="aviso-hito"><span class="aviso-hito-num">Día</span> del vencimiento</span>
+        </div>
+
+        <ul class="aviso-bullets">
+          <li>Recibes un correo por cada documento — cédula, licencia, permiso de circulación, revisión técnica, SOAP, patente comercial, y más.</li>
+          <li>Al renovar y actualizar la fecha en tu perfil, el ciclo de avisos se reinicia automáticamente.</li>
+          <li>Cero configuración: si tu documento tiene fecha de vencimiento, ya está monitoreado.</li>
+        </ul>
+      </div>
+
+      <div class="aviso-media">
+        <div class="aviso-frame">
+          <div class="aviso-badge-float">Notificación real</div>
+          <img src="images/AVISO.webp" alt="Correo de NEXO avisando que un documento venció" loading="lazy" decoding="async">
+        </div>
       </div>
     </div>
   </div>
