@@ -147,8 +147,8 @@
     /* Borde de las tarjetas de documento: en noche un poco más grueso y
        blanquecino (sutil) para que la orilla se distinga del fondo oscuro */
     :root[data-theme="dark"] .doc-card {
-      border-color: rgba(255,255,255,0.20) !important;
-      border-width: 3px !important;
+      border-color: rgba(255,255,255,0.22) !important;
+      border-width: 2px !important;
     }
     /* Botón "Inicio" (logo verde de marca): mantener el verde, con texto oscuro
        para buen contraste sobre el verde más brillante del modo noche */
