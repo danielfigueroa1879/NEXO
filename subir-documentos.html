@@ -2599,21 +2599,9 @@
 
   </div><!-- /page -->
 
-  <!-- PREVIEW SIDEBAR -->
-  <div class="preview-sidebar">
-    <div class="phone-container">
-      <div class="phone-mockup">
-        <div class="phone-notch"></div>
-        <div class="phone-screen">
-          <iframe id="previewIframe" src="verificar.html" frameborder="0"></iframe>
-        </div>
-      </div>
-      <div class="phone-label">
-        <span>Vista previa en tiempo real</span>
-        <button type="button" onclick="refreshPreview()" class="btn-refresh-preview" title="Actualizar vista previa">🔄</button>
-      </div>
-    </div>
-  </div>
+  <!-- Preview sidebar (celular con iframe verificar.html) removido para no
+       redescargar los documentos del usuario cada vez que se abre la página.
+       La función refreshPreview() queda inerte porque #previewIframe no existe. -->
 </div><!-- /layout-wrapper -->
 
 <!-- SAVE BAR -->
