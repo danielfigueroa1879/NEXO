@@ -76,7 +76,9 @@
     :root[data-theme="dark"] .perfil-opt,
     :root[data-theme="dark"] .field,
     :root[data-theme="dark"] .theme-dot-wrap,
-    :root[data-theme="dark"] .stats {
+    :root[data-theme="dark"] .stats,
+    :root[data-theme="dark"] .principal-block,
+    :root[data-theme="dark"] .principal-opt {
       background: #26262d !important;
       color: var(--ink) !important;
       border-color: var(--line) !important;
@@ -139,7 +141,8 @@
     :root[data-theme="dark"] .veh-chip.active,
     :root[data-theme="dark"] .toast,
     :root[data-theme="dark"] .home-toast,
-    :root[data-theme="dark"] .btt {
+    :root[data-theme="dark"] .btt,
+    :root[data-theme="dark"] .principal-opt.active {
       background: #34343f !important;
       color: #ffffff !important;
       border-color: #47474f !important;
