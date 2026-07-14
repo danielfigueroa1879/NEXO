@@ -1,5 +1,8 @@
 // ============================================================
-//  NEXO — Netlify Function: avisos por correo de documentos por vencer
+//  NEXO — Netlify Function: avisos de documentos por vencer
+//  Envía EMAIL (Resend) + PUSH al celular (Web Push / VAPID) para
+//  que aparezca el badge rojo con "1" sobre el ícono, igual que
+//  Google/Fotos en iOS.
 //
 //  Se ejecuta automáticamente 1x/día vía schedule en netlify.toml
 //  (0 12 * * *  → 12:00 UTC = 09:00 Chile CLT).
@@ -9,13 +12,17 @@
 //
 //  Hitos de aviso (días respecto a la fecha de vencimiento):
 //    30, 15, 7, 1, 0, -1
-//  Cada hito manda UN correo por documento. Se guarda en documentos.notif_hito
-//  para no repetirlo. Si el usuario extiende la fecha, el frontend debe poner
-//  notif_hito = null para reactivar los avisos.
+//  Cada hito manda UN correo + UN push por documento. Se guarda en
+//  documentos.notif_hito para no repetirlo. Si el usuario extiende la
+//  fecha, el frontend pone notif_hito = null para reactivar los avisos.
 //
 //  Requiere env vars en Netlify:
-//    SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, RESEND_FROM
+//    SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY   (obligatorias)
+//    RESEND_API_KEY, RESEND_FROM               (para correo)
+//    VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT (para push)
 // ============================================================
+
+const webpush = require('web-push');
 
 const HITOS_ASC = [-1, 0, 1, 7, 15, 30]; // orden de urgencia (menor = más urgente)
 
@@ -24,15 +31,28 @@ exports.handler = async () => {
   const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const RESEND_KEY   = process.env.RESEND_API_KEY;
   const RESEND_FROM  = process.env.RESEND_FROM || 'onboarding@resend.dev';
+  const VAPID_PUB    = process.env.VAPID_PUBLIC_KEY;
+  const VAPID_PRIV   = process.env.VAPID_PRIVATE_KEY;
+  const VAPID_SUBJ   = process.env.VAPID_SUBJECT || 'mailto:soporte@nfcnexo.cl';
 
   const errores = [];
-  const resumen = { revisados: 0, enviados: 0, saltados: 0, errores };
+  const resumen = { revisados: 0, enviados: 0, push_enviados: 0, push_borrados: 0, saltados: 0, errores };
 
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     return json(500, { error: 'Faltan SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY en Netlify.' });
   }
   if (!RESEND_KEY) {
     return json(500, { error: 'Falta RESEND_API_KEY en Netlify.' });
+  }
+
+  // Push es opcional: si faltan las VAPID keys, seguimos solo con email.
+  const pushActivo = Boolean(VAPID_PUB && VAPID_PRIV);
+  if (pushActivo) {
+    try {
+      webpush.setVapidDetails(VAPID_SUBJ, VAPID_PUB, VAPID_PRIV);
+    } catch (e) {
+      errores.push({ error: 'VAPID inválido: ' + e.message });
+    }
   }
 
   // Hoy en zona horaria de Chile (evita off-by-one si el cron corre cerca de medianoche)
@@ -112,6 +132,20 @@ exports.handler = async () => {
       }
 
       resumen.enviados++;
+
+      // Push al celular (badge rojo sobre el ícono) — no bloquea el flujo si falla
+      if (pushActivo) {
+        const r = await enviarPushCuenta({
+          SUPABASE_URL, SUPABASE_KEY,
+          cuentaId: d.cuenta_id,
+          titulo: asunto.replace(/^⚠️\s*/, ''),
+          cuerpo: hitoActual < 0 ? `Venció el ${d.vence}` : `Vence el ${d.vence}`,
+          docId: d.id
+        });
+        resumen.push_enviados += r.enviados;
+        resumen.push_borrados += r.borrados;
+        if (r.errores.length) errores.push(...r.errores);
+      }
     } catch (e) {
       errores.push({ doc_id: d.id, error: e.message });
     }
@@ -119,6 +153,64 @@ exports.handler = async () => {
 
   return json(200, resumen);
 };
+
+// --- push helpers -------------------------------------------------------
+
+async function enviarPushCuenta({ SUPABASE_URL, SUPABASE_KEY, cuentaId, titulo, cuerpo, docId }) {
+  const res = { enviados: 0, borrados: 0, errores: [] };
+  const rSub = await fetch(
+    `${SUPABASE_URL}/rest/v1/push_subscriptions?select=endpoint,p256dh,auth&cuenta_id=eq.${cuentaId}`,
+    { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+  );
+  if (!rSub.ok) {
+    res.errores.push({ doc_id: docId, error: 'Leer push_subscriptions: ' + await rSub.text() });
+    return res;
+  }
+  const subs = await rSub.json();
+  if (!subs.length) return res;
+
+  const payload = JSON.stringify({
+    title: titulo,
+    body: cuerpo,
+    url: '/subir-documentos.html',
+    tag: 'doc-' + docId,
+    doc_id: docId
+  });
+
+  for (const s of subs) {
+    try {
+      await webpush.sendNotification(
+        { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+        payload,
+        { TTL: 24 * 3600 }
+      );
+      res.enviados++;
+    } catch (e) {
+      // 404/410 = suscripción caducada → borrar de la BD
+      if (e && (e.statusCode === 404 || e.statusCode === 410)) {
+        try {
+          await fetch(
+            `${SUPABASE_URL}/rest/v1/push_subscriptions?endpoint=eq.${encodeURIComponent(s.endpoint)}`,
+            {
+              method: 'DELETE',
+              headers: {
+                apikey: SUPABASE_KEY,
+                Authorization: `Bearer ${SUPABASE_KEY}`,
+                Prefer: 'return=minimal'
+              }
+            }
+          );
+          res.borrados++;
+        } catch (delErr) {
+          res.errores.push({ doc_id: docId, error: 'Borrar sub caducada: ' + delErr.message });
+        }
+      } else {
+        res.errores.push({ doc_id: docId, error: 'web-push: ' + (e && e.message ? e.message : e) });
+      }
+    }
+  }
+  return res;
+}
 
 // --- helpers ------------------------------------------------------------
 
