@@ -17,7 +17,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_Ksaisk6CWNecrUnI9fD3wg_dxnO_TsB';  // 
 // Genera un par con:  npx web-push generate-vapid-keys
 // La PÚBLICA va aquí; la PRIVADA va en Netlify env vars (VAPID_PRIVATE_KEY).
 // Mientras esté vacía, la suscripción push simplemente no se activa.
-const VAPID_PUBLIC_KEY = '';
+const VAPID_PUBLIC_KEY = 'BNJ00LvkZGEDK_qjcgpKRwuajDr35dm4u6E4bIV15qrur5F1b6oLS6DhtHwhBRHgzjKi-pxylYsGToHHNXZ0YXY';
 
 // Cliente global (usa el bundle UMD cargado por <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js">)
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
