@@ -4323,17 +4323,38 @@
   // ===== CAMPANA DE AVISOS (toggle/cerrar) =====
   window.toggleNotifBell = function() {
     const dd = document.getElementById('notifDropdown');
-    if (dd) dd.classList.toggle('open');
+    const wrap = document.getElementById('avisoVenceWrap');
+    const badge = document.getElementById('notifBadge');
+    if (!dd) return;
+    const abriendo = !dd.classList.contains('open');
+    dd.classList.toggle('open');
+    if (abriendo) {
+      // Mostrar el banner de avisos al abrir la campana
+      if (wrap) wrap.style.display = 'block';
+      // Ocultar el badge rojo (ya lo vio)
+      if (badge) badge.style.display = 'none';
+      // Limpiar badge del ícono de la app
+      if ('clearAppBadge' in navigator) { try { navigator.clearAppBadge(); } catch(_){} }
+    } else {
+      // Al cerrar la campana, ocultar el banner
+      if (wrap) wrap.style.display = 'none';
+    }
   };
   window.cerrarNotifBell = function() {
     const dd = document.getElementById('notifDropdown');
+    const wrap = document.getElementById('avisoVenceWrap');
     if (dd) dd.classList.remove('open');
+    if (wrap) wrap.style.display = 'none';
   };
   document.addEventListener('click', function(e) {
     const bellWrap = document.querySelector('.notif-bell-wrap');
     if (bellWrap && !bellWrap.contains(e.target)) {
       const dd = document.getElementById('notifDropdown');
-      if (dd) dd.classList.remove('open');
+      const wrap = document.getElementById('avisoVenceWrap');
+      if (dd && dd.classList.contains('open')) {
+        dd.classList.remove('open');
+        if (wrap) wrap.style.display = 'none';
+      }
     }
   });
 
@@ -4373,7 +4394,8 @@
         return `<li><strong>${nombre}</strong> — ${frase} (${d.vence})</li>`;
       }).join('');
 
-      wrap.style.display = 'block';
+      // Banner oculto por defecto — se muestra solo al abrir la campana
+      wrap.style.display = 'none';
 
       // --- Campana de avisos (header) ---
       if (bellBtn) {
