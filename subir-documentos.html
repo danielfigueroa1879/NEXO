@@ -4335,6 +4335,13 @@
       if (badge) badge.style.display = 'none';
       // Limpiar badge del ícono de la app
       if ('clearAppBadge' in navigator) { try { navigator.clearAppBadge(); } catch(_){} }
+      // En móvil, scroll al inicio para que se vea el banner
+      if (window.innerWidth <= 480) {
+        setTimeout(function() {
+          var bannerEl = wrap || document.getElementById('avisoVenceWrap');
+          if (bannerEl) bannerEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 50);
+      }
     } else {
       // Al cerrar la campana, ocultar el banner
       if (wrap) wrap.style.display = 'none';

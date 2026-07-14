@@ -1,0 +1,9 @@
+{
+  "name": "nfc-nexo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NEXO — sitio estático + Netlify Functions (avisos por email/push).",
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}
