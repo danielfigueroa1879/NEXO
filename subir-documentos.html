@@ -482,10 +482,19 @@
   }
 
   /* ===== BLOQUE DE VEHÍCULO (multi-vehículo) =====
-     Sin container propio — cada vehículo fluye junto a las demás tarjetas. */
+     Sin container propio — cada vehículo fluye junto a las demás tarjetas.
+     Entre vehículos, un fino separador gris + espacio. */
   .vehiculo-block {
     padding: 0; margin-bottom: 14px; background: transparent;
     border: none; border-radius: 0;
+  }
+  .vehiculo-block + .vehiculo-block {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+  }
+  [data-theme="dark"] .vehiculo-block + .vehiculo-block {
+    border-top-color: rgba(255, 255, 255, 0.10);
   }
   .vehiculo-head {
     display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
