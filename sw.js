@@ -1,9 +1,14 @@
-const CACHE_NAME = 'nfc-nexo-v10';
-const OFFLINE_URL = 'index.html';
+// Dos cachés distintos:
+//  - APP_CACHE   se bumpea con cada deploy para forzar refresco de HTML/JS/CSS.
+//  - STORAGE_CACHE es persistente: guarda las imágenes de documentos de Supabase
+//                  para que NO se vuelvan a descargar en el próximo deploy.
+const APP_CACHE     = 'nfc-nexo-v11';
+const STORAGE_CACHE = 'nfc-nexo-storage-v1';
+const OFFLINE_URL   = 'index.html';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
+    caches.open(APP_CACHE).then((cache) => {
       return cache.addAll([
         './',
         'index.html',
@@ -27,7 +32,9 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
+          // Borrar solo las cachés viejas de la app. STORAGE_CACHE se preserva
+          // entre deploys → las imágenes ya bajadas no se vuelven a descargar.
+          if (cacheName !== APP_CACHE && cacheName !== STORAGE_CACHE) {
             return caches.delete(cacheName);
           }
         })
@@ -37,38 +44,52 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
-  if (event.request.method !== 'GET') {
-    return;
-  }
+  if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
   const esLocal = url.origin === self.location.origin;
-  const esSupabaseStorage = url.hostname.endsWith('.supabase.co') && url.pathname.includes('/storage/v1/object/');
+  const esSupabaseStorage = url.hostname.endsWith('.supabase.co')
+    && url.pathname.includes('/storage/v1/object/');
 
-  // Si no es un recurso local ni archivos de almacenamiento de Supabase, no lo interceptamos
-  if (!esLocal && !esSupabaseStorage) {
+  if (!esLocal && !esSupabaseStorage) return;
+
+  // ---- Supabase Storage: CACHE-FIRST puro, sin revalidación en background ----
+  // Los documentos casi nunca cambian (y cuando cambian, el usuario re-sube y
+  // Supabase invalida vía Cache-Control). Servir desde caché y NO redescargar
+  // en background baja el egress a ~0 para archivos ya vistos.
+  if (esSupabaseStorage) {
+    const cleanUrl = new URL(event.request.url);
+    cleanUrl.search = ''; // ignora ?token=... y firmas que cambian
+    const cacheKey = cleanUrl.toString();
+
+    event.respondWith((async () => {
+      const cache = await caches.open(STORAGE_CACHE);
+      const cached = await cache.match(cacheKey);
+      if (cached) return cached; // 0 egress
+
+      try {
+        const networkResponse = await fetch(event.request);
+        if (networkResponse && networkResponse.status === 200) {
+          cache.put(cacheKey, networkResponse.clone()).catch(() => {});
+        }
+        return networkResponse;
+      } catch (e) {
+        console.warn('Storage fetch falló:', event.request.url, e);
+        return new Response('', { status: 504, statusText: 'Storage offline' });
+      }
+    })());
     return;
   }
 
-  // Clave de caché limpia (para Supabase Storage ignoramos tokens y firmas que cambian constantemente)
-  let cacheKey = event.request;
-  if (esSupabaseStorage) {
-    const cleanUrl = new URL(event.request.url);
-    cleanUrl.search = ''; // Elimina ?token=...&expires=...
-    cacheKey = cleanUrl.toString();
-  }
-
+  // ---- Recursos locales: stale-while-revalidate contra APP_CACHE ----
   event.respondWith(
-    caches.match(cacheKey).then((cachedResponse) => {
-      // Realizar consulta de red en segundo plano para actualizar la caché de forma asíncrona
-      // (siempre usando la request original autorizada con token)
+    caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request)
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(cacheKey, responseToCache);
+            caches.open(APP_CACHE).then((cache) => {
+              cache.put(event.request, responseToCache);
             });
           }
           return networkResponse;
@@ -83,7 +104,6 @@ self.addEventListener('fetch', (event) => {
           }
         });
 
-      // Servir al instante desde caché (0ms de latencia, sin carga por partes) si existe
       return cachedResponse || fetchPromise;
     })
   );
