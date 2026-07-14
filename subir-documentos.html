@@ -573,30 +573,13 @@
   }
 
   /* ===== SELECTOR PERFIL PRINCIPAL =====
-     Se destaca del resto de la configuración: banda azul lateral,
-     fondo levemente tintado y estrella dorada junto al título. */
+     Contorno gris uniforme por los 4 lados, sin acentos de color. */
   .principal-block {
-    position: relative;
-    background:
-      linear-gradient(135deg, rgba(0,51,160,0.06), rgba(232,33,39,0.04)),
-      var(--surface);
-    border: 1.5px solid rgba(0,51,160,0.25);
-    border-left: 4px solid var(--blue);
+    background: var(--surface);
+    border: 1.5px solid #C7C7CC;
     border-radius: 14px;
-    padding: 16px 16px 14px 18px;
+    padding: 14px 16px;
     margin-bottom: 18px;
-    box-shadow: 0 4px 14px rgba(0,51,160,0.08);
-  }
-  .principal-block::before {
-    content: 'PRINCIPAL';
-    position: absolute;
-    top: -9px; left: 14px;
-    background: var(--blue); color: #fff;
-    font-family: 'Outfit', sans-serif;
-    font-size: 9px; font-weight: 800;
-    letter-spacing: 0.12em;
-    padding: 3px 8px; border-radius: 6px;
-    box-shadow: 0 2px 6px rgba(0,51,160,0.25);
   }
   .principal-head { margin-bottom: 12px; }
   .principal-title {
@@ -615,16 +598,7 @@
     margin-top: 3px; line-height: 1.4;
   }
   [data-theme="dark"] .principal-block {
-    background:
-      linear-gradient(135deg, rgba(80,130,255,0.10), rgba(232,33,39,0.06)),
-      var(--surface);
-    border-color: rgba(120,160,255,0.35);
-    border-left-color: #4a7dff;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
-  }
-  [data-theme="dark"] .principal-block::before {
-    background: #4a7dff;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    border-color: rgba(255,255,255,0.18);
   }
   .principal-opts {
     display: flex; flex-wrap: wrap; gap: 8px;
