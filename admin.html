@@ -368,6 +368,12 @@
     transition: background .15s;
   }
   .btn-danger:hover { background: var(--red); color: #fff; }
+  .btn-danger.unblock {
+    border-color: rgba(52,199,89,0.5);
+    color: var(--green);
+  }
+  .btn-danger.unblock:hover { background: var(--green); color: #fff; }
+  .btn-danger:disabled { opacity: 0.6; cursor: wait; }
 
   /* ===== SAVE BAR ===== */
   .save-bar {
@@ -798,12 +804,12 @@
       <h3>Zona peligrosa</h3>
     </div>
 
-    <div class="danger-row">
+    <div class="danger-row" id="bloqueoTarjetaRow">
       <div class="d-info">
-        <h4>Bloquear tarjeta NFC</h4>
-        <p>Si la perdiste o te la robaron, desactívala</p>
+        <h4 id="bloqueoTitulo">Bloquear tarjeta NFC</h4>
+        <p id="bloqueoSub">Si la perdiste o te la robaron, desactívala</p>
       </div>
-      <button class="btn-danger" onclick="confirmar('¿Bloquear tarjeta NFC? Nadie podrá escanearla.')">Bloquear</button>
+      <button class="btn-danger" id="btnBloquearTarjeta" onclick="toggleBloqueoTarjeta()">Bloquear</button>
     </div>
 
     <div class="danger-row">
@@ -1051,6 +1057,9 @@
       if (dot) setTheme(datos.tema, dot);
     }
 
+    // Estado bloquear/desbloquear tarjeta
+    pintarEstadoBloqueo(datos);
+
     // 🔒 Sección NFC visible SOLO para el admin
     if (datos.es_admin) {
       document.getElementById('nfcSection').style.display = '';
@@ -1095,6 +1104,58 @@
     } catch(e) { showToast('No se pudo copiar'); }
   }
   window.copiarTexto = copiarTexto;
+
+  // ==== BLOQUEO DE TARJETA POR EL TITULAR ====
+  // Refleja en la UI si la tarjeta está bloqueada por su dueño.
+  function pintarEstadoBloqueo(datos) {
+    const btn   = document.getElementById('btnBloquearTarjeta');
+    const tit   = document.getElementById('bloqueoTitulo');
+    const sub   = document.getElementById('bloqueoSub');
+    if (!btn || !tit || !sub) return;
+    const bloqueada = (datos && datos.estado === 'bloqueada');
+    if (bloqueada) {
+      tit.textContent = 'Tarjeta bloqueada';
+      sub.textContent = 'Nadie puede escanear tu tarjeta. Desbloquéala si la recuperaste.';
+      btn.textContent = 'Desbloquear';
+      btn.classList.add('unblock');
+    } else {
+      tit.textContent = 'Bloquear tarjeta NFC';
+      sub.textContent = 'Si la perdiste o te la robaron, desactívala';
+      btn.textContent = 'Bloquear';
+      btn.classList.remove('unblock');
+    }
+  }
+
+  async function toggleBloqueoTarjeta() {
+    const btn = document.getElementById('btnBloquearTarjeta');
+    if (!btn || btn.disabled) return;
+    let datos = null;
+    try { datos = await obtenerCuenta(); } catch(e) { console.warn(e); }
+    if (!datos) { alert('No hay sesión activa.'); return; }
+    const yaBloqueada = (datos.estado === 'bloqueada');
+    const msg = yaBloqueada
+      ? '¿Desbloquear tu tarjeta NFC? Volverá a ser visible cuando la escaneen.'
+      : '¿Bloquear tu tarjeta NFC? Nadie podrá escanearla hasta que la desbloquees.';
+    if (!confirm(msg)) return;
+
+    const nuevoEstado = yaBloqueada ? 'activa' : 'bloqueada';
+    btn.disabled = true;
+    const textoOriginal = btn.textContent;
+    btn.textContent = yaBloqueada ? 'Desbloqueando…' : 'Bloqueando…';
+    try {
+      const actualizado = await guardarCuenta({ estado: nuevoEstado });
+      try { localStorage.setItem('nexo_cuenta', JSON.stringify(actualizado)); } catch(e) {}
+      pintarEstadoBloqueo(actualizado);
+      showToast(nuevoEstado === 'bloqueada' ? 'Tarjeta bloqueada' : 'Tarjeta desbloqueada');
+    } catch(e) {
+      console.error(e);
+      btn.textContent = textoOriginal;
+      alert('No se pudo actualizar el estado. Intenta nuevamente.');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+  window.toggleBloqueoTarjeta = toggleBloqueoTarjeta;
 
   async function cambiarEstadoCuenta(cuentaId, nuevoEstado) {
     try {

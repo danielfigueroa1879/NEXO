@@ -1601,6 +1601,31 @@
     }
 
     const esVisualizadorAdmin = (loggedInCuenta && loggedInCuenta.es_admin === true);
+
+    // Tarjeta bloqueada por el titular — prevalece sobre pago/activa.
+    // Solo se muestra en modo público; el propio titular sigue viendo su vista normal.
+    if (codigoPublico && datos && datos.estado === 'bloqueada' && !esVisualizadorAdmin) {
+      const pageEl = document.querySelector('.page');
+      if (pageEl) pageEl.style.display = 'none';
+      let blockedEl = document.getElementById('blockedCardScreen');
+      if (!blockedEl) {
+        blockedEl = document.createElement('div');
+        blockedEl.id = 'blockedCardScreen';
+        blockedEl.className = 'blocked-card-screen';
+        document.body.appendChild(blockedEl);
+      }
+      blockedEl.innerHTML = `
+        <div class="blocked-card-box">
+          <div class="lock-icon">🔒</div>
+          <h2>Tarjeta bloqueada por el titular</h2>
+          <p>Esta tarjeta NFC NEXO fue bloqueada por su dueño. Si la encontraste y quieres devolverla, contacta a NFC NEXO.</p>
+          <div class="badge-nfc-nx">NFC·NX VERIFIED</div>
+        </div>
+      `;
+      blockedEl.style.display = 'flex';
+      return;
+    }
+
     const haPagado = (datos.pago === 'pagado' || datos.estado === 'activa' || datos.es_admin === true || esVisualizadorAdmin);
     if (!haPagado) {
       if (codigoPublico) {
