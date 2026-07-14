@@ -205,10 +205,10 @@ async function listarCuentas() {
   return data || [];
 }
 
-// Comprime imágenes en el cliente (max 1800px de ancho/alto, 82% calidad JPEG).
+// Comprime imágenes en el cliente (max 1200px de ancho/alto, 70% calidad JPEG).
 // Acepta jpg, png, jpeg, webp y cualquier otro image/*. Devuelve el archivo
 // original si la recomprimida termina siendo del mismo peso o mayor.
-function comprimirImagenClientSide(file, maxDim = 1800, calidad = 0.82) {
+function comprimirImagenClientSide(file, maxDim = 1200, calidad = 0.70) {
   return new Promise((resolve) => {
     if (!file || !file.type || !file.type.startsWith('image/') || typeof FileReader === 'undefined') {
       resolve(file);
@@ -269,7 +269,7 @@ function comprimirImagenClientSide(file, maxDim = 1800, calidad = 0.82) {
 // Comprime PDFs rasterizando cada página con pdf.js y reconstruyéndolo con jsPDF.
 // Requiere `window.pdfjsLib` y `window.jspdf`; si no están cargados o el PDF ya
 // era más liviano, devuelve el archivo original.
-async function comprimirPdfClientSide(file, dpi = 150, calidad = 0.78) {
+async function comprimirPdfClientSide(file, dpi = 120, calidad = 0.65) {
   if (!file || file.type !== 'application/pdf') return file;
   if (typeof window === 'undefined' || !window.pdfjsLib || !window.jspdf) return file;
   try {
@@ -340,7 +340,11 @@ async function subirDocumento({ tipo, file, titulo, nombre, noCompress, vence })
   const path = `${user.id}/${tipo}.${ext}`;
 
   const { error: eUp } = await sb.storage.from('documentos')
-    .upload(path, fileToUpload, { upsert: true, contentType: fileToUpload.type || undefined });
+    .upload(path, fileToUpload, {
+      upsert: true,
+      contentType: fileToUpload.type || undefined,
+      cacheControl: '2592000' // 30 días — el navegador reusa la imagen sin volver a bajarla → menos egress
+    });
   if (eUp) throw eUp;
 
   const payload = { cuenta_id: user.id, tipo, nombre: nombreOriginal, path, tamano: fileToUpload.size };
