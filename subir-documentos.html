@@ -722,6 +722,26 @@
   .btn-save.primary { background: var(--ink); color: #fff; }
   .btn-save.secondary { background: #fff; color: var(--ink); border: 1.5px solid var(--line); flex: 0 0 auto; padding: 14px 20px; }
   .btn-save:active { transform: scale(0.98); }
+  /* Estado "hay cambios sin guardar" — se aplica desde activarBotonGuardarRojo() */
+  .btn-save.primary.dirty {
+    background-color: var(--red) !important;
+    color: #fff !important;
+    border-color: var(--red) !important;
+    box-shadow: 0 6px 18px rgba(232, 33, 39, 0.35);
+  }
+  .btn-save.primary.dirty.saltito {
+    animation: btnSaltito 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes btnSaltito {
+    0%   { transform: translateY(0)    scale(1);    box-shadow: 0 6px 18px rgba(232, 33, 39, 0.35); }
+    30%  { transform: translateY(-10px) scale(1.04); box-shadow: 0 12px 26px rgba(232, 33, 39, 0.50); }
+    55%  { transform: translateY(0)    scale(1);    box-shadow: 0 6px 18px rgba(232, 33, 39, 0.35); }
+    75%  { transform: translateY(-4px) scale(1.02); box-shadow: 0 8px 20px rgba(232, 33, 39, 0.40); }
+    100% { transform: translateY(0)    scale(1);    box-shadow: 0 6px 18px rgba(232, 33, 39, 0.35); }
+  }
+  [data-theme="dark"] .btn-save.primary.dirty {
+    box-shadow: 0 6px 20px rgba(232, 33, 39, 0.55);
+  }
 
   /* ===== BACK TO TOP CHEVRON ===== */
   .btt {
@@ -3024,11 +3044,15 @@
 
   function activarBotonGuardarRojo() {
     const btn = document.querySelector('.btn-save.primary');
-    if (btn) {
-      btn.style.setProperty('background-color', 'var(--red)', 'important');
-      btn.style.setProperty('color', '#ffffff', 'important');
-      btn.style.setProperty('border-color', 'var(--red)', 'important');
-    }
+    if (!btn) return;
+    btn.style.setProperty('background-color', 'var(--red)', 'important');
+    btn.style.setProperty('color', '#ffffff', 'important');
+    btn.style.setProperty('border-color', 'var(--red)', 'important');
+    btn.classList.add('dirty');
+    // Relanzar la animación saltito cada vez que hay un cambio nuevo.
+    btn.classList.remove('saltito');
+    void btn.offsetWidth; // forzar reflow para reiniciar la animación
+    btn.classList.add('saltito');
   }
 
   // Guardar
@@ -3634,6 +3658,8 @@
       const status = document.getElementById('principal-status');
       const opts   = document.querySelectorAll('.principal-opt');
       opts.forEach(o => o.classList.toggle('active', o.dataset.perfil === perfil));
+      // Cambio de perfil de inicio: activar botón "Guardar cambios" en rojo con saltito.
+      if (typeof activarBotonGuardarRojo === 'function') activarBotonGuardarRojo();
       if (status) {
         status.className = 'principal-status';
         status.textContent = 'Guardando…';
