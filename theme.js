@@ -183,11 +183,13 @@
     :root[data-theme="dark"] .btn.btn-secondary,
     :root[data-theme="dark"] .preview-btn,
     :root[data-theme="dark"] .copy-btn,
-    :root[data-theme="dark"] .veh-chip {
+    :root[data-theme="dark"] .veh-chip,
+    :root[data-theme="dark"] .notif-bell-btn {
       background: #2c2c34 !important;
       color: var(--ink) !important;
       border-color: var(--line) !important;
     }
+    :root[data-theme="dark"] .notif-bell-btn:hover { background: #3a3a44 !important; }
 
     /* Textos atenuados: legibles */
     :root[data-theme="dark"] .price-features li,
