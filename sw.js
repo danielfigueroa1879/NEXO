@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nfc-nexo-v9';
+const CACHE_NAME = 'nfc-nexo-v10';
 const OFFLINE_URL = 'index.html';
 
 self.addEventListener('install', (event) => {
@@ -118,13 +118,25 @@ self.addEventListener('push', (event) => {
     }
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(
+    (async () => {
+      await self.registration.showNotification(title, options);
+      // Poner badge en el ícono de la app (número rojo)
+      if ('setAppBadge' in navigator) {
+        try { await navigator.setAppBadge(1); } catch(_){}
+      }
+    })()
+  );
 });
 
 // Al tocar la notificación → abrir la app en la página de documentos.
 // Si ya hay una ventana abierta, la enfocamos en lugar de abrir otra.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  // Limpiar badge del ícono de la app
+  if ('clearAppBadge' in navigator) {
+    try { navigator.clearAppBadge(); } catch(_){}
+  }
   const targetUrl = (event.notification.data && event.notification.data.url) || '/subir-documentos.html';
 
   event.waitUntil((async () => {
