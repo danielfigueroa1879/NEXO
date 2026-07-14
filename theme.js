@@ -78,7 +78,9 @@
     :root[data-theme="dark"] .theme-dot-wrap,
     :root[data-theme="dark"] .stats,
     :root[data-theme="dark"] .principal-block,
-    :root[data-theme="dark"] .principal-opt {
+    :root[data-theme="dark"] .principal-opt,
+    :root[data-theme="dark"] .banco-block,
+    :root[data-theme="dark"] .banco-row {
       background: #26262d !important;
       color: var(--ink) !important;
       border-color: var(--line) !important;
