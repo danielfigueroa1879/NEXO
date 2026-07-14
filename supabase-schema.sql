@@ -73,42 +73,9 @@ update public.cuentas
    set codigo_publico = upper(substr(md5(random()::text || id::text), 1, 8))
  where codigo_publico is null;
 
--- Función pública: leer datos verificables por codigo_publico SIN autenticación
--- Devuelve JSON con datos de la cuenta + lista de documentos.
-create or replace function public.verificar_publico(codigo text)
-returns json language sql stable security definer set search_path = public as $$
-  select json_build_object(
-    'nombre',    c.nombre,
-    'rut',       c.rut,
-    'perfiles',  c.perfiles,
-    'tema',      c.tema,
-    'patente',   c.patente,
-    'patentes',  c.patentes,
-    'estado',    c.estado,
-    'codigo',    c.codigo_publico,
-    'banco',               c.banco,
-    'titular_cuenta',      c.titular_cuenta,
-    'tipo_cuenta',         c.tipo_cuenta,
-    'numero_cuenta',       c.numero_cuenta,
-    'email_transferencia', c.email_transferencia,
-    'perfil_principal',    c.perfil_principal,
-    'documentos', coalesce(
-      (select json_agg(json_build_object(
-         'tipo',   d.tipo,
-         'titulo', d.titulo,
-         'nombre', d.nombre,
-         'path',   d.path,
-         'vence',  d.vence,
-         'orden',  d.orden
-       ) order by d.orden nulls last, d.tipo)
-       from public.documentos d
-       where d.cuenta_id = c.id and d.path <> ''), '[]'::json)
-  )
-  from public.cuentas c
-  where c.codigo_publico = codigo
-  limit 1;
-$$;
-grant execute on function public.verificar_publico(text) to anon, authenticated;
+-- (La función pública `verificar_publico` se define más abajo, DESPUÉS
+--  de que la tabla `documentos` y todos sus `alter table add column`
+--  se hayan ejecutado — así no falla en ejecuciones limpias.)
 
 -- Hacer PÚBLICO el bucket documentos para que las URLs funcionen sin token
 update storage.buckets set public = true where id = 'documentos';
@@ -157,6 +124,46 @@ alter table public.documentos add column if not exists orden integer;
 create index if not exists documentos_cuenta_idx on public.documentos (cuenta_id);
 create index if not exists documentos_vence_idx  on public.documentos (vence)
   where vence is not null;
+
+-- Función pública: leer datos verificables por codigo_publico SIN autenticación.
+-- Se define AQUÍ (no arriba con `cuentas`) porque referencia columnas de
+-- `documentos` — entre ellas `d.orden`, que se agrega mediante `alter table
+-- add column if not exists` justo arriba. Postgres valida las columnas al
+-- momento de CREATE FUNCTION, así que la definimos después.
+create or replace function public.verificar_publico(codigo text)
+returns json language sql stable security definer set search_path = public as $$
+  select json_build_object(
+    'nombre',    c.nombre,
+    'rut',       c.rut,
+    'perfiles',  c.perfiles,
+    'tema',      c.tema,
+    'patente',   c.patente,
+    'patentes',  c.patentes,
+    'estado',    c.estado,
+    'codigo',    c.codigo_publico,
+    'banco',               c.banco,
+    'titular_cuenta',      c.titular_cuenta,
+    'tipo_cuenta',         c.tipo_cuenta,
+    'numero_cuenta',       c.numero_cuenta,
+    'email_transferencia', c.email_transferencia,
+    'perfil_principal',    c.perfil_principal,
+    'documentos', coalesce(
+      (select json_agg(json_build_object(
+         'tipo',   d.tipo,
+         'titulo', d.titulo,
+         'nombre', d.nombre,
+         'path',   d.path,
+         'vence',  d.vence,
+         'orden',  d.orden
+       ) order by d.orden nulls last, d.tipo)
+       from public.documentos d
+       where d.cuenta_id = c.id and d.path <> ''), '[]'::json)
+  )
+  from public.cuentas c
+  where c.codigo_publico = codigo
+  limit 1;
+$$;
+grant execute on function public.verificar_publico(text) to anon, authenticated;
 
 -- ------------------------------------------------------------
 -- 3) ROW LEVEL SECURITY
@@ -209,6 +216,38 @@ create policy "documentos_update_propia" on public.documentos
 
 drop policy if exists "documentos_delete_propia" on public.documentos;
 create policy "documentos_delete_propia" on public.documentos
+  for delete using (auth.uid() = cuenta_id or public.es_admin_actual());
+
+-- ------------------------------------------------------------
+-- 3b) Tabla PUSH_SUBSCRIPTIONS
+--     Guarda las suscripciones Web Push del usuario (una por
+--     navegador/dispositivo). notificar-vencimientos.js las lee
+--     con la service_role key para enviar avisos al celular.
+-- ------------------------------------------------------------
+create table if not exists public.push_subscriptions (
+  id         uuid primary key default gen_random_uuid(),
+  cuenta_id  uuid not null references public.cuentas(id) on delete cascade,
+  endpoint   text not null unique,
+  p256dh     text not null,
+  auth       text not null,
+  user_agent text,
+  fecha      timestamptz default now()
+);
+
+create index if not exists push_subs_cuenta_idx on public.push_subscriptions (cuenta_id);
+
+alter table public.push_subscriptions enable row level security;
+
+drop policy if exists "push_select_propia" on public.push_subscriptions;
+create policy "push_select_propia" on public.push_subscriptions
+  for select using (auth.uid() = cuenta_id or public.es_admin_actual());
+
+drop policy if exists "push_insert_propia" on public.push_subscriptions;
+create policy "push_insert_propia" on public.push_subscriptions
+  for insert with check (auth.uid() = cuenta_id);
+
+drop policy if exists "push_delete_propia" on public.push_subscriptions;
+create policy "push_delete_propia" on public.push_subscriptions
   for delete using (auth.uid() = cuenta_id or public.es_admin_actual());
 
 -- ------------------------------------------------------------

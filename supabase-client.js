@@ -13,6 +13,12 @@
 const SUPABASE_URL      = 'https://wzzvfycrbkgholazxmnq.supabase.co';       // solo el dominio base, sin /rest/v1/…
 const SUPABASE_ANON_KEY = 'sb_publishable_Ksaisk6CWNecrUnI9fD3wg_dxnO_TsB';  // clave pública "publishable" o "anon"
 
+// Clave PÚBLICA VAPID para Web Push (documentos por vencer al celular).
+// Genera un par con:  npx web-push generate-vapid-keys
+// La PÚBLICA va aquí; la PRIVADA va en Netlify env vars (VAPID_PRIVATE_KEY).
+// Mientras esté vacía, la suscripción push simplemente no se activa.
+const VAPID_PUBLIC_KEY = '';
+
 // Cliente global (usa el bundle UMD cargado por <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js">)
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
@@ -500,11 +506,143 @@ async function aplicarFotoPerfil() {
   });
 }
 
+/* ------------------------------------------------------------
+   WEB PUSH — suscripción del navegador para avisos de vencimiento
+   ------------------------------------------------------------
+   Flujo:
+   1) nexoActivarPush()  → pide permiso, se suscribe al PushManager
+                          usando VAPID_PUBLIC_KEY, y guarda endpoint
+                          + claves en la tabla push_subscriptions.
+   2) nexoEstadoPush()   → devuelve 'no-soportado' | 'denegado' |
+                          'no-activado' | 'activado' | 'sin-vapid'.
+   3) nexoDocumentosPorVencer(diasMax) → devuelve la lista de
+                          documentos con días restantes ≤ diasMax
+                          (para el banner in-app).
+   ------------------------------------------------------------ */
+
+function _b64UrlToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  const out = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+
+function _arrayBufferToBase64(buffer) {
+  if (!buffer) return '';
+  const bytes = new Uint8Array(buffer);
+  let bin = '';
+  for (let i = 0; i < bytes.byteLength; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+function nexoPushSoportado() {
+  return typeof window !== 'undefined'
+    && 'serviceWorker' in navigator
+    && 'PushManager' in window
+    && typeof Notification !== 'undefined';
+}
+
+async function nexoEstadoPush() {
+  if (!nexoPushSoportado()) return 'no-soportado';
+  if (!VAPID_PUBLIC_KEY)    return 'sin-vapid';
+  if (Notification.permission === 'denied') return 'denegado';
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg) return 'no-activado';
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) return 'activado';
+    return Notification.permission === 'granted' ? 'no-activado' : 'no-activado';
+  } catch (e) {
+    return 'no-activado';
+  }
+}
+
+async function nexoActivarPush() {
+  if (!nexoPushSoportado()) throw new Error('Tu navegador no soporta notificaciones push.');
+  if (!VAPID_PUBLIC_KEY)    throw new Error('Falta configurar VAPID_PUBLIC_KEY en supabase-client.js.');
+
+  const user = await nexoUsuarioActual();
+  if (!user) throw new Error('Debes iniciar sesión antes de activar las notificaciones.');
+
+  // Permiso — en iOS/Chrome debe llamarse desde un gesto del usuario
+  let perm = Notification.permission;
+  if (perm === 'default') perm = await Notification.requestPermission();
+  if (perm !== 'granted') throw new Error('Permiso de notificaciones denegado.');
+
+  // Espera al SW listo (register se hace en el HTML)
+  const reg = await navigator.serviceWorker.ready;
+
+  // Reusar suscripción existente o crear una nueva
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) {
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: _b64UrlToUint8Array(VAPID_PUBLIC_KEY)
+    });
+  }
+
+  const json = sub.toJSON();
+  const payload = {
+    cuenta_id: user.id,
+    endpoint:  sub.endpoint,
+    p256dh:    (json.keys && json.keys.p256dh) || _arrayBufferToBase64(sub.getKey && sub.getKey('p256dh')),
+    auth:      (json.keys && json.keys.auth)   || _arrayBufferToBase64(sub.getKey && sub.getKey('auth')),
+    user_agent: (navigator.userAgent || '').slice(0, 300)
+  };
+
+  // Upsert por endpoint — misma suscripción reemplaza la fila anterior
+  const { error } = await sb.from('push_subscriptions')
+    .upsert(payload, { onConflict: 'endpoint' });
+  if (error) throw error;
+  return true;
+}
+
+async function nexoDesactivarPush() {
+  if (!nexoPushSoportado()) return false;
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg) return false;
+    const sub = await reg.pushManager.getSubscription();
+    if (!sub) return false;
+    const endpoint = sub.endpoint;
+    await sub.unsubscribe();
+    await sb.from('push_subscriptions').delete().eq('endpoint', endpoint);
+    return true;
+  } catch (e) {
+    console.warn('nexoDesactivarPush:', e);
+    return false;
+  }
+}
+
+// Devuelve los documentos del usuario con vencimiento ≤ diasMax días
+// (o ya vencidos), ordenados por urgencia (los ya vencidos primero).
+async function nexoDocumentosPorVencer(diasMax = 30) {
+  const docs = await listarDocumentos();
+  const hoyStr = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Santiago',
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date());
+  const hoy = new Date(hoyStr + 'T00:00:00Z');
+  const out = [];
+  for (const d of docs) {
+    if (!d.vence) continue;
+    const v = new Date(d.vence + 'T00:00:00Z');
+    if (isNaN(v.getTime())) continue;
+    const dias = Math.round((v - hoy) / 86400000);
+    if (dias <= diasMax) out.push({ ...d, dias });
+  }
+  out.sort((a, b) => a.dias - b.dias);
+  return out;
+}
+
 // Exponer al window para poder llamarlas desde inline scripts
 Object.assign(window, {
   nexoSignUp, nexoSignIn, nexoSignOut, nexoUsuarioActual, asegurarCuenta, esperarSesionOAuth,
   guardarCuenta, obtenerCuenta, listarCuentas, guardarDatosBancarios,
   subirDocumento, guardarTituloDocumento, guardarVenceDocumento, guardarOrdenDocumentos, listarDocumentos, eliminarDocumento, urlDocumento,
   urlFotoPerfil, aplicarFotoPerfil,
-  verificarPublico, urlPublicaDocumento, urlDeMiTarjeta
+  verificarPublico, urlPublicaDocumento, urlDeMiTarjeta,
+  nexoPushSoportado, nexoEstadoPush, nexoActivarPush, nexoDesactivarPush, nexoDocumentosPorVencer
 });

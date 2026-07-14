@@ -3,10 +3,19 @@
   functions = "netlify/functions"
 
 # ===== TAREA PROGRAMADA =====
-# Avisos por correo de documentos por vencer.
+# Avisos por correo + push de documentos por vencer.
 # Se ejecuta todos los días a las 12:00 UTC (~09:00 Chile CLT).
-# Requiere env vars en Netlify → Site settings → Environment variables:
-#   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, RESEND_FROM
+#
+# Env vars requeridas en Netlify → Site settings → Environment variables:
+#   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY   (obligatorias)
+#   RESEND_API_KEY, RESEND_FROM               (para correo)
+#   VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY       (para push al celular)
+#   VAPID_SUBJECT                             (ej: mailto:soporte@nfcnexo.cl)
+#
+# Cómo generar el par VAPID (una sola vez):
+#   npx web-push generate-vapid-keys
+# → Pega la PÚBLICA en supabase-client.js (VAPID_PUBLIC_KEY) y en Netlify.
+# → Pega la PRIVADA sólo en Netlify (VAPID_PRIVATE_KEY). NUNCA en el frontend.
 [functions."notificar-vencimientos"]
   schedule = "0 12 * * *"
 

@@ -1583,6 +1583,66 @@
       padding: 24px 16px !important;
     }
   }
+
+  /* ====== AVISOS DE VENCIMIENTO (in-app) + PROMPT PUSH ====== */
+  .aviso-vence-wrap { margin: 12px 0 18px; display: none; }
+  .aviso-vence {
+    border-radius: 14px;
+    padding: 14px 16px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.06);
+    display: flex; gap: 12px; align-items: flex-start;
+    background: #fff8ec;
+    border: 1px solid #f4c37a;
+    color: #6b3e00;
+  }
+  .aviso-vence.urgente { background: #fdecec; border-color: #e79b9b; color: #7a1a1a; }
+  .aviso-vence .av-icono { font-size: 22px; line-height: 1; margin-top: 2px; }
+  .aviso-vence .av-body { flex: 1; min-width: 0; }
+  .aviso-vence h4 { margin: 0 0 6px; font-size: 15px; font-weight: 700; }
+  .aviso-vence ul { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.55; }
+  .aviso-vence li strong { font-weight: 700; }
+  .aviso-vence .av-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .aviso-vence .av-btn {
+    font-size: 13px; font-weight: 600;
+    padding: 8px 14px; border-radius: 8px;
+    border: none; cursor: pointer;
+    background: #E82127; color: #fff;
+  }
+  .aviso-vence .av-btn.sec {
+    background: transparent; color: inherit; border: 1px solid currentColor;
+  }
+
+  .push-prompt {
+    display: none;
+    margin: 10px 0 16px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #eaf3ff;
+    border: 1px solid #b3d4ff;
+    color: #1a3a6b;
+    font-size: 13px;
+    line-height: 1.5;
+    align-items: center; gap: 10px;
+  }
+  .push-prompt .pp-txt { flex: 1; }
+  .push-prompt .pp-btn {
+    background: #1976d2; color: #fff; border: none; cursor: pointer;
+    padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px;
+  }
+  .push-prompt .pp-close {
+    background: transparent; border: none; color: inherit; cursor: pointer;
+    font-size: 18px; padding: 0 4px;
+  }
+
+  [data-theme="dark"] .aviso-vence {
+    background: #3a2a10; border-color: #7a5a20; color: #ffdca6;
+  }
+  [data-theme="dark"] .aviso-vence.urgente {
+    background: #3a1616; border-color: #7a2020; color: #ffb0b0;
+  }
+  [data-theme="dark"] .push-prompt {
+    background: #172538; border-color: #2f4d78; color: #bcd7ff;
+  }
 </style>
 <script>(function(){try{var k='nexo_theme',s=sessionStorage.getItem(k);if(!s){var h=new Date().getHours();s=(h>=19||h<7)?'dark':'light';}document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){}})();</script>
 <script src="theme.js" defer></script>
@@ -1638,6 +1698,30 @@
 
 <div class="layout-wrapper">
   <div class="page">
+
+  <!-- BANNER DE AVISOS DE VENCIMIENTO (in-app) -->
+  <div class="aviso-vence-wrap" id="avisoVenceWrap">
+    <div class="aviso-vence" id="avisoVence">
+      <div class="av-icono" id="avisoVenceIcono">⚠️</div>
+      <div class="av-body">
+        <h4 id="avisoVenceTitulo">Documentos por vencer</h4>
+        <ul id="avisoVenceLista"></ul>
+        <div class="av-actions">
+          <button class="av-btn" onclick="scrollToPrimerVence()">Ver documentos</button>
+          <button class="av-btn sec" id="btnActivarPush" style="display:none" onclick="activarPushDesdeAviso()">🔔 Activar avisos</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMPT PARA ACTIVAR NOTIFICACIONES PUSH -->
+  <div class="push-prompt" id="pushPrompt">
+    <div class="pp-txt">
+      🔔 <strong>Recibí los avisos en tu celular.</strong> Te enviamos una notificación cuando un documento esté por vencer, incluso si no tienes la app abierta.
+    </div>
+    <button class="pp-btn" onclick="activarPushDesdePrompt()">Activar</button>
+    <button class="pp-close" title="Ahora no" onclick="ocultarPushPrompt(true)">✕</button>
+  </div>
 
   <!-- PERFIL USUARIO -->
   <div class="perfil-card">
@@ -4005,6 +4089,154 @@
         .catch((err) => console.error('Error al registrar Service Worker:', err));
     });
   }
+
+  // ==========================================================
+  // AVISOS DE VENCIMIENTO — banner in-app + prompt push
+  // ==========================================================
+
+  const PUSH_PROMPT_KEY = 'nexo_push_prompt_dismissed_at';
+
+  function _tituloBonito(d) {
+    if (d.titulo) return d.titulo;
+    const map = {
+      cedula: 'Cédula de identidad', licencia: 'Licencia de conducir',
+      curso: 'Curso OS10', credencial: 'Credencial', contrato: 'Contrato',
+      examen: 'Examen', permiso: 'Permiso de circulación', soap: 'SOAP',
+      antecedentes: 'Certificado de antecedentes', revision: 'Revisión técnica',
+      padron: 'Padrón', patente_alcoholes: 'Patente de alcoholes',
+      patente_comercial: 'Patente comercial', directiva: 'Directiva',
+      contratos_empresa: 'Contratos de empresa', seguro_empresa: 'Seguro de empresa'
+    };
+    return map[d.tipo] || d.tipo || 'Documento';
+  }
+
+  function _fraseDias(dias) {
+    if (dias < 0)  return `venció hace ${-dias} día${dias === -1 ? '' : 's'}`;
+    if (dias === 0) return 'vence hoy';
+    if (dias === 1) return 'vence mañana';
+    return `vence en ${dias} días`;
+  }
+
+  window.scrollToPrimerVence = function () {
+    // Abre y hace scroll a la primera tarjeta con documento por vencer
+    const primero = window.__nexoPrimerDocVence;
+    if (!primero) return;
+    const card = document.getElementById('card-' + primero.tipo);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const chev = document.getElementById('chev-' + primero.tipo);
+      if (chev && typeof togglePanel === 'function') {
+        try { togglePanel(primero.tipo); } catch (_) {}
+      }
+    }
+  };
+
+  async function renderAvisoVencimientos() {
+    try {
+      if (typeof nexoDocumentosPorVencer !== 'function') return;
+      const cerca = await nexoDocumentosPorVencer(30);
+      const wrap = document.getElementById('avisoVenceWrap');
+      if (!wrap) return;
+      if (!cerca.length) { wrap.style.display = 'none'; return; }
+
+      window.__nexoPrimerDocVence = cerca[0];
+
+      const aviso = document.getElementById('avisoVence');
+      const lista = document.getElementById('avisoVenceLista');
+      const titulo = document.getElementById('avisoVenceTitulo');
+      const icono = document.getElementById('avisoVenceIcono');
+
+      const urgente = cerca.some(d => d.dias <= 1);
+      aviso.classList.toggle('urgente', urgente);
+      icono.textContent = urgente ? '🚨' : '⚠️';
+      titulo.textContent = urgente
+        ? 'Tienes documentos que vencen muy pronto'
+        : 'Documentos por vencer';
+
+      lista.innerHTML = cerca.map(d => {
+        const nombre = _tituloBonito(d).replace(/</g,'&lt;');
+        const frase = _fraseDias(d.dias);
+        return `<li><strong>${nombre}</strong> — ${frase} (${d.vence})</li>`;
+      }).join('');
+
+      wrap.style.display = 'block';
+
+      // Si push no está activado y el navegador lo soporta, mostrar botón
+      if (typeof nexoEstadoPush === 'function') {
+        const est = await nexoEstadoPush();
+        const btn = document.getElementById('btnActivarPush');
+        if (btn) btn.style.display = (est === 'no-activado') ? 'inline-block' : 'none';
+      }
+    } catch (e) {
+      console.warn('renderAvisoVencimientos:', e);
+    }
+  }
+
+  function _pushPromptFueDescartadoReciente() {
+    try {
+      const t = parseInt(localStorage.getItem(PUSH_PROMPT_KEY) || '0', 10);
+      if (!t) return false;
+      // No volver a molestar por 7 días
+      return (Date.now() - t) < 7 * 24 * 3600 * 1000;
+    } catch (_) { return false; }
+  }
+
+  window.ocultarPushPrompt = function (guardar) {
+    const p = document.getElementById('pushPrompt');
+    if (p) p.style.display = 'none';
+    if (guardar) {
+      try { localStorage.setItem(PUSH_PROMPT_KEY, String(Date.now())); } catch (_) {}
+    }
+  };
+
+  async function mostrarPushPromptSiCorresponde() {
+    try {
+      if (typeof nexoEstadoPush !== 'function') return;
+      if (_pushPromptFueDescartadoReciente()) return;
+      const est = await nexoEstadoPush();
+      if (est !== 'no-activado') return; // ya activado, sin-vapid, denegado, o no-soportado
+      const p = document.getElementById('pushPrompt');
+      if (p) p.style.display = 'flex';
+    } catch (e) {
+      console.warn('mostrarPushPromptSiCorresponde:', e);
+    }
+  }
+
+  async function _activarPushComun(botones) {
+    botones.forEach(b => { if (b) { b.disabled = true; b.dataset._txt = b.textContent; b.textContent = 'Activando…'; } });
+    try {
+      await nexoActivarPush();
+      alert('✅ Listo. Recibirás los avisos en este dispositivo.');
+      ocultarPushPrompt(false);
+      // Ocultar el botón "Activar avisos" del banner
+      const btn = document.getElementById('btnActivarPush');
+      if (btn) btn.style.display = 'none';
+    } catch (e) {
+      alert('No se pudo activar: ' + (e && e.message ? e.message : e));
+    } finally {
+      botones.forEach(b => { if (b) { b.disabled = false; if (b.dataset._txt) b.textContent = b.dataset._txt; } });
+    }
+  }
+
+  window.activarPushDesdePrompt = function () {
+    const b = document.querySelector('#pushPrompt .pp-btn');
+    _activarPushComun([b]);
+  };
+  window.activarPushDesdeAviso = function () {
+    const b = document.getElementById('btnActivarPush');
+    _activarPushComun([b]);
+  };
+
+  // Al cargar la sesión, mostrar avisos y prompt (esperamos un poco para que
+  // obtenerCuenta() ya haya cacheado los datos y el SW esté registrado).
+  window.addEventListener('load', () => {
+    setTimeout(async () => {
+      const user = typeof nexoUsuarioActual === 'function' ? await nexoUsuarioActual() : null;
+      if (!user) return;
+      await renderAvisoVencimientos();
+      await mostrarPushPromptSiCorresponde();
+    }, 1500);
+  });
 </script>
 <!-- MODAL PARA FUSIÓN DE DOCUMENTOS (DOS CARAS) -->
 <div class="merge-modal-overlay" id="mergeModal" onclick="if(event.target===this) cerrarMergeModal()">

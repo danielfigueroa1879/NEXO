@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nfc-nexo-v8';
+const CACHE_NAME = 'nfc-nexo-v9';
 const OFFLINE_URL = 'index.html';
 
 self.addEventListener('install', (event) => {
@@ -87,4 +87,62 @@ self.addEventListener('fetch', (event) => {
       return cachedResponse || fetchPromise;
     })
   );
+});
+
+// ============================================================
+//  WEB PUSH — avisos de documentos por vencer al celular donde
+//  el usuario instaló la app. El backend envía el push desde
+//  netlify/functions/notificar-vencimientos.js usando web-push.
+//  Payload esperado (JSON):
+//    { title, body, url, tag, doc_id }
+// ============================================================
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (e) {
+    // Si el body no es JSON, lo tomamos como texto plano
+    data = { title: 'NEXO', body: event.data ? event.data.text() : '' };
+  }
+
+  const title = data.title || 'NEXO';
+  const options = {
+    body: data.body || '',
+    icon: 'favicon/web-app-manifest-192x192.png',
+    badge: 'favicon/favicon-96x96.png',
+    tag: data.tag || 'nexo-doc',      // agrupa avisos del mismo documento
+    renotify: true,
+    data: {
+      url: data.url || '/subir-documentos.html',
+      doc_id: data.doc_id || null
+    }
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Al tocar la notificación → abrir la app en la página de documentos.
+// Si ya hay una ventana abierta, la enfocamos en lugar de abrir otra.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/subir-documentos.html';
+
+  event.waitUntil((async () => {
+    const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of allClients) {
+      try {
+        const clientUrl = new URL(client.url);
+        if (clientUrl.origin === self.location.origin) {
+          await client.focus();
+          if ('navigate' in client) {
+            try { await client.navigate(targetUrl); } catch (e) { /* algunas plataformas lo bloquean */ }
+          }
+          return;
+        }
+      } catch (_) { /* ignorar URLs inválidas */ }
+    }
+    if (self.clients.openWindow) {
+      await self.clients.openWindow(targetUrl);
+    }
+  })());
 });
