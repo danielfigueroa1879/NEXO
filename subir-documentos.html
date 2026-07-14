@@ -40,7 +40,7 @@
     --ink: #0A0A0A;
     --ink-soft: #2C2C2E;
     --ink-mute: #6E6E73;
-    --line: #E5E5EA;
+    --line: #D8D8DE;
     --surface: #FFFFFF;
     --red: #E82127;
     --blue: #0033A0;
@@ -660,6 +660,38 @@
   }
   .principal-status.ok  { color: #1A7A34; }
   .principal-status.err { color: #C00; }
+
+  /* ===== CONTAINER "SUBIR DOCUMENTOS" =====
+     Envuelve pestañas de perfil y todo su contenido en un único bloque
+     con contorno gris uniforme por los cuatro lados. */
+  .subir-container {
+    background: var(--surface);
+    border: 1.5px solid #C7C7CC;
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 20px;
+  }
+  .subir-container-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 4px 4px 12px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 14px;
+  }
+  .subir-container-head .subir-icon {
+    font-size: 20px; line-height: 1;
+  }
+  .subir-container-head .subir-text { display: flex; flex-direction: column; }
+  .subir-container-head .subir-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px; font-weight: 700; color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .subir-container-head .subir-sub {
+    font-size: 11px; color: var(--ink-mute); margin-top: 2px;
+  }
+  [data-theme="dark"] .subir-container {
+    border-color: rgba(255,255,255,0.18);
+  }
 
   /* ===== PERFIL TABS ===== */
   .perfil-tabs {
@@ -1795,6 +1827,16 @@
     <span id="principal-status" class="principal-status"></span>
   </div>
 
+  <!-- CONTAINER ÚNICO: SUBIR DOCUMENTOS (título + tabs + contenido de cada perfil) -->
+  <div class="subir-container">
+    <div class="subir-container-head">
+      <span class="subir-icon">📄</span>
+      <div class="subir-text">
+        <span class="subir-title">Subir documentos</span>
+        <span class="subir-sub">Selecciona un perfil y carga los documentos correspondientes.</span>
+      </div>
+    </div>
+
   <!-- TABS PERFIL -->
   <div class="perfil-tabs">
     <button class="ptab active" id="ptab-conductor" onclick="switchTab('conductor', this)">🚗 Vehículo</button>
@@ -2449,6 +2491,8 @@
       </div>
     </div>
   </div><!-- /tab-empresa -->
+
+  </div><!-- /subir-container -->
 
   </div><!-- /page -->
 
