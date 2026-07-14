@@ -144,7 +144,8 @@
     :root[data-theme="dark"] .toast,
     :root[data-theme="dark"] .home-toast,
     :root[data-theme="dark"] .btt,
-    :root[data-theme="dark"] .principal-opt.active {
+    :root[data-theme="dark"] .principal-opt.active,
+    :root[data-theme="dark"] .banco-unlock-btn {
       background: #34343f !important;
       color: #ffffff !important;
       border-color: #47474f !important;
