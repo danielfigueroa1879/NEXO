@@ -205,15 +205,36 @@ async function listarCuentas() {
   return data || [];
 }
 
-// Comprime imágenes en el cliente (max 1200px de ancho/alto, 70% calidad JPEG).
-// Acepta jpg, png, jpeg, webp y cualquier otro image/*. Devuelve el archivo
-// original si la recomprimida termina siendo del mismo peso o mayor.
-function comprimirImagenClientSide(file, maxDim = 1200, calidad = 0.70) {
+// Detecta si el navegador puede CODIFICAR WebP con canvas (mostrarlo no basta:
+// hay que saber escribirlo). Se evalúa una vez y se cachea el resultado.
+let _soportaWebp = null;
+function soportaWebp() {
+  if (_soportaWebp !== null) return _soportaWebp;
+  try {
+    const c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    _soportaWebp = c.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+  } catch (e) {
+    _soportaWebp = false;
+  }
+  return _soportaWebp;
+}
+
+// Comprime imágenes en el cliente: reescala a máx `maxDim` px y recodifica en WebP
+// (el formato de Instagram/X: ~30% más liviano que JPEG a igual calidad visual).
+// Si el navegador no sabe escribir WebP, cae a JPEG. Devuelve el archivo original
+// si la versión recomprimida no resulta más liviana.
+function comprimirImagenClientSide(file, maxDim = 1200, calidad = 0.82) {
   return new Promise((resolve) => {
     if (!file || !file.type || !file.type.startsWith('image/') || typeof FileReader === 'undefined') {
       resolve(file);
       return;
     }
+    const usarWebp = soportaWebp();
+    const mime = usarWebp ? 'image/webp' : 'image/jpeg';
+    const ext  = usarWebp ? 'webp' : 'jpg';
+    // WebP rinde más por byte; si caemos a JPEG bajamos la calidad para no engordar.
+    const q = usarWebp ? calidad : Math.min(calidad, 0.72);
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
@@ -239,24 +260,24 @@ function comprimirImagenClientSide(file, maxDim = 1200, calidad = 0.70) {
             resolve(file);
             return;
           }
-          let nuevoNombre = file.name || 'documento.jpg';
+          let nuevoNombre = file.name || 'documento';
           const extIndex = nuevoNombre.lastIndexOf('.');
           if (extIndex !== -1) {
-            nuevoNombre = nuevoNombre.substring(0, extIndex) + '.jpg';
+            nuevoNombre = nuevoNombre.substring(0, extIndex) + '.' + ext;
           } else {
-            nuevoNombre += '.jpg';
+            nuevoNombre += '.' + ext;
           }
           let compressedFile;
           try {
             compressedFile = new File([blob], nuevoNombre, {
-              type: 'image/jpeg',
+              type: mime,
               lastModified: Date.now()
             });
           } catch (e) {
             compressedFile = blob;
           }
           resolve(compressedFile);
-        }, 'image/jpeg', calidad);
+        }, mime, q);
       };
       img.onerror = () => resolve(file);
       img.src = e.target.result;
@@ -346,6 +367,10 @@ async function subirDocumento({ tipo, file, titulo, nombre, noCompress, vence })
       cacheControl: '2592000' // 30 días — el navegador reusa la imagen sin volver a bajarla → menos egress
     });
   if (eUp) throw eUp;
+
+  // El archivo cambió: invalida la URL firmada cacheada para que la próxima
+  // vista descargue la versión nueva y no la vieja del caché del navegador.
+  try { localStorage.removeItem('nexo_signed_' + path); } catch (e) {}
 
   const payload = { cuenta_id: user.id, tipo, nombre: nombreOriginal, path, tamano: fileToUpload.size };
   if (titulo) payload.titulo = titulo;
@@ -441,14 +466,28 @@ async function eliminarDocumento(tipo) {
     .select('path').eq('cuenta_id', user.id).eq('tipo', tipo);
   if (existentes && existentes.length) {
     await sb.storage.from('documentos').remove(existentes.map(d => d.path));
+    try { existentes.forEach(d => localStorage.removeItem('nexo_signed_' + d.path)); } catch (e) {}
   }
   await sb.from('documentos').delete().eq('cuenta_id', user.id).eq('tipo', tipo);
 }
 
 async function urlDocumento(path) {
+  // Cachea la URL firmada en localStorage para NO regenerarla en cada carga.
+  // Una URL firmada nueva lleva otro token → el navegador la ve como un archivo
+  // distinto y la vuelve a descargar. Reutilizando la MISMA URL mientras siga
+  // vigente, el navegador la sirve desde su caché y no gasta egress al refrescar.
+  const KEY = 'nexo_signed_' + path;
+  try {
+    const c = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (c && c.url && c.exp - 10 * 60 * 1000 > Date.now()) return c.url;
+  } catch (e) {}
+  const DUR = 6 * 60 * 60; // 6 horas de validez → una descarga cubre toda la sesión
   const { data, error } = await sb.storage.from('documentos')
-    .createSignedUrl(path, 60 * 60); // 1 hora
+    .createSignedUrl(path, DUR);
   if (error) throw error;
+  try {
+    localStorage.setItem(KEY, JSON.stringify({ url: data.signedUrl, exp: Date.now() + DUR * 1000 }));
+  } catch (e) {}
   return data.signedUrl;
 }
 
@@ -643,6 +682,7 @@ async function nexoDocumentosPorVencer(diasMax = 30) {
 
 // Exponer al window para poder llamarlas desde inline scripts
 Object.assign(window, {
+  soportaWebp,
   nexoSignUp, nexoSignIn, nexoSignOut, nexoUsuarioActual, asegurarCuenta, esperarSesionOAuth,
   guardarCuenta, obtenerCuenta, listarCuentas, guardarDatosBancarios,
   subirDocumento, guardarTituloDocumento, guardarVenceDocumento, guardarOrdenDocumentos, listarDocumentos, eliminarDocumento, urlDocumento,

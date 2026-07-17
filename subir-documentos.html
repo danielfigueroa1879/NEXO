@@ -3792,7 +3792,7 @@
       if (overlay) {
         const perfiles = datos.perfiles || [];
         const precios = { guardia: 10000, vehiculo: 10000, comerciante: 10000, empresa: 30000 };
-        const nombres = { guardia: 'Agente OS10', vehiculo: 'Vehículo (Conductor)', comerciante: 'Comerciante', empresa: 'Empresa' };
+        const nombres = { guardia: 'Particular', vehiculo: 'Vehículo (Conductor)', comerciante: 'Comerciante', empresa: 'Empresa' };
         
         const total = perfiles.reduce((s, p) => s + (precios[p] || 0), 0);
         const planText = perfiles.map(p => nombres[p] || p).join(' + ') || 'Ninguno';
@@ -4143,11 +4143,13 @@
       );
 
       // 2. Crear un archivo File del Blob combinado con fallback de Blob
-      const filename = `${docId}_combinado.jpg`;
+      const tipoBlob = combinedBlob.type || 'image/jpeg';
+      const extBlob = tipoBlob === 'image/webp' ? 'webp' : 'jpg';
+      const filename = `${docId}_combinado.${extBlob}`;
       let combinedFile;
       try {
         combinedFile = new File([combinedBlob], filename, {
-          type: 'image/jpeg',
+          type: tipoBlob,
           lastModified: Date.now()
         });
       } catch (err) {
@@ -4232,13 +4234,14 @@
           ctx.drawImage(imgFront, x, topY, cardW, cardH);
           ctx.drawImage(imgBack, x, topY + cardH + gap, cardW, cardH);
 
+          const usarWebp = (typeof soportaWebp === 'function') && soportaWebp();
           canvas.toBlob((blob) => {
             if (!blob) {
               reject(new Error('Fallo al generar el blob combinado.'));
               return;
             }
             resolve(blob);
-          }, 'image/jpeg', 0.9);
+          }, usarWebp ? 'image/webp' : 'image/jpeg', 0.85);
         }
       };
       
@@ -4277,7 +4280,7 @@
     if (d.titulo) return d.titulo;
     const map = {
       cedula: 'Cédula de identidad', licencia: 'Licencia de conducir',
-      curso: 'Curso OS10', credencial: 'Credencial', contrato: 'Contrato',
+      curso: 'Título Profesional o Certificado de Estudios', credencial: 'Credencial', contrato: 'Contrato',
       examen: 'Examen', permiso: 'Permiso de circulación', soap: 'SOAP',
       antecedentes: 'Certificado de antecedentes', revision: 'Revisión técnica',
       padron: 'Padrón', patente_alcoholes: 'Patente de alcoholes',
@@ -4993,10 +4996,12 @@
         return;
       }
     } else {
-      const blob = await new Promise(res => outCanvas.toBlob(res, 'image/jpeg', 0.9));
+      const usarWebp = (typeof soportaWebp === 'function') && soportaWebp();
+      const mimeOut = usarWebp ? 'image/webp' : 'image/jpeg';
+      const blob = await new Promise(res => outCanvas.toBlob(res, mimeOut, 0.85));
       if (!blob) { if (typeof showToast === 'function') showToast('Error al generar la imagen'); return; }
-      filename = `${docId}_escaneo.jpg`;
-      try { file = new File([blob], filename, { type: 'image/jpeg', lastModified: Date.now() }); }
+      filename = `${docId}_escaneo.${usarWebp ? 'webp' : 'jpg'}`;
+      try { file = new File([blob], filename, { type: mimeOut, lastModified: Date.now() }); }
       catch (e2) { file = blob; }
     }
 
