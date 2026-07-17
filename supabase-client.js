@@ -356,9 +356,30 @@ async function subirDocumento({ tipo, file, titulo, nombre, noCompress, vence })
   // Comprimir (imagen o PDF) para reducir peso manteniendo la calidad, excepto si se pide saltar.
   const fileToUpload = noCompress ? file : await comprimirArchivoClientSide(file);
 
-  const nombreOriginal = nombre || file.name || (fileToUpload && fileToUpload.name) || `${tipo}.jpg`;
-  const ext  = (nombreOriginal.split('.').pop() || 'jpg').toLowerCase();
+  // La extensión del path y del nombre guardado deben reflejar el archivo REAL que
+  // se sube: comprimirArchivoClientSide pudo convertirlo a .webp. Si usáramos la
+  // extensión del original, la descarga saldría con un nombre engañoso (ej. .jpg
+  // cuando el contenido ya es WebP) porque el navegador nombra el archivo según la
+  // extensión de la URL del Storage.
+  const nombreReal = (fileToUpload && fileToUpload.name) || nombre || file.name || `${tipo}.jpg`;
+  const ext  = (nombreReal.split('.').pop() || 'jpg').toLowerCase();
   const path = `${user.id}/${tipo}.${ext}`;
+
+  // Nombre visible: conserva el nombre lindo (el que pase el caller o el original)
+  // pero con la extensión real del archivo subido.
+  const baseNombre = (nombre || file.name || nombreReal).replace(/\.[^.]+$/, '');
+  const nombreOriginal = baseNombre + '.' + ext;
+
+  // Si ya existía un archivo de este tipo con OTRA extensión (ej. un .jpg previo que
+  // ahora se sube como .webp), elimina el objeto viejo para no dejar basura en Storage.
+  try {
+    const { data: prev } = await sb.from('documentos')
+      .select('path').eq('cuenta_id', user.id).eq('tipo', tipo).maybeSingle();
+    if (prev && prev.path && prev.path !== path) {
+      await sb.storage.from('documentos').remove([prev.path]);
+      try { localStorage.removeItem('nexo_signed_' + prev.path); } catch (e) {}
+    }
+  } catch (e) { /* limpieza best-effort: si falla, se sube igual */ }
 
   const { error: eUp } = await sb.storage.from('documentos')
     .upload(path, fileToUpload, {
