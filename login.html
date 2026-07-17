@@ -225,6 +225,17 @@
   .btn-social:hover { border-color: var(--ink-mute); background: var(--bg); }
   .btn-social img { width: 18px; height: 18px; }
 
+  /* Aviso inicio de sesión con Google */
+  .google-note {
+    display: flex; align-items: flex-start; gap: 8px;
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px 12px;
+    font-size: 12px; line-height: 1.45; color: var(--ink-mute);
+    margin-bottom: 4px;
+  }
+  .google-note .g-ico { flex-shrink: 0; font-size: 14px; line-height: 1.2; }
+  .google-note strong { color: var(--ink-soft); font-weight: 600; }
+
   /* Olvidé contraseña */
   .forgot {
     text-align: right; margin-top: -8px; margin-bottom: 16px;
@@ -451,6 +462,11 @@
         Continuar con Google
       </button>
 
+      <div class="google-note">
+        <span class="g-ico">🔔</span>
+        <span>Debes <strong>iniciar sesión con Google</strong>: elige una cuenta de Google e inicia sesión. Las notificaciones se enviarán a ese correo.</span>
+      </div>
+
       <div class="divider">o ingresa con tu RUT</div>
 
       <div class="field">
@@ -560,6 +576,11 @@
             <span class="ico">✉️</span>
             <input type="email" id="reg-email" placeholder="correo@ejemplo.cl">
           </div>
+        </div>
+
+        <div class="google-note">
+          <span class="g-ico">🔔</span>
+          <span>Usa un <strong>correo real</strong>: los avisos de documentos por vencer se enviarán ahí. Si prefieres, puedes <strong>iniciar sesión con Google</strong> y usar directamente el correo de tu cuenta.</span>
         </div>
 
         <div class="field" id="empresa-field" style="display:none;">
@@ -796,6 +817,14 @@
         telefono: tel, tipo: tipoSeleccionado,
         empresa: tipoSeleccionado === 'guardia' ? empresa : null
       });
+      // Correo de bienvenida (no bloquea el registro si falla el envío)
+      if (email) {
+        fetch('/.netlify/functions/bienvenida', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, nombre })
+        }).catch(err => console.warn('No se pudo enviar el correo de bienvenida:', err));
+      }
       document.getElementById('step-3').style.display = 'none';
       document.getElementById('panel-registro').querySelector('.steps').style.display = 'none';
       document.getElementById('success-screen').classList.add('show');
