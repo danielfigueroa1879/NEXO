@@ -153,6 +153,23 @@ async function asegurarCuenta() {
     perfiles: []
   }).select().single();
   if (error) { console.warn('asegurarCuenta:', error); return null; }
+
+  // Cuenta creada por primera vez vía Google: enviar correo de bienvenida.
+  // Solo llega aquí cuando NO existía fila previa, así que no se repite en cada login.
+  if (data && data.email) {
+    fetch('/.netlify/functions/bienvenida', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: data.email, nombre: data.nombre || 'usuario' })
+    })
+      .then(async (r) => {
+        const txt = await r.text();
+        if (r.ok) console.log('✅ Bienvenida (Google) enviada:', txt);
+        else console.warn('⚠️ Bienvenida (Google) falló (' + r.status + '):', txt);
+      })
+      .catch(err => console.warn('No se pudo enviar la bienvenida (Google):', err));
+  }
+
   return data;
 }
 
