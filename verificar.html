@@ -786,6 +786,35 @@
   }
   .doc-modal-close:hover { background: rgba(40,40,40,0.9); }
   .doc-modal-close:active { transform: scale(0.92); }
+  /* Visor de PDF embebido dentro del mismo modal (conserva la X para cerrar) */
+  .doc-modal-body iframe {
+    width: 100%;
+    height: calc(100vh - 24px);
+    border: 0;
+    background: #fff;
+    border-radius: 4px;
+    display: none;
+  }
+  .doc-modal-body iframe.show { display: block; }
+  /* Botón de respaldo: abrir el PDF en pestaña nueva (por si el navegador no
+     renderiza PDFs embebidos, típico en algunos móviles) */
+  .doc-modal-open {
+    position: fixed;
+    top: 14px; right: 68px;
+    height: 40px; padding: 0 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(20,20,20,0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #fff; text-decoration: none;
+    font-size: 13px; font-weight: 500; line-height: 1;
+    display: none; align-items: center; gap: 6px;
+    z-index: 510;
+    transition: background .15s, transform .12s;
+  }
+  .doc-modal-open.show { display: flex; }
+  .doc-modal-open:active { transform: scale(0.96); }
 
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -2446,19 +2475,44 @@
   //  - Si el thumb ya cargó la MISMA imagen, reusamos su blob (aparece al instante).
   //  - Si aún no está lista, mostramos spinner y hacemos fade cuando cargue.
   function abrirDoc(src, titulo, subtitulo) {
-    if (/\.pdf(\?|$)/i.test(src)) { window.open(src, '_blank', 'noopener'); return; }
-    const modal = document.getElementById('docModal');
-    const img   = document.getElementById('modalImg');
+    const modal   = document.getElementById('docModal');
+    const img     = document.getElementById('modalImg');
+    const pdf     = document.getElementById('modalPdf');
+    const openBtn = document.getElementById('modalOpen');
     document.getElementById('modalTitle').textContent = titulo;
     document.getElementById('modalSub').textContent = subtitulo || '';
+
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+
+    // ---- PDF: se muestra DENTRO del modal, con la misma X para cerrar ----
+    if (/\.pdf(\?|$)/i.test(src)) {
+      img.style.display = 'none';
+      img.classList.remove('ready');
+      pdf.classList.add('show');
+      openBtn.href = src;
+      openBtn.classList.add('show');   // respaldo: abrir en pestaña nueva
+      modal.classList.add('loading');
+      pdf.onload = () => modal.classList.remove('loading');
+      // Fallback por si onload no dispara en algún navegador
+      setTimeout(() => modal.classList.remove('loading'), 1500);
+      if (pdf.getAttribute('src') !== src) pdf.setAttribute('src', src);
+      else modal.classList.remove('loading');
+      return;
+    }
+
+    // ---- Imagen ----
+    pdf.classList.remove('show');
+    pdf.removeAttribute('src');
+    openBtn.classList.remove('show');
+    img.style.display = '';
 
     // Reutilizar imagen ya decodificada por el thumb si existe (evita re-fetch)
     const thumb = document.querySelector('.doc-img-thumb img[src="' + src + '"]');
     const yaCargada = thumb && thumb.complete && thumb.naturalWidth > 0;
 
     img.classList.remove('ready');
-    modal.classList.add('show', 'loading');
-    document.body.style.overflow = 'hidden';
+    modal.classList.add('loading');
 
     const marcarListo = () => {
       modal.classList.remove('loading');
@@ -2477,6 +2531,11 @@
     const modal = document.getElementById('docModal');
     modal.classList.remove('show', 'loading');
     document.body.style.overflow = '';
+    // Liberar el PDF embebido para que deje de renderizar/consumir memoria.
+    const pdf = document.getElementById('modalPdf');
+    if (pdf) { pdf.classList.remove('show'); pdf.removeAttribute('src'); }
+    const openBtn = document.getElementById('modalOpen');
+    if (openBtn) openBtn.classList.remove('show');
   }
   // Cerrar con tecla ESC
   document.addEventListener('keydown', e => {
@@ -2486,10 +2545,12 @@
 
 <!-- MODAL VISOR DE DOCUMENTOS: pantalla completa, sin marcos, sólo el documento + X -->
 <div class="doc-modal" id="docModal">
+  <a class="doc-modal-open" id="modalOpen" href="#" target="_blank" rel="noopener" title="Abrir en pestaña nueva">Abrir ↗</a>
   <button class="doc-modal-close" onclick="cerrarDoc()" title="Cerrar" aria-label="Cerrar">✕</button>
   <div class="doc-modal-spinner" aria-hidden="true"></div>
   <div class="doc-modal-body">
     <img id="modalImg" src="" alt="Documento" decoding="async">
+    <iframe id="modalPdf" title="Documento PDF" allow="fullscreen"></iframe>
   </div>
   <h3 id="modalTitle" hidden></h3>
   <div id="modalSub" hidden></div>
