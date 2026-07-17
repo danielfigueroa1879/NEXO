@@ -2205,7 +2205,10 @@
     seleccionar(orden[0]);
   }
 
-  // Carga y renderiza todos los documentos en paralelo
+  // Lee la lista de documentos UNA vez y la reparte en buckets por perfil, pero
+  // SOLO renderiza el perfil visible. Los otros perfiles se cargan al abrir su
+  // pestaña (ver switchPanel → cargarPerfilDocs). Así un visitante que mira un
+  // solo perfil no descarga las imágenes ni los PDFs de los otros tres → menos egress.
   async function cargarDocumentosUsuario() {
     try {
       document.querySelectorAll('.doc-img-card[data-tipo]').forEach(c => { c.style.display = 'none'; });
@@ -2244,30 +2247,53 @@
         }
       }
 
-      const urlsFijos = await resolverUrls(fijos);
-      for (const d of fijos) {
-        const url = urlsFijos.get(d.path);
-        if (!url) continue;
-        const card = document.querySelector('.doc-img-card[data-tipo="' + d.tipo + '"]');
-        if (card) actualizarCard(card, d, url);
-      }
+      window._buckets = { fijos, extras, comerciante, empresa, vehiculos };
+      window._perfilCargado = {};
 
-      // Aplicar el orden personalizado a la grilla estática de Particular
-      const gridGuardia = document.querySelector('#panel-guardia .docs-grid');
-      reordenarGrid(gridGuardia, fijos);
-      if (esDueño() && gridGuardia) agregarFlechasReorden(gridGuardia, 'guardia');
-
-      await Promise.all([
-        renderVehiculosVerif(vehiculos),
-        renderizarGridDinamico('gridComerciante', comerciante, 'comerciante'),
-        renderizarGridDinamico('gridEmpresa', empresa, 'empresa'),
-        renderizarExtrasGuardia(extras)
-      ]);
-
-      mostrarVacios();
-      renderizarPdfThumbs();
+      // Renderizar SOLO el perfil actualmente activo; el resto queda diferido.
+      const panelActivo = document.querySelector('.panel.active');
+      const perfilActivo = panelActivo ? panelActivo.id.replace('panel-', '') : 'guardia';
+      await cargarPerfilDocs(perfilActivo);
     } catch(e) { console.warn('No se pudieron cargar documentos:', e.message); }
   }
+
+  // Renderiza los documentos de UN perfil (idempotente). Al pertenecer al panel
+  // visible, recién aquí el navegador descarga sus imágenes/PDFs.
+  async function cargarPerfilDocs(perfil) {
+    if (!window._buckets || !perfil) return;          // la lista aún no se parsea
+    window._perfilCargado = window._perfilCargado || {};
+    if (window._perfilCargado[perfil]) return;        // ya cargado antes
+    window._perfilCargado[perfil] = true;
+    const b = window._buckets;
+    try {
+      if (perfil === 'guardia') {
+        const urlsFijos = await resolverUrls(b.fijos);
+        for (const d of b.fijos) {
+          const url = urlsFijos.get(d.path);
+          if (!url) continue;
+          const card = document.querySelector('.doc-img-card[data-tipo="' + d.tipo + '"]');
+          if (card) actualizarCard(card, d, url);
+        }
+        // Aplicar el orden personalizado a la grilla estática de Particular
+        const gridGuardia = document.querySelector('#panel-guardia .docs-grid');
+        reordenarGrid(gridGuardia, b.fijos);
+        if (esDueño() && gridGuardia) agregarFlechasReorden(gridGuardia, 'guardia');
+        await renderizarExtrasGuardia(b.extras);
+        mostrarVacios();
+      } else if (perfil === 'conductor') {
+        await renderVehiculosVerif(b.vehiculos);
+      } else if (perfil === 'comerciante') {
+        await renderizarGridDinamico('gridComerciante', b.comerciante, 'comerciante');
+      } else if (perfil === 'empresa') {
+        await renderizarGridDinamico('gridEmpresa', b.empresa, 'empresa');
+      }
+      renderizarPdfThumbs();
+    } catch(e) {
+      window._perfilCargado[perfil] = false;          // permite reintentar al reabrir
+      console.warn('No se pudieron cargar documentos del perfil ' + perfil + ':', e.message);
+    }
+  }
+  window.cargarPerfilDocs = cargarPerfilDocs;
 
   function renderCardTabs(activos, patente) {
     const orden = ['conductor', 'guardia', 'comerciante', 'empresa'];
@@ -2396,6 +2422,8 @@
     if (topTab) topTab.classList.add('active');
     document.querySelectorAll('.card-tab[data-perfil="' + id + '"]').forEach(t => t.classList.add('active'));
     document.body.classList.add('modo-completo');
+    // Carga diferida: descarga los documentos de este perfil recién al abrirlo.
+    if (typeof cargarPerfilDocs === 'function') cargarPerfilDocs(id);
   }
 
   window.addEventListener('scroll', () => {
