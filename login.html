@@ -823,7 +823,16 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, nombre })
-        }).catch(err => console.warn('No se pudo enviar el correo de bienvenida:', err));
+        })
+          .then(async (r) => {
+            const txt = await r.text();
+            if (r.ok) {
+              console.log('✅ Correo de bienvenida enviado:', txt);
+            } else {
+              console.warn('⚠️ Bienvenida falló (' + r.status + '):', txt);
+            }
+          })
+          .catch(err => console.warn('No se pudo enviar el correo de bienvenida:', err));
       }
       document.getElementById('step-3').style.display = 'none';
       document.getElementById('panel-registro').querySelector('.steps').style.display = 'none';
