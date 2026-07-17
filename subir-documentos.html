@@ -3848,12 +3848,59 @@
       // Reordenar las tarjetas de particular/comerciante/empresa según lo guardado
       aplicarOrdenGuardado(docs);
       updateProgress();
+      // Migración silenciosa a WebP de imágenes pesadas ya subidas (en 2º plano).
+      migrarDocsAWebp(docs).catch(() => {});
     } catch (e) { console.warn('No se pudieron cargar documentos previos:', e.message); }
 
     // Aplicar foto de perfil si la tiene subida
     aplicarFotoPerfil();
     convertirTarjetasAEstiloPremium();
   })();
+
+  // Convierte a WebP los documentos-imagen ya subidos en formato pesado (jpg/png).
+  // Aprovecha que la página YA descargó cada imagen: al hacer fetch de la MISMA URL
+  // firmada, el navegador la sirve desde su caché → casi sin egress extra. Reconvierte
+  // y re-sube (subirDocumento guarda .webp y borra el archivo viejo). Es idempotente:
+  // una vez migrados quedan en .webp y este pase ya no los toca.
+  async function migrarDocsAWebp(docs) {
+    if (!Array.isArray(docs) || typeof comprimirArchivoClientSide !== 'function') return;
+    const MIN_PESO = 100 * 1024; // solo imágenes "pesadas"
+    const pendientes = docs.filter(d =>
+      d && d.path && d.nombre &&
+      /\.(jpe?g|png|bmp)$/i.test(d.path) && !/\.webp$/i.test(d.path) &&
+      (d.tamano == null || d.tamano >= MIN_PESO)
+    );
+    if (!pendientes.length) return;
+    for (const d of pendientes) {
+      try {
+        const url = await urlDocumento(d.path);        // misma URL que ya mostró el <img> → caché
+        const resp = await fetch(url);
+        if (!resp.ok) continue;
+        const blob = await resp.blob();
+        if (!blob || !(blob.type || '').startsWith('image/')) continue;
+        if (blob.size < MIN_PESO) continue;
+        const original = new File([blob], d.nombre, { type: blob.type });
+        const webp = await comprimirArchivoClientSide(original);
+        // Solo re-subir si de verdad quedó en WebP y más liviano.
+        if (!webp || webp.type !== 'image/webp' || webp.size >= original.size) continue;
+        // noCompress: ya viene comprimido; evita recomprimir dos veces.
+        const data = await subirDocumento({ tipo: d.tipo, file: webp, nombre: d.nombre, noCompress: true });
+        // Rebind de la tarjeta a la nueva URL .webp (la .jpg vieja ya fue borrada).
+        if (data && data.path) {
+          try {
+            const nuevaUrl = await urlDocumento(data.path);
+            marcarCardSubida(d.tipo, data.nombre || webp.name,
+              Math.round((data.tamano || webp.size) / 1024), 'Optimizado a WebP', nuevaUrl, false);
+            if (d.vence) actualizarEstadoVencimiento(d.tipo, d.vence);
+          } catch (_) {}
+        }
+        console.info('Documento migrado a WebP:', d.tipo);
+      } catch (e) {
+        console.warn('No se pudo migrar a WebP', d.tipo, e && e.message);
+      }
+    }
+  }
+  window.migrarDocsAWebp = migrarDocsAWebp;
 
   async function cerrarSesion() {
     try { await nexoSignOut(); } catch(e) {}
