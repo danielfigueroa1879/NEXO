@@ -786,16 +786,25 @@
   }
   .doc-modal-close:hover { background: rgba(40,40,40,0.9); }
   .doc-modal-close:active { transform: scale(0.92); }
-  /* Visor de PDF embebido dentro del mismo modal (conserva la X para cerrar) */
-  .doc-modal-body iframe {
-    width: 100%;
-    height: calc(100vh - 24px);
-    border: 0;
-    background: #fff;
-    border-radius: 4px;
+  /* Visor de PDF dentro del mismo modal: cada página como canvas (pdf.js).
+     Funciona en móvil, a diferencia de un <iframe>, y conserva la X para cerrar. */
+  .doc-modal-body #modalPdfPages {
     display: none;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
   }
-  .doc-modal-body iframe.show { display: block; }
+  .doc-modal-body #modalPdfPages.show { display: block; }
+  .doc-modal-body #modalPdfPages canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0 auto 12px;
+    border-radius: 4px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+    background: #fff;
+  }
+  .pdf-fallback-msg { color: #fff; text-align: center; padding: 48px 20px; font-size: 14px; line-height: 1.5; }
   /* Botón de respaldo: abrir el PDF en pestaña nueva (por si el navegador no
      renderiza PDFs embebidos, típico en algunos móviles) */
   .doc-modal-open {
@@ -2474,10 +2483,41 @@
   // Abrir documento en modal. Optimizado:
   //  - Si el thumb ya cargó la MISMA imagen, reusamos su blob (aparece al instante).
   //  - Si aún no está lista, mostramos spinner y hacemos fade cuando cargue.
+  // Renderiza un PDF (por URL) dentro del modal con pdf.js: cada página como un
+  // canvas. A diferencia de un <iframe>, esto funciona en móviles (que a menudo no
+  // muestran PDFs embebidos y abren una ventana aparte sin control) y mantiene
+  // nuestra X para cerrar.
+  async function renderizarPdfEnModal(src) {
+    const pages = document.getElementById('modalPdfPages');
+    const modal = document.getElementById('docModal');
+    pages.innerHTML = '';
+    pages.classList.add('show');
+    if (!window.pdfjsLib) throw new Error('pdf.js no disponible');
+    if (window.__pdfjsWorkerReady && typeof window.__pdfjsWorkerReady.then === 'function') {
+      try { await window.__pdfjsWorkerReady; } catch (_) {}
+    }
+    const pdf = await pdfjsLib.getDocument(src).promise;
+    const anchoCont = pages.clientWidth || Math.min(window.innerWidth - 24, 900);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const maxPags = Math.min(pdf.numPages, 15);
+    for (let i = 1; i <= maxPags; i++) {
+      const page = await pdf.getPage(i);
+      const base = page.getViewport({ scale: 1 });
+      const escala = Math.max(0.2, (anchoCont / base.width) * dpr);
+      const viewport = page.getViewport({ scale: escala });
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.round(viewport.width);
+      canvas.height = Math.round(viewport.height);
+      pages.appendChild(canvas);
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      if (i === 1) modal.classList.remove('loading'); // 1ª página lista → oculta spinner
+    }
+  }
+
   function abrirDoc(src, titulo, subtitulo) {
     const modal   = document.getElementById('docModal');
     const img     = document.getElementById('modalImg');
-    const pdf     = document.getElementById('modalPdf');
+    const pages   = document.getElementById('modalPdfPages');
     const openBtn = document.getElementById('modalOpen');
     document.getElementById('modalTitle').textContent = titulo;
     document.getElementById('modalSub').textContent = subtitulo || '';
@@ -2485,25 +2525,29 @@
     modal.classList.add('show');
     document.body.style.overflow = 'hidden';
 
-    // ---- PDF: se muestra DENTRO del modal, con la misma X para cerrar ----
+    // ---- PDF: se renderiza DENTRO del modal con pdf.js, con la misma X ----
     if (/\.pdf(\?|$)/i.test(src)) {
       img.style.display = 'none';
       img.classList.remove('ready');
-      pdf.classList.add('show');
-      openBtn.href = src;
-      openBtn.classList.add('show');   // respaldo: abrir en pestaña nueva
+      openBtn.classList.remove('show');
       modal.classList.add('loading');
-      pdf.onload = () => modal.classList.remove('loading');
-      // Fallback por si onload no dispara en algún navegador
-      setTimeout(() => modal.classList.remove('loading'), 1500);
-      if (pdf.getAttribute('src') !== src) pdf.setAttribute('src', src);
-      else modal.classList.remove('loading');
+      renderizarPdfEnModal(src)
+        .then(() => { modal.classList.remove('loading'); })
+        .catch((e) => {
+          console.warn('No se pudo mostrar el PDF en el modal:', e && e.message);
+          modal.classList.remove('loading');
+          // Fallback: botón para abrir en pestaña nueva + aviso dentro del modal
+          openBtn.href = src;
+          openBtn.classList.add('show');
+          pages.innerHTML = '<div class="pdf-fallback-msg">No se pudo mostrar el PDF aquí.<br>Usa el botón “Abrir ↗”.</div>';
+          pages.classList.add('show');
+        });
       return;
     }
 
     // ---- Imagen ----
-    pdf.classList.remove('show');
-    pdf.removeAttribute('src');
+    pages.classList.remove('show');
+    pages.innerHTML = '';
     openBtn.classList.remove('show');
     img.style.display = '';
 
@@ -2531,9 +2575,9 @@
     const modal = document.getElementById('docModal');
     modal.classList.remove('show', 'loading');
     document.body.style.overflow = '';
-    // Liberar el PDF embebido para que deje de renderizar/consumir memoria.
-    const pdf = document.getElementById('modalPdf');
-    if (pdf) { pdf.classList.remove('show'); pdf.removeAttribute('src'); }
+    // Liberar los canvas del PDF para que dejen de consumir memoria.
+    const pages = document.getElementById('modalPdfPages');
+    if (pages) { pages.classList.remove('show'); pages.innerHTML = ''; }
     const openBtn = document.getElementById('modalOpen');
     if (openBtn) openBtn.classList.remove('show');
   }
@@ -2550,7 +2594,7 @@
   <div class="doc-modal-spinner" aria-hidden="true"></div>
   <div class="doc-modal-body">
     <img id="modalImg" src="" alt="Documento" decoding="async">
-    <iframe id="modalPdf" title="Documento PDF" allow="fullscreen"></iframe>
+    <div id="modalPdfPages" aria-label="Documento PDF"></div>
   </div>
   <h3 id="modalTitle" hidden></h3>
   <div id="modalSub" hidden></div>
