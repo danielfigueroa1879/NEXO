@@ -28,9 +28,10 @@ exports.handler = async (event) => {
   let body = {};
   try { body = JSON.parse(event.body || '{}'); } catch (e) {}
 
-  const nombre  = (body.nombre  || 'Visitante').toString().trim().slice(0, 80);
-  const email   = (body.email   || '').toString().trim().slice(0, 120);
-  const mensaje = (body.mensaje || '').toString().trim().slice(0, 800);
+  const nombre   = (body.nombre   || 'Visitante').toString().trim().slice(0, 80);
+  const telefono = (body.telefono || '').toString().trim().slice(0, 20);
+  const email    = (body.email    || '').toString().trim().slice(0, 120);
+  const mensaje  = (body.mensaje  || '').toString().trim().slice(0, 800);
 
   if (!mensaje) return json(400, { error: 'El mensaje no puede estar vacío.' });
 
@@ -45,7 +46,7 @@ exports.handler = async (event) => {
           'Authorization': `Bearer ${SERVICE_KEY}`,
           'Prefer': 'return=minimal'
         },
-        body: JSON.stringify({ nombre, email, mensaje })
+        body: JSON.stringify({ nombre, telefono, email, mensaje })
       });
     } catch (e) {
       console.error('Supabase error:', e.message);
@@ -54,7 +55,14 @@ exports.handler = async (event) => {
 
   // 2. Enviar WhatsApp via CallMeBot
   if (WA_APIKEY) {
-    const texto = `💬 *Nuevo mensaje NEXO*\n👤 ${nombre}${email ? '\n📧 ' + email : ''}\n\n${mensaje}`;
+    const waLink = waMeLink(telefono);
+    const texto =
+      `💬 *Nuevo mensaje NEXO*\n` +
+      `👤 ${nombre}` +
+      (telefono ? `\n📱 ${telefono}` : '') +
+      (email    ? `\n📧 ${email}` : '') +
+      `\n\n${mensaje}` +
+      (waLink ? `\n\n↩️ Responder por WhatsApp:\n${waLink}` : '');
     const url = `https://api.callmebot.com/whatsapp.php?phone=${WA_PHONE}&text=${encodeURIComponent(texto)}&apikey=${WA_APIKEY}`;
     try {
       const r = await fetch(url);
@@ -66,6 +74,16 @@ exports.handler = async (event) => {
 
   return json(200, { ok: true });
 };
+
+// Convierte el teléfono del visitante en un enlace wa.me para responderle.
+// Normaliza al formato internacional chileno (código país 56).
+function waMeLink(tel) {
+  if (!tel) return null;
+  let d = String(tel).replace(/\D/g, ''); // deja solo dígitos
+  if (d.length < 8) return null;           // demasiado corto, no es válido
+  if (!d.startsWith('56')) d = '56' + d;   // anteponer código de Chile si falta
+  return 'https://wa.me/' + d;
+}
 
 function json(statusCode, obj) {
   return {
