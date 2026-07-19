@@ -27,6 +27,14 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
+// Al recibir SKIP_WAITING desde la página (cuando detecta un SW nuevo esperando),
+// activarnos de inmediato en lugar de esperar a que se cierren todas las pestañas.
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {

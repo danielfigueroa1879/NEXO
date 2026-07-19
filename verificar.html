@@ -2617,7 +2617,27 @@
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js')
-        .then(() => {})
+        .then((reg) => {
+          // Auto-recarga: cuando el SW nuevo toma el control, refrescar la página
+          // una sola vez para que el usuario vea los cambios sin cerrar la app.
+          let recargando = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (recargando) return;
+            recargando = true;
+            window.location.reload();
+          });
+          // Si hay uno esperando desde antes (ej. la app estaba abierta), activarlo ya.
+          if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          reg.addEventListener('updatefound', () => {
+            const nw = reg.installing;
+            if (!nw) return;
+            nw.addEventListener('statechange', () => {
+              if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                nw.postMessage({ type: 'SKIP_WAITING' });
+              }
+            });
+          });
+        })
         .catch((err) => console.error('Error al registrar Service Worker:', err));
     });
   }
