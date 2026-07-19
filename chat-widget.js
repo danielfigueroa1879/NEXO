@@ -235,6 +235,51 @@
     scrollMsgsToBottom();
   }
 
+  let conocidosAdminMsgIds = null;
+
+  function reproducirSonidoGota() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      if (ctx.state === 'suspended') ctx.resume();
+
+      const now = ctx.currentTime;
+
+      // Gota principal (sweep de frecuencia ascendente 450Hz -> 1300Hz)
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(450, now);
+      osc.frequency.exponentialRampToValueAtTime(1300, now + 0.08);
+
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.35, now + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.16);
+
+      // Resonancia secundaria (eco sutil tipo gota de agua)
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(900, now + 0.02);
+      osc2.frequency.exponentialRampToValueAtTime(1600, now + 0.09);
+
+      gain2.gain.setValueAtTime(0, now + 0.02);
+      gain2.gain.linearRampToValueAtTime(0.15, now + 0.035);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now + 0.02);
+      osc2.stop(now + 0.15);
+    } catch (e) { /* audio fallback */ }
+  }
+
   async function poll() {
     if (!convId) return;
     try {
@@ -246,6 +291,25 @@
       if (!r.ok) return;
       const data = await r.json();
       mensajes = data.mensajes || [];
+
+      const currentIds = new Set();
+      let hayNuevoAdmin = false;
+      mensajes.forEach(m => {
+        currentIds.add(m.id);
+        if (conocidosAdminMsgIds !== null && !conocidosAdminMsgIds.has(m.id) && m.de === 'admin') {
+          hayNuevoAdmin = true;
+        }
+      });
+
+      if (conocidosAdminMsgIds === null) {
+        conocidosAdminMsgIds = currentIds;
+      } else {
+        conocidosAdminMsgIds = currentIds;
+        if (hayNuevoAdmin) {
+          reproducirSonidoGota();
+        }
+      }
+
       const nuevaSig = mensajes.map(m => m.id + (m.leido ? '1' : '0')).join('|');
       if (nuevaSig !== sig) { sig = nuevaSig; renderThread(); }
     } catch (e) { /* silencioso: reintenta en el próximo ciclo */ }
