@@ -116,10 +116,10 @@
     @media (max-width: 480px) {
       #nexo-chat-box {
         position: fixed;
-        top: 24px; bottom: 24px; left: 12px; right: 12px;
-        width: calc(100vw - 24px); max-width: 440px;
-        height: auto; max-height: calc(100dvh - 48px);
-        border-radius: 22px;
+        top: 36px; bottom: 36px; left: 6px; right: 6px;
+        width: calc(100vw - 12px); max-width: 480px;
+        height: auto; max-height: calc(100dvh - 72px);
+        border-radius: 20px;
         box-shadow: 0 12px 48px rgba(0,0,0,0.3);
         margin: 0 auto;
       }
@@ -444,7 +444,7 @@
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', () => {
       if (abierto && window.innerWidth <= 480) {
-        const targetH = Math.min(window.visualViewport.height - 36, window.innerHeight - 36);
+        const targetH = Math.min(window.visualViewport.height - 50, window.innerHeight - 50);
         box.style.height = `${targetH}px`;
         box.style.maxHeight = `${targetH}px`;
         scrollMsgsToBottom();
