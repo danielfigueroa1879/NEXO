@@ -2,7 +2,7 @@
 //  - APP_CACHE   se bumpea con cada deploy para forzar refresco de HTML/JS/CSS.
 //  - STORAGE_CACHE es persistente: guarda las imágenes de documentos de Supabase
 //                  para que NO se vuelvan a descargar en el próximo deploy.
-const APP_CACHE     = 'nfc-nexo-v15';
+const APP_CACHE     = 'nfc-nexo-v16';
 const STORAGE_CACHE = 'nfc-nexo-storage-v1';
 const OFFLINE_URL   = 'index.html';
 
