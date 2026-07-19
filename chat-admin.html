@@ -103,8 +103,12 @@
   }
   @keyframes chatSheetUp { from { transform: translateY(24px); opacity:.6; } to { transform: translateY(0); opacity:1; } }
   @media (max-width: 639px) {
+    #chatThread { align-items: flex-end; padding-top: 140px; box-sizing: border-box; }
     #chatThreadPanel {
-      height: 100dvh; height: 100%; max-height: 100dvh; border-radius: 0;
+      height: 100%; max-height: calc(100dvh - 140px);
+      border: 1.5px solid #64748B; border-bottom: none;
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -6px 36px rgba(0,0,0,0.32);
     }
     .topbar h1 { font-size: 20px; }
     .card-head h2 { font-size: 17px; }
