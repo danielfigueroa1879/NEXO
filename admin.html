@@ -548,34 +548,27 @@
 
 <div class="page">
 
-  <!-- DUEÑO DE LA CUENTA -->
-  <div class="owner-card">
-    <h3>Dueño de la cuenta</h3>
-    <div class="nombre" id="adminNombre">Tu nombre</div>
-    <div class="rut" id="adminRut">RUT: —</div>
-    <div class="nfc-id">
-      <div>
-        <label>ID de tu tarjeta NFC</label>
-        <div class="id-val" id="nfc-id-val">NFC·NX·0001-CL</div>
-      </div>
-      <button class="copy-btn" onclick="copyId()">📋 Copiar</button>
-    </div>
+  <!-- 💬 CHAT ADMIN (solo se ve para el admin) -->
+  <a href="chat-admin.html" id="chatAdminBtn" class="btn-admin-doc" style="display:none;width:100%;justify-content:center;margin-bottom:16px;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Chat Admin
+    <span id="chatAdminBadge" style="display:none;background:#fff;color:#E82127;border-radius:10px;font-size:11px;font-weight:700;padding:1px 8px;margin-left:6px;"></span>
+  </a>
 
-    <!-- 🔗 URL para grabar en el chip NFC — SOLO visible para el admin/dueño -->
-    <div id="nfcSection" style="display:none;margin-top:16px;padding:14px;background:#f5f5f7;border-radius:12px;border:1.5px solid #E82127;">
-      <label style="font-size:11px;font-weight:700;color:#E82127;text-transform:uppercase;letter-spacing:0.06em;">
-        🔒 Link para grabar en el chip NFC · Solo admin
-      </label>
-      <div style="font-family:'Space Grotesk',monospace;font-size:13px;word-break:break-all;margin:8px 0;color:var(--ink);"
-           id="nfcLink">Generando…</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="copy-btn" onclick="copiarLinkNFC()" style="flex:1;">📋 Copiar link</button>
-        <button class="copy-btn" onclick="abrirLinkNFC()" style="flex:1;">👁 Previsualizar</button>
-      </div>
-      <p style="font-size:11px;color:var(--ink-mute);margin-top:8px;line-height:1.4;">
-        Graba este URL en la memoria del chip NFC del usuario con una app como <strong>NFC Tools</strong>.
-      </p>
+  <!-- 🔗 URL para grabar en el chip NFC — SOLO visible para el admin/dueño -->
+  <div id="nfcSection" style="display:none;padding:14px;background:#f5f5f7;border-radius:12px;border:1.5px solid #E82127;margin-bottom:16px;">
+    <label style="font-size:11px;font-weight:700;color:#E82127;text-transform:uppercase;letter-spacing:0.06em;">
+      🔒 Link para grabar en el chip NFC · Solo admin
+    </label>
+    <div style="font-family:'Space Grotesk',monospace;font-size:13px;word-break:break-all;margin:8px 0;color:var(--ink);"
+         id="nfcLink">Generando…</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="copy-btn" onclick="copiarLinkNFC()" style="flex:1;">📋 Copiar link</button>
+      <button class="copy-btn" onclick="abrirLinkNFC()" style="flex:1;">👁 Previsualizar</button>
     </div>
+    <p style="font-size:11px;color:var(--ink-mute);margin-top:8px;line-height:1.4;">
+      Graba este URL en la memoria del chip NFC del usuario con una app como <strong>NFC Tools</strong>.
+    </p>
   </div>
 
   <!-- ===== PERFILES ACTIVOS ===== -->
@@ -875,44 +868,6 @@
     </style>
   </div>
 
-  <!-- ===== ADMIN: MENSAJES DEL CHAT (solo es_admin) ===== -->
-  <div class="page-wide" id="chatAdmin" style="display:none;">
-    <div class="section">
-      <div class="section-head">
-        <span class="icon">💬</span>
-        <h3>Mensajes del chat</h3>
-        <span class="help" id="chatUnread">—</span>
-      </div>
-
-      <!-- Lista de conversaciones -->
-      <div id="chatConvs" style="max-height:380px; overflow-y:auto;"></div>
-
-      <!-- Hilo de conversación -->
-      <div id="chatThread" style="display:none;">
-        <div style="display:flex; align-items:center; gap:8px; padding:10px 14px; border-bottom:1px solid var(--line);">
-          <button onclick="cerrarHilo()" class="copy-btn" style="padding:4px 10px;">← Volver</button>
-          <strong id="chatThreadName" style="font-size:14px; color:var(--ink);"></strong>
-        </div>
-        <div id="chatMsgs" style="padding:14px; display:flex; flex-direction:column; gap:8px; height:320px; overflow-y:auto; background:var(--bg);"></div>
-        <div style="display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--line);">
-          <input type="text" id="chatReply" placeholder="Escribe tu respuesta…" maxlength="800"
-                 onkeydown="if(event.key==='Enter'){event.preventDefault();responderChat();}"
-                 style="flex:1; border:1px solid var(--line); border-radius:20px; padding:9px 14px; font-size:14px; background:#fff; color:#111; outline:none;">
-          <button onclick="responderChat()" class="btn-admin-doc" style="padding:9px 16px; white-space:nowrap;">Enviar</button>
-        </div>
-      </div>
-    </div>
-    <style>
-      #chatConvs .conv-row { display:flex; align-items:center; gap:10px; padding:12px 14px; border-bottom:1px solid var(--line); cursor:pointer; }
-      #chatConvs .conv-row:hover { background:var(--bg); }
-      #chatConvs .conv-name { font-weight:600; font-size:14px; color:var(--ink); }
-      #chatConvs .conv-last { font-size:12px; color:var(--ink-mute); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:220px; }
-      #chatConvs .conv-badge { margin-left:auto; background:#e53e3e; color:#fff; border-radius:10px; font-size:11px; font-weight:700; padding:1px 7px; }
-      #chatMsgs .chat-b { max-width:80%; padding:9px 12px; border-radius:14px; font-size:13px; line-height:1.4; white-space:pre-wrap; word-wrap:break-word; }
-      #chatMsgs .chat-b.visitante { align-self:flex-start; background:#fff; border:1px solid var(--line); border-bottom-left-radius:4px; color:#111; }
-      #chatMsgs .chat-b.admin { align-self:flex-end; background:#0A0A0A; color:#fff; border-bottom-right-radius:4px; }
-    </style>
-  </div>
 </div>
 
 <!-- SAVE BAR -->
@@ -1030,9 +985,12 @@
     }
     if (!datos) datos = { nombre: 'Tu nombre', rut: '—', perfiles: ['guardia'], patente: '', tema: 'negro' };
 
-    document.getElementById('adminNombre').textContent       = datos.nombre || 'Tu nombre';
-    document.getElementById('adminRut').textContent          = 'RUT: ' + (datos.rut || '—');
-    document.getElementById('adminPreviewName').textContent  = datos.nombre || 'Tu nombre';
+    const _elNombre = document.getElementById('adminNombre');
+    if (_elNombre) _elNombre.textContent = datos.nombre || 'Tu nombre';
+    const _elRut = document.getElementById('adminRut');
+    if (_elRut) _elRut.textContent = 'RUT: ' + (datos.rut || '—');
+    const _elPrev = document.getElementById('adminPreviewName');
+    if (_elPrev) _elPrev.textContent = datos.nombre || 'Tu nombre';
 
     const perfiles = datos.perfiles || [];
 
@@ -1102,12 +1060,25 @@
     // 🔒 Sección NFC visible SOLO para el admin
     if (datos.es_admin) {
       document.getElementById('nfcSection').style.display = '';
+      document.getElementById('chatAdminBtn').style.display = '';
       cargarLinkNFC();
       await cargarListaCuentas();
-      cargarChatAdmin();
+      cargarChatAdminBadge();
     }
     // Aplicar foto de perfil en cualquier avatar
     aplicarFotoPerfil();
+  }
+
+  // 💬 Contador de mensajes de chat sin leer (badge del botón "Chat Admin")
+  async function cargarChatAdminBadge() {
+    try {
+      const { count, error } = await sb.from('chat_mensajes')
+        .select('id', { count: 'exact', head: true })
+        .eq('de', 'visitante').eq('leido', false);
+      if (error) return;
+      const b = document.getElementById('chatAdminBadge');
+      if (b && count) { b.textContent = count; b.style.display = ''; }
+    } catch (e) { /* silencioso */ }
   }
 
   // 🔗 Link para grabar en la tarjeta NFC
@@ -1350,131 +1321,6 @@
       console.error(e);
       cont.querySelector('tbody').innerHTML =
         `<tr><td colspan="10" style="color:#c00;">Error: ${e.message}</td></tr>`;
-    }
-  }
-
-  // ============================================================
-  //  MENSAJES DEL CHAT (panel admin)
-  // ============================================================
-  let chatConversaciones = {};
-  let chatConvActivo = null;
-  let chatPollTimer = null;
-
-  function chatEsc(s) {
-    return String(s ?? '').replace(/[&<>"']/g, c =>
-      ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
-  }
-
-  async function cargarChatAdmin() {
-    const cont = document.getElementById('chatAdmin');
-    if (!cont) return;
-    cont.style.display = 'block';
-    await refrescarChat();
-    if (!chatPollTimer) chatPollTimer = setInterval(refrescarChat, 6000);
-  }
-
-  async function refrescarChat() {
-    try {
-      const { data, error } = await sb.from('chat_mensajes')
-        .select('id,conversacion_id,de,nombre,telefono,email,mensaje,leido,fecha')
-        .order('fecha', { ascending: true })
-        .limit(2000);
-      if (error) throw error;
-
-      const convs = {};
-      (data || []).forEach(m => {
-        const k = m.conversacion_id || m.id;
-        if (!convs[k]) convs[k] = { id:k, nombre:'', telefono:'', mensajes:[], unread:0, ultimo:'', ultimoTexto:'' };
-        const c = convs[k];
-        c.mensajes.push(m);
-        if (m.de === 'visitante') {
-          if (m.nombre)   c.nombre = m.nombre;
-          if (m.telefono) c.telefono = m.telefono;
-          if (!m.leido)   c.unread++;
-        }
-        c.ultimo = m.fecha;
-        c.ultimoTexto = m.mensaje;
-      });
-      chatConversaciones = convs;
-
-      pintarListaConvs();
-      if (chatConvActivo && convs[chatConvActivo]) pintarHilo(chatConvActivo);
-
-      const totalUnread = Object.values(convs).reduce((s, c) => s + c.unread, 0);
-      const badge = document.getElementById('chatUnread');
-      if (badge) badge.textContent = totalUnread ? (totalUnread + ' sin leer') : 'Sin mensajes nuevos';
-    } catch (e) {
-      console.warn('chat admin:', e);
-    }
-  }
-
-  function pintarListaConvs() {
-    const cont = document.getElementById('chatConvs');
-    if (!cont) return;
-    const arr = Object.values(chatConversaciones)
-      .sort((a, b) => (b.ultimo || '').localeCompare(a.ultimo || ''));
-    if (!arr.length) {
-      cont.innerHTML = '<div style="padding:18px;color:var(--ink-mute);font-size:13px;text-align:center;">Aún no hay mensajes.</div>';
-      return;
-    }
-    cont.innerHTML = arr.map(c => `
-      <div class="conv-row" onclick="abrirHilo('${c.id}')">
-        <div style="min-width:0;">
-          <div class="conv-name">${chatEsc(c.nombre || 'Visitante')}${c.telefono ? ' · ' + chatEsc(c.telefono) : ''}</div>
-          <div class="conv-last">${chatEsc(c.ultimoTexto || '')}</div>
-        </div>
-        ${c.unread ? `<span class="conv-badge">${c.unread}</span>` : ''}
-      </div>
-    `).join('');
-  }
-
-  async function abrirHilo(id) {
-    chatConvActivo = id;
-    document.getElementById('chatConvs').style.display = 'none';
-    document.getElementById('chatThread').style.display = 'block';
-    pintarHilo(id);
-    try {
-      await sb.from('chat_mensajes').update({ leido: true })
-        .eq('conversacion_id', id).eq('de', 'visitante').eq('leido', false);
-    } catch (e) { /* no crítico */ }
-    refrescarChat();
-    const inp = document.getElementById('chatReply');
-    if (inp) inp.focus();
-  }
-
-  function pintarHilo(id) {
-    const c = chatConversaciones[id];
-    if (!c) return;
-    document.getElementById('chatThreadName').textContent =
-      (c.nombre || 'Visitante') + (c.telefono ? ' · ' + c.telefono : '');
-    const cont = document.getElementById('chatMsgs');
-    const nearBottom = cont.scrollHeight - cont.scrollTop - cont.clientHeight < 80;
-    cont.innerHTML = c.mensajes.map(m =>
-      `<div class="chat-b ${m.de === 'admin' ? 'admin' : 'visitante'}">${chatEsc(m.mensaje)}</div>`
-    ).join('');
-    if (nearBottom) cont.scrollTop = cont.scrollHeight;
-  }
-
-  function cerrarHilo() {
-    chatConvActivo = null;
-    document.getElementById('chatThread').style.display = 'none';
-    document.getElementById('chatConvs').style.display = 'block';
-  }
-
-  async function responderChat() {
-    const inp = document.getElementById('chatReply');
-    const texto = inp.value.trim();
-    if (!texto || !chatConvActivo) return;
-    inp.value = '';
-    try {
-      const { error } = await sb.from('chat_mensajes').insert({
-        conversacion_id: chatConvActivo, de: 'admin', mensaje: texto, leido: true
-      });
-      if (error) throw error;
-      await refrescarChat();
-    } catch (e) {
-      alert('No se pudo enviar: ' + e.message);
-      inp.value = texto;
     }
   }
 

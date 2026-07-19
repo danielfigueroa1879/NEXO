@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>NFC NEXO — Chat Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap"></noscript>
+<link rel="icon" type="image/png" href="favicon/favicon-96x96.png" sizes="96x96" />
+<link rel="manifest" href="favicon/nexo.webmanifest" />
+<style>
+  :root {
+    --bg: #F2F2F5; --surface: #FFFFFF; --ink: #0A0A0A; --ink-mute: #6E6E73;
+    --line: #E5E5EA; --brand: #0A0A0A; --red: #E82127;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0E0E10; --surface: #1C1C1E; --ink: #FFFFFF; --ink-mute: #9A9AA0;
+    --line: #2C2C34; --brand: #FFFFFF;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: 'Outfit', -apple-system, sans-serif;
+    background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased;
+  }
+  .topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; background: var(--surface); border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 20;
+  }
+  .topbar a.back {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line);
+    color: var(--ink); text-decoration: none; background: var(--bg);
+  }
+  .topbar h1 { font-size: 17px; margin: 0; flex: 1; }
+  .topbar .badge { font-size: 11px; font-weight: 700; color: var(--red); }
+
+  .wrap { max-width: 720px; margin: 0 auto; padding: 16px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 14px; overflow: hidden;
+  }
+  .card-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px; border-bottom: 1px solid var(--line);
+  }
+  .card-head h2 { font-size: 15px; margin: 0; flex: 1; }
+  .card-head .help { font-size: 12px; color: var(--ink-mute); }
+
+  #chatConvs { max-height: calc(100vh - 190px); overflow-y: auto; }
+  #chatConvs .conv-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px; border-bottom: 1px solid var(--line); cursor: pointer;
+  }
+  #chatConvs .conv-row:hover { background: var(--bg); }
+  #chatConvs .conv-name { font-weight: 600; font-size: 15px; color: var(--ink); }
+  #chatConvs .conv-last { font-size: 13px; color: var(--ink-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60vw; }
+  #chatConvs .conv-badge { margin-left: auto; background: var(--red); color: #fff; border-radius: 10px; font-size: 11px; font-weight: 700; padding: 2px 8px; }
+  #chatConvs .vacio { padding: 28px 16px; text-align: center; color: var(--ink-mute); font-size: 14px; }
+
+  #gate { display: none; text-align: center; padding: 60px 20px; }
+  #gate a { color: var(--red); font-weight: 600; }
+
+  /* --- Hoja flotante del hilo --- */
+  #chatThread {
+    position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.45);
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  #chatThread.open { display: flex; }
+  #chatThreadPanel {
+    background: var(--surface); width: 100%; max-width: 460px; height: 85vh;
+    display: flex; flex-direction: column; overflow: hidden;
+    border-radius: 18px 18px 0 0; box-shadow: 0 -4px 30px rgba(0,0,0,0.3);
+    animation: chatSheetUp .24s ease;
+  }
+  @keyframes chatSheetUp { from { transform: translateY(24px); opacity:.6; } to { transform: translateY(0); opacity:1; } }
+  @media (min-width: 640px) {
+    #chatThread { align-items: center; }
+    #chatThreadPanel { height: 70vh; border-radius: 16px; }
+  }
+  #chatThreadHead {
+    display: flex; align-items: center; gap: 10px;
+    padding: 13px 16px; background: #0A0A0A; color: #fff; flex-shrink: 0;
+  }
+  #chatThreadHead strong { flex: 1; min-width: 0; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #chatThreadClose { background: none; border: none; color: #fff; cursor: pointer; font-size: 20px; line-height: 1; padding: 0 4px; flex-shrink: 0; }
+
+  #chatMsgs {
+    flex: 1; overflow-y: auto; padding: 14px;
+    display: flex; flex-direction: column; gap: 8px; background: var(--bg);
+  }
+  #chatMsgs .chat-b { max-width: 82%; padding: 9px 12px; border-radius: 14px; font-size: 14px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; }
+  #chatMsgs .chat-b.visitante { align-self: flex-start; background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 4px; color: var(--ink); }
+  #chatMsgs .chat-b.admin { align-self: flex-end; background: #0A0A0A; color: #fff; border-bottom-right-radius: 4px; }
+
+  #chatReplyBar { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); flex-shrink: 0; background: var(--surface); }
+  #chatReply {
+    flex: 1; min-width: 0; box-sizing: border-box; border: 1px solid var(--line); border-radius: 22px;
+    padding: 11px 16px; font-size: 15px; outline: none; background: var(--bg); color: var(--ink); font-family: inherit;
+  }
+  #chatReply:focus { border-color: var(--brand); }
+  #chatSendBtn {
+    flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%;
+    background: #0A0A0A; color: #fff; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #chatSendBtn svg { width: 19px; height: 19px; }
+</style>
+<script>(function(){try{var k='nexo_theme',s=sessionStorage.getItem(k);if(!s){var h=new Date().getHours();s=(h>=19||h<7)?'dark':'light';}document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){}})();</script>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="admin.html" class="back" title="Volver al panel">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+  </a>
+  <h1>💬 Chat Admin</h1>
+  <span class="badge" id="chatUnread">—</span>
+</div>
+
+<div class="wrap">
+  <div id="gate">
+    <p>Esta página es solo para el administrador.</p>
+    <p><a href="login.html">Iniciar sesión →</a></p>
+  </div>
+
+  <div id="main" style="display:none;">
+    <div class="card">
+      <div class="card-head">
+        <h2>Conversaciones</h2>
+        <span class="help">Toca una para responder</span>
+      </div>
+      <div id="chatConvs"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Hoja flotante del hilo -->
+<div id="chatThread" onclick="if(event.target===this)cerrarHilo()">
+  <div id="chatThreadPanel">
+    <div id="chatThreadHead">
+      <strong id="chatThreadName">Conversación</strong>
+      <button onclick="cerrarHilo()" id="chatThreadClose" aria-label="Cerrar">✕</button>
+    </div>
+    <div id="chatMsgs"></div>
+    <div id="chatReplyBar">
+      <input type="text" id="chatReply" placeholder="Escribe tu respuesta…" maxlength="800"
+             onkeydown="if(event.key==='Enter'){event.preventDefault();responderChat();}">
+      <button onclick="responderChat()" id="chatSendBtn" aria-label="Enviar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="supabase-client.js"></script>
+<script src="theme.js" defer></script>
+<script>
+  let chatConversaciones = {};
+  let chatConvActivo = null;
+
+  function chatEsc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+      ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  }
+
+  async function refrescarChat() {
+    try {
+      const { data, error } = await sb.from('chat_mensajes')
+        .select('id,conversacion_id,de,nombre,telefono,email,mensaje,leido,fecha')
+        .order('fecha', { ascending: true })
+        .limit(2000);
+      if (error) throw error;
+
+      const convs = {};
+      (data || []).forEach(m => {
+        const k = m.conversacion_id || m.id;
+        if (!convs[k]) convs[k] = { id:k, nombre:'', telefono:'', mensajes:[], unread:0, ultimo:'', ultimoTexto:'' };
+        const c = convs[k];
+        c.mensajes.push(m);
+        if (m.de === 'visitante') {
+          if (m.nombre)   c.nombre = m.nombre;
+          if (m.telefono) c.telefono = m.telefono;
+          if (!m.leido)   c.unread++;
+        }
+        c.ultimo = m.fecha;
+        c.ultimoTexto = m.mensaje;
+      });
+      chatConversaciones = convs;
+
+      pintarListaConvs();
+      if (chatConvActivo && convs[chatConvActivo]) pintarHilo(chatConvActivo);
+
+      const totalUnread = Object.values(convs).reduce((s, c) => s + c.unread, 0);
+      const badge = document.getElementById('chatUnread');
+      if (badge) badge.textContent = totalUnread ? (totalUnread + ' sin leer') : '';
+    } catch (e) {
+      console.warn('chat admin:', e);
+    }
+  }
+
+  function pintarListaConvs() {
+    const cont = document.getElementById('chatConvs');
+    const arr = Object.values(chatConversaciones)
+      .sort((a, b) => (b.ultimo || '').localeCompare(a.ultimo || ''));
+    if (!arr.length) {
+      cont.innerHTML = '<div class="vacio">Aún no hay mensajes.</div>';
+      return;
+    }
+    cont.innerHTML = arr.map(c => `
+      <div class="conv-row" onclick="abrirHilo('${c.id}')">
+        <div style="min-width:0;">
+          <div class="conv-name">${chatEsc(c.nombre || 'Visitante')}${c.telefono ? ' · ' + chatEsc(c.telefono) : ''}</div>
+          <div class="conv-last">${chatEsc(c.ultimoTexto || '')}</div>
+        </div>
+        ${c.unread ? `<span class="conv-badge">${c.unread}</span>` : ''}
+      </div>
+    `).join('');
+  }
+
+  async function abrirHilo(id) {
+    chatConvActivo = id;
+    document.getElementById('chatThread').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    pintarHilo(id);
+    try {
+      await sb.from('chat_mensajes').update({ leido: true })
+        .eq('conversacion_id', id).eq('de', 'visitante').eq('leido', false);
+    } catch (e) { /* no crítico */ }
+    refrescarChat();
+    const inp = document.getElementById('chatReply');
+    if (inp) inp.focus();
+  }
+
+  function pintarHilo(id) {
+    const c = chatConversaciones[id];
+    if (!c) return;
+    document.getElementById('chatThreadName').textContent =
+      (c.nombre || 'Visitante') + (c.telefono ? ' · ' + c.telefono : '');
+    const cont = document.getElementById('chatMsgs');
+    const nearBottom = cont.scrollHeight - cont.scrollTop - cont.clientHeight < 80;
+    cont.innerHTML = c.mensajes.map(m =>
+      `<div class="chat-b ${m.de === 'admin' ? 'admin' : 'visitante'}">${chatEsc(m.mensaje)}</div>`
+    ).join('');
+    if (nearBottom) cont.scrollTop = cont.scrollHeight;
+  }
+
+  function cerrarHilo() {
+    chatConvActivo = null;
+    document.getElementById('chatThread').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  async function responderChat() {
+    const inp = document.getElementById('chatReply');
+    const texto = inp.value.trim();
+    if (!texto || !chatConvActivo) return;
+    inp.value = '';
+    try {
+      const { error } = await sb.from('chat_mensajes').insert({
+        conversacion_id: chatConvActivo, de: 'admin', mensaje: texto, leido: true
+      });
+      if (error) throw error;
+      await refrescarChat();
+    } catch (e) {
+      alert('No se pudo enviar: ' + e.message);
+      inp.value = texto;
+    }
+  }
+
+  // Gate de administrador + arranque
+  (async function init() {
+    let datos = null;
+    try { datos = await obtenerCuenta(); } catch (e) { /* sin sesión */ }
+    if (!datos || !datos.es_admin) {
+      document.getElementById('gate').style.display = 'block';
+      document.getElementById('main').style.display = 'none';
+      return;
+    }
+    document.getElementById('main').style.display = 'block';
+    await refrescarChat();
+    setInterval(refrescarChat, 6000);
+  })();
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  }
+</script>
+</body>
+</html>
