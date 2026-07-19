@@ -124,12 +124,12 @@
         box-shadow: 0 12px 48px rgba(0,0,0,0.18), 0 0 16px rgba(0,122,255,0.2);
         margin: 0 auto;
       }
-      #nexo-chat-header-text strong { font-size: 17px; }
-      #nexo-chat-header-text span { font-size: 13px; }
-      .nexo-msg { font-size: 16px; line-height: 1.45; max-width: 88%; padding: 12px 16px; border-radius: 18px; }
-      .nexo-meta { font-size: 11px; }
+      #nexo-chat-header-text strong { font-size: 19px; }
+      #nexo-chat-header-text span { font-size: 14px; }
+      .nexo-msg { font-size: 18px; line-height: 1.48; max-width: 88%; padding: 13px 17px; border-radius: 20px; }
+      .nexo-meta { font-size: 12px; margin-top: 5px; }
       #nexo-chat-input, #nexo-chat-contact input {
-        font-size: 16px; padding: 12px 16px;
+        font-size: 18px; padding: 13px 17px;
       }
     }
     #nexo-chat-sendbtn {
@@ -140,7 +140,6 @@
     }
     #nexo-chat-sendbtn:hover:not(:disabled) { transform: scale(1.05); }
     #nexo-chat-sendbtn:disabled { opacity: .5; cursor: default; }
-    #nexo-chat-sendbtn svg { width: 19px; height: 19px; }
     #nexo-chat-sendbtn svg { width: 19px; height: 19px; }
   `;
 
