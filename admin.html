@@ -1077,7 +1077,15 @@
         .eq('de', 'visitante').eq('leido', false);
       if (error) return;
       const b = document.getElementById('chatAdminBadge');
-      if (b && count) { b.textContent = count; b.style.display = ''; }
+      if (b) {
+        if (count && count > 0) {
+          b.textContent = count;
+          b.style.display = 'inline-block';
+        } else {
+          b.textContent = '';
+          b.style.display = 'none';
+        }
+      }
     } catch (e) { /* silencioso */ }
   }
 

@@ -50,6 +50,7 @@
     #nexo-chat-header {
       background: #0A0A0A; color: #fff; padding: 14px 16px;
       display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+      position: sticky; top: 0; z-index: 10;
     }
     #nexo-chat-header svg { width:22px; height:22px; flex-shrink:0; }
     #nexo-chat-header-text { flex:1; }
@@ -61,9 +62,9 @@
     }
 
     #nexo-chat-msgs {
-      flex: 1; overflow-y: auto; padding: 14px;
+      flex: 1; min-height: 0; overflow-y: auto; padding: 14px;
       display: flex; flex-direction: column; gap: 8px;
-      background: #f7f7f8;
+      background: #f7f7f8; -webkit-overflow-scrolling: touch;
     }
     .nexo-msg {
       max-width: 80%; padding: 9px 12px; border-radius: 14px;
@@ -95,18 +96,29 @@
     #nexo-chat-contact { padding: 12px 14px 0; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
     #nexo-chat-contact input {
       width: 100%; box-sizing: border-box; border: 1px solid #ddd; border-radius: 8px;
-      padding: 8px 11px; font-size: 13px; font-family: Arial, sans-serif; outline: none;
+      padding: 8px 11px; font-size: 14px; font-family: Arial, sans-serif; outline: none;
     }
     #nexo-chat-contact input:focus { border-color: #0A0A0A; }
 
     #nexo-chat-footer {
-      display: flex; gap: 8px; padding: 12px 14px; border-top: 1px solid #eee; flex-shrink: 0;
+      display: flex; gap: 8px; padding: 12px 14px; border-top: 1px solid #eee; flex-shrink: 0; background: #fff;
     }
     #nexo-chat-input {
       flex: 1; box-sizing: border-box; border: 1px solid #ddd; border-radius: 20px;
-      padding: 9px 14px; font-size: 13px; font-family: Arial, sans-serif; outline: none; resize: none;
+      padding: 9px 14px; font-size: 14px; font-family: Arial, sans-serif; outline: none; resize: none;
     }
     #nexo-chat-input:focus { border-color: #0A0A0A; }
+
+    @media (max-width: 480px) {
+      #nexo-chat-box {
+        bottom: 0; right: 0; left: 0; top: 0;
+        width: 100vw; max-width: 100vw; height: 100dvh; height: 100%; max-height: 100dvh;
+        border-radius: 0;
+      }
+      #nexo-chat-input, #nexo-chat-contact input {
+        font-size: 16px;
+      }
+    }
     #nexo-chat-sendbtn {
       background: #0A0A0A; color: #fff; border: none; border-radius: 50%;
       width: 40px; height: 40px; flex-shrink: 0; cursor: pointer;
@@ -175,9 +187,13 @@
   let lastTypingSent = 0;
 
   function genId() {
-    return (window.crypto && crypto.randomUUID)
-      ? crypto.randomUUID()
-      : 'conv-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+    if (typeof window !== 'undefined' && window.crypto && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
   }
 
   function hora(fecha) {

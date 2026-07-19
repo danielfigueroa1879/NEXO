@@ -48,6 +48,29 @@
   }
   .card-head h2 { font-size: 15px; margin: 0; flex: 1; }
   .card-head .help { font-size: 12px; color: var(--ink-mute); }
+  .card-actions { display: flex; align-items: center; gap: 8px; }
+  .btn-action-sm {
+    background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+    padding: 5px 10px; font-size: 12px; font-weight: 600; color: var(--ink);
+    cursor: pointer; transition: background .15s ease;
+  }
+  .btn-action-sm:hover { background: var(--line); }
+  .btn-action-sm.danger { color: var(--red); border-color: rgba(232,33,39,0.3); }
+  .btn-action-sm.danger:hover { background: rgba(232,33,39,0.1); }
+
+  .btn-del-conv {
+    background: none; border: none; color: var(--ink-mute); cursor: pointer;
+    padding: 6px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;
+    transition: color .15s ease, background .15s ease; margin-left: 6px;
+  }
+  .btn-del-conv:hover { color: var(--red); background: rgba(232,33,39,0.08); }
+
+  .btn-del-msg {
+    opacity: 0; transition: opacity .15s ease; background: none; border: none;
+    color: var(--ink-mute); cursor: pointer; padding: 2px 4px; font-size: 12px; margin-left: 4px;
+  }
+  .chat-b:hover .btn-del-msg { opacity: 1; }
+  .btn-del-msg:hover { color: var(--red); }
 
   #chatConvs { max-height: calc(100vh - 190px); overflow-y: auto; }
   #chatConvs .conv-row {
@@ -56,7 +79,7 @@
   }
   #chatConvs .conv-row:hover { background: var(--bg); }
   #chatConvs .conv-name { font-weight: 600; font-size: 15px; color: var(--ink); }
-  #chatConvs .conv-last { font-size: 13px; color: var(--ink-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60vw; }
+  #chatConvs .conv-last { font-size: 13px; color: var(--ink-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50vw; }
   #chatConvs .conv-badge { margin-left: auto; background: var(--red); color: #fff; border-radius: 10px; font-size: 11px; font-weight: 700; padding: 2px 8px; }
   #chatConvs .vacio { padding: 28px 16px; text-align: center; color: var(--ink-mute); font-size: 14px; }
 
@@ -65,22 +88,32 @@
 
   /* --- Hoja flotante del hilo --- */
   #chatThread {
-    position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.45);
-    display: none; align-items: flex-end; justify-content: center;
+    position: fixed; inset: 0; top: 0; bottom: 0; left: 0; right: 0;
+    width: 100vw; height: 100%; height: 100dvh; z-index: 10000;
+    background: rgba(0,0,0,0.45); display: none;
+    align-items: flex-end; justify-content: center; overflow: hidden;
   }
   #chatThread.open { display: flex; }
   #chatThreadPanel {
-    background: var(--surface); width: 100%; max-width: 460px; height: 85vh;
+    background: var(--surface); width: 100%; max-width: 460px;
+    height: 85dvh; height: 85%; max-height: 100dvh;
     display: flex; flex-direction: column; overflow: hidden;
     border-radius: 18px 18px 0 0; box-shadow: 0 -4px 30px rgba(0,0,0,0.3);
     animation: chatSheetUp .24s ease;
   }
   @keyframes chatSheetUp { from { transform: translateY(24px); opacity:.6; } to { transform: translateY(0); opacity:1; } }
+  @media (max-width: 639px) {
+    #chatThreadPanel {
+      height: 100dvh; height: 100%; max-height: 100dvh; border-radius: 0;
+    }
+    #chatReply { font-size: 16px; } /* Evita el auto-zoom de iOS que desplaza el header fuera de pantalla */
+  }
   @media (min-width: 640px) {
     #chatThread { align-items: center; }
     #chatThreadPanel { height: 70vh; border-radius: 16px; }
   }
   #chatThreadHead {
+    position: sticky; top: 0; z-index: 10;
     display: flex; align-items: center; gap: 10px;
     padding: 13px 16px; background: #0A0A0A; color: #fff; flex-shrink: 0;
   }
@@ -88,13 +121,14 @@
   #chatThreadClose { background: none; border: none; color: #fff; cursor: pointer; font-size: 20px; line-height: 1; padding: 0 4px; flex-shrink: 0; }
 
   #chatMsgs {
-    flex: 1; overflow-y: auto; padding: 14px;
+    flex: 1; min-height: 0; overflow-y: auto; padding: 14px;
     display: flex; flex-direction: column; gap: 8px; background: var(--bg);
+    -webkit-overflow-scrolling: touch;
   }
   #chatMsgs .chat-b { max-width: 82%; padding: 9px 12px; border-radius: 14px; font-size: 14px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; }
   #chatMsgs .chat-b.visitante { align-self: flex-start; background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 4px; color: var(--ink); }
   #chatMsgs .chat-b.admin { align-self: flex-end; background: #0A0A0A; color: #fff; border-bottom-right-radius: 4px; }
-  #chatMsgs .chat-meta { display: block; font-size: 10px; margin-top: 4px; text-align: right; opacity: .7; }
+  #chatMsgs .chat-meta { display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-size: 10px; margin-top: 4px; opacity: .7; }
   #chatMsgs .chat-b.visitante .chat-meta { color: var(--ink-mute); }
   #chatMsgs .chat-check { margin-left: 3px; letter-spacing: -2px; }
   #chatMsgs .chat-check.read { color: #34B7F1; }
@@ -108,7 +142,7 @@
   #chatReplyBar { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); flex-shrink: 0; background: var(--surface); }
   #chatReply {
     flex: 1; min-width: 0; box-sizing: border-box; border: 1px solid var(--line); border-radius: 22px;
-    padding: 11px 16px; font-size: 15px; outline: none; background: var(--bg); color: var(--ink); font-family: inherit;
+    padding: 11px 16px; font-size: 16px; outline: none; background: var(--bg); color: var(--ink); font-family: inherit;
   }
   #chatReply:focus { border-color: var(--brand); }
   #chatSendBtn {
@@ -127,7 +161,7 @@
     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
   </a>
   <h1>💬 Chat Admin</h1>
-  <span class="badge" id="chatUnread">—</span>
+  <span class="badge" id="chatUnread" style="display:none;"></span>
 </div>
 
 <div class="wrap">
@@ -140,7 +174,10 @@
     <div class="card">
       <div class="card-head">
         <h2>Conversaciones</h2>
-        <span class="help">Toca una para responder</span>
+        <div class="card-actions">
+          <button onclick="marcarTodosLeidos()" class="btn-action-sm" title="Marcar todos como leídos">✓✓ Marcar leídos</button>
+          <button onclick="borrarTodasConvs()" class="btn-action-sm danger" title="Borrar todas las conversaciones">🗑️ Borrar todo</button>
+        </div>
       </div>
       <div id="chatConvs"></div>
     </div>
@@ -152,6 +189,9 @@
   <div id="chatThreadPanel">
     <div id="chatThreadHead">
       <strong id="chatThreadName">Conversación</strong>
+      <button onclick="borrarConversacionActiva()" class="btn-del-conv" style="color:#fff;" title="Borrar esta conversación">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+      </button>
       <button onclick="cerrarHilo()" id="chatThreadClose" aria-label="Cerrar">✕</button>
     </div>
     <div id="chatMsgs"></div>
@@ -219,6 +259,20 @@
     if (el) el.style.display = 'none';
   }
 
+  function actualizarBadgeTotal() {
+    const totalUnread = Object.values(chatConversaciones).reduce((s, c) => s + c.unread, 0);
+    const badge = document.getElementById('chatUnread');
+    if (badge) {
+      if (totalUnread > 0) {
+        badge.textContent = totalUnread + ' sin leer';
+        badge.style.display = 'inline';
+      } else {
+        badge.textContent = '';
+        badge.style.display = 'none';
+      }
+    }
+  }
+
   async function refrescarChat() {
     try {
       const { data, error } = await sb.from('chat_mensajes')
@@ -246,9 +300,7 @@
       pintarListaConvs();
       if (chatConvActivo && convs[chatConvActivo]) pintarHilo(chatConvActivo);
 
-      const totalUnread = Object.values(convs).reduce((s, c) => s + c.unread, 0);
-      const badge = document.getElementById('chatUnread');
-      if (badge) badge.textContent = totalUnread ? (totalUnread + ' sin leer') : '';
+      actualizarBadgeTotal();
     } catch (e) {
       console.warn('chat admin:', e);
     }
@@ -264,25 +316,46 @@
     }
     cont.innerHTML = arr.map(c => `
       <div class="conv-row" onclick="abrirHilo('${c.id}')">
-        <div style="min-width:0;">
+        <div style="min-width:0; flex:1;">
           <div class="conv-name">${chatEsc(c.nombre || 'Visitante')}${c.telefono ? ' · ' + chatEsc(c.telefono) : ''}</div>
           <div class="conv-last">${chatEsc(c.ultimoTexto || '')}</div>
         </div>
         ${c.unread ? `<span class="conv-badge">${c.unread}</span>` : ''}
+        <button class="btn-del-conv" onclick="borrarConversacion('${c.id}', event)" title="Borrar conversación">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        </button>
       </div>
     `).join('');
   }
 
+  let scrollPosY = 0;
   async function abrirHilo(id) {
     chatConvActivo = id;
-    document.getElementById('chatThread').classList.add('open');
+    scrollPosY = window.scrollY;
+    const thread = document.getElementById('chatThread');
+    thread.classList.add('open');
     document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollPosY}px`;
+    document.body.style.width = '100%';
+
     suscribirCanal(id);
+
+    // Marcar como leído localmente de inmediato para actualización fluida
+    if (chatConversaciones[id]) {
+      chatConversaciones[id].unread = 0;
+      chatConversaciones[id].mensajes.forEach(m => { if (m.de === 'visitante') m.leido = true; });
+    }
+    pintarListaConvs();
     pintarHilo(id);
+    actualizarBadgeTotal();
+
     try {
       await sb.from('chat_mensajes').update({ leido: true })
-        .eq('conversacion_id', id).eq('de', 'visitante').eq('leido', false);
-    } catch (e) { /* no crítico */ }
+        .or(`conversacion_id.eq.${id},id.eq.${id}`)
+        .eq('de', 'visitante').eq('leido', false);
+    } catch (e) { console.warn('Error al marcar leídos:', e); }
+
     refrescarChat();
     const inp = document.getElementById('chatReply');
     if (inp) inp.focus();
@@ -297,13 +370,15 @@
     const nearBottom = cont.scrollHeight - cont.scrollTop - cont.clientHeight < 80;
     cont.innerHTML = c.mensajes.map(m => {
       const esAdmin = m.de === 'admin';
-      // Vistos solo en los mensajes propios del admin (leido = el visitante ya lo vio)
       const check = esAdmin
         ? `<span class="chat-check ${m.leido ? 'read' : ''}">${m.leido ? '✓✓' : '✓'}</span>`
         : '';
       return `<div class="chat-b ${esAdmin ? 'admin' : 'visitante'}">`
         + `<span>${chatEsc(m.mensaje)}</span>`
-        + `<span class="chat-meta">${horaMsg(m.fecha)}${check}</span>`
+        + `<div class="chat-meta">`
+        + `${horaMsg(m.fecha)}${check}`
+        + `<button class="btn-del-msg" onclick="borrarMensaje('${m.id}', event)" title="Eliminar mensaje">🗑️</button>`
+        + `</div>`
         + `</div>`;
     }).join('');
     if (nearBottom) cont.scrollTop = cont.scrollHeight;
@@ -313,7 +388,26 @@
     chatConvActivo = null;
     document.getElementById('chatThread').classList.remove('open');
     document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    window.scrollTo(0, scrollPosY);
     desuscribirCanal();
+  }
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      if (chatConvActivo && window.innerWidth <= 639) {
+        const thread = document.getElementById('chatThread');
+        const panel = document.getElementById('chatThreadPanel');
+        if (thread) thread.style.height = `${window.visualViewport.height}px`;
+        if (panel) panel.style.height = `${window.visualViewport.height}px`;
+        window.scrollTo(0, 0);
+      }
+    });
+    window.visualViewport.addEventListener('scroll', () => {
+      if (chatConvActivo) window.scrollTo(0, 0);
+    });
   }
 
   async function responderChat() {
@@ -330,6 +424,75 @@
     } catch (e) {
       alert('No se pudo enviar: ' + e.message);
       inp.value = texto;
+    }
+  }
+
+  async function borrarConversacion(id, evt) {
+    if (evt) evt.stopPropagation();
+    if (!confirm('¿Estás seguro de borrar esta conversación y sus mensajes?')) return;
+    try {
+      const { error } = await sb.from('chat_mensajes')
+        .delete()
+        .or(`conversacion_id.eq.${id},id.eq.${id}`);
+      if (error) throw error;
+      delete chatConversaciones[id];
+      if (chatConvActivo === id) cerrarHilo();
+      pintarListaConvs();
+      actualizarBadgeTotal();
+    } catch (e) {
+      alert('Error al borrar la conversación: ' + e.message);
+    }
+  }
+
+  function borrarConversacionActiva() {
+    if (chatConvActivo) borrarConversacion(chatConvActivo);
+  }
+
+  async function borrarMensaje(msgId, evt) {
+    if (evt) evt.stopPropagation();
+    if (!confirm('¿Eliminar este mensaje?')) return;
+    try {
+      const { error } = await sb.from('chat_mensajes')
+        .delete()
+        .eq('id', msgId);
+      if (error) throw error;
+      await refrescarChat();
+    } catch (e) {
+      alert('Error al eliminar mensaje: ' + e.message);
+    }
+  }
+
+  async function borrarTodasConvs() {
+    if (!confirm('⚠️ ¿Estás SEGURO de eliminar TODAS las conversaciones del chat? Esta acción NO se puede deshacer.')) return;
+    try {
+      const { error } = await sb.from('chat_mensajes')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000');
+      if (error) throw error;
+      chatConversaciones = {};
+      if (chatConvActivo) cerrarHilo();
+      pintarListaConvs();
+      actualizarBadgeTotal();
+    } catch (e) {
+      alert('Error al borrar todas las conversaciones: ' + e.message);
+    }
+  }
+
+  async function marcarTodosLeidos() {
+    try {
+      const { error } = await sb.from('chat_mensajes')
+        .update({ leido: true })
+        .eq('de', 'visitante')
+        .eq('leido', false);
+      if (error) throw error;
+      Object.values(chatConversaciones).forEach(c => {
+        c.unread = 0;
+        c.mensajes.forEach(m => { if (m.de === 'visitante') m.leido = true; });
+      });
+      pintarListaConvs();
+      actualizarBadgeTotal();
+    } catch (e) {
+      alert('Error al marcar leídos: ' + e.message);
     }
   }
 
