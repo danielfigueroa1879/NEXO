@@ -29,20 +29,30 @@ exports.handler = async (event) => {
   let body = {};
   try { body = JSON.parse(event.body || '{}'); } catch (e) {}
 
-  const conv  = (body.conversacion_id || '').toString().trim();
-  const after = (body.after || '').toString().trim();
+  const conv = (body.conversacion_id || '').toString().trim();
   if (!/^[0-9a-f-]{10,}$/i.test(conv)) return json(400, { error: 'conversacion_id inválido' });
 
-  let url = `${SUPABASE_URL}/rest/v1/chat_mensajes`
-    + `?conversacion_id=eq.${encodeURIComponent(conv)}`
-    + `&select=id,de,mensaje,fecha`
-    + `&order=fecha.asc`;
-  if (after) url += `&fecha=gt.${encodeURIComponent(after)}`;
+  const authHeaders = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
 
   try {
-    const r = await fetch(url, {
-      headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` }
-    });
+    // El visitante está viendo el chat → marcar como leídos los mensajes del admin
+    // (así el admin ve el "visto" ✓✓ en sus propios mensajes).
+    await fetch(
+      `${SUPABASE_URL}/rest/v1/chat_mensajes`
+        + `?conversacion_id=eq.${encodeURIComponent(conv)}&de=eq.admin&leido=eq.false`,
+      {
+        method: 'PATCH',
+        headers: { ...authHeaders, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ leido: true })
+      }
+    );
+
+    // Devolver todos los mensajes de la conversación (con estado de leído)
+    const url = `${SUPABASE_URL}/rest/v1/chat_mensajes`
+      + `?conversacion_id=eq.${encodeURIComponent(conv)}`
+      + `&select=id,de,mensaje,leido,fecha`
+      + `&order=fecha.asc`;
+    const r = await fetch(url, { headers: authHeaders });
     if (!r.ok) return json(502, { error: await r.text() });
     const mensajes = await r.json();
     return json(200, { mensajes });
