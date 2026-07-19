@@ -446,7 +446,7 @@
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', () => {
       if (abierto && window.innerWidth <= 480) {
-        const targetH = Math.min(window.visualViewport.height - 50, window.innerHeight - 50);
+        const targetH = Math.min(window.visualViewport.height - 70, window.innerHeight - 70);
         box.style.height = `${targetH}px`;
         box.style.maxHeight = `${targetH}px`;
         scrollMsgsToBottom();
