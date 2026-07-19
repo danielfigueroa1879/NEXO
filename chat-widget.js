@@ -549,3 +549,96 @@
     window.visualViewport.addEventListener('scroll', ajustarTeclado);
   }
 })();
+
+// ============================================================
+//  Botón flotante ADMIN — acceso directo a Chat Admin
+//  Aparece SOLO si el usuario logueado es admin. Reemplaza al
+//  botón del visitante (para no mostrar los dos a la vez).
+//  Muestra un badge rojo con la cantidad de mensajes sin leer.
+//  Un toque lleva directo a chat-admin.html.
+// ============================================================
+(function () {
+  // No aparece en la propia página de Chat Admin (para no duplicar).
+  if (/\/chat-admin\.html/i.test(location.pathname)) return;
+
+  const CSS = `
+    #nexo-admin-btn {
+      position: fixed; bottom: 24px; right: 24px;
+      width: 58px; height: 58px; border-radius: 50%;
+      background: #E82127; color: #fff; border: none; cursor: pointer;
+      display: none; align-items: center; justify-content: center;
+      box-shadow: 0 4px 18px rgba(232,33,39,0.45); z-index: 9997;
+      text-decoration: none;
+      transition: transform .2s;
+    }
+    #nexo-admin-btn:hover { transform: scale(1.08); }
+    #nexo-admin-btn svg { width: 26px; height: 26px; }
+    #nexo-admin-badge {
+      position: absolute; top: -4px; right: -4px;
+      background: #0A0A0A; color: #fff; border-radius: 50%;
+      min-width: 20px; height: 20px; padding: 0 5px; font-size: 11px; font-weight: 700;
+      display: none; align-items: center; justify-content: center;
+      border: 2px solid #fff;
+    }
+  `;
+  const style = document.createElement('style');
+  style.textContent = CSS;
+  document.head.appendChild(style);
+
+  const a = document.createElement('a');
+  a.id = 'nexo-admin-btn';
+  a.href = 'chat-admin.html';
+  a.title = 'Chat Admin';
+  a.setAttribute('aria-label', 'Chat Admin');
+  a.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+    </svg>
+    <span id="nexo-admin-badge"></span>
+  `;
+  document.body.appendChild(a);
+
+  const btnCliente = document.getElementById('nexo-chat-btn');
+
+  async function esperarSb(intentos) {
+    for (let i = 0; i < (intentos || 40); i++) {
+      if (window.sb) return true;
+      await new Promise(r => setTimeout(r, 150));
+    }
+    return !!window.sb;
+  }
+
+  async function detectarAdmin() {
+    if (!(await esperarSb(40))) return false;
+    try {
+      const { data: { user } } = await window.sb.auth.getUser();
+      if (!user) return false;
+      const { data } = await window.sb.from('cuentas').select('es_admin').eq('id', user.id).maybeSingle();
+      return !!(data && data.es_admin);
+    } catch (e) { return false; }
+  }
+
+  async function actualizarBadge() {
+    try {
+      const { count } = await window.sb.from('chat_mensajes')
+        .select('id', { count: 'exact', head: true })
+        .eq('de', 'visitante').eq('leido', false);
+      const b = document.getElementById('nexo-admin-badge');
+      if (!b) return;
+      if (count) { b.textContent = count > 99 ? '99+' : count; b.style.display = 'flex'; }
+      else       { b.style.display = 'none'; }
+    } catch (e) { /* silencioso */ }
+  }
+
+  (async function init() {
+    const esAdmin = await detectarAdmin();
+    if (!esAdmin) return;
+    // Ocultar el chat del cliente y mostrar el del admin
+    if (btnCliente) btnCliente.style.display = 'none';
+    const box = document.getElementById('nexo-chat-box');
+    if (box) box.style.display = 'none';
+    a.style.display = 'flex';
+    await actualizarBadge();
+    setInterval(actualizarBadge, 15000);
+  })();
+})();

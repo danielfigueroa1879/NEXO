@@ -610,6 +610,13 @@
     document.getElementById('main').style.display = 'block';
     await refrescarChat();
     setInterval(refrescarChat, 6000);
+
+    // Si el link del WhatsApp trae ?id=CONV_ID, abrir esa conversación directamente
+    const params = new URLSearchParams(location.search);
+    const abrirId = params.get('id');
+    if (abrirId && chatConversaciones[abrirId]) {
+      abrirHilo(abrirId);
+    }
   })();
 </script>
 
