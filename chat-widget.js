@@ -46,7 +46,8 @@
       width: 350px; max-width: calc(100vw - 48px);
       height: 480px; max-height: calc(100vh - 130px);
       background: #fff; border-radius: 20px;
-      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+      border: 2px solid #E82127;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2), 0 0 16px rgba(232,33,39,0.25);
       z-index: 9999; display: none; flex-direction: column;
       overflow: hidden; font-family: 'Outfit', -apple-system, sans-serif;
       animation: nexoChatIn .22s ease;
@@ -60,8 +61,9 @@
       background: #0A0A0A; color: #fff; padding: 15px 18px;
       display: flex; align-items: center; gap: 10px; flex-shrink: 0;
       position: sticky; top: 0; z-index: 10;
+      border-bottom: 2px solid #E82127;
     }
-    #nexo-chat-header svg { width:24px; height:24px; flex-shrink:0; }
+    .nexo-chat-logo { width: 28px; height: 28px; object-fit: contain; flex-shrink: 0; border-radius: 6px; }
     #nexo-chat-header-text { flex:1; }
     #nexo-chat-header-text strong { display:block; font-size:16px; font-weight: 700; letter-spacing: -0.01em; color: #fff; }
     #nexo-chat-header-text span { font-size:12px; opacity:.7; color: #fff; }
@@ -74,7 +76,7 @@
     #nexo-chat-msgs {
       flex: 1; min-height: 0; overflow-y: auto; padding: 16px;
       display: flex; flex-direction: column; gap: 10px;
-      background: #f7f7f8; -webkit-overflow-scrolling: touch;
+      background: #EDEDF0; -webkit-overflow-scrolling: touch;
     }
     .nexo-msg {
       max-width: 82%; padding: 11px 15px; border-radius: 18px;
@@ -95,7 +97,7 @@
 
     #nexo-chat-typing {
       display: none; padding: 4px 16px 8px; font-size: 12px; color: #888;
-      background: #f7f7f8; align-items: center; gap: 6px;
+      background: #EDEDF0; align-items: center; gap: 6px;
     }
     .nexo-dots { display: inline-flex; gap: 3px; }
     .nexo-dots i { width: 5px; height: 5px; border-radius: 50%; background: #999; display: inline-block; animation: nexoDot 1.2s infinite ease-in-out; }
@@ -108,7 +110,7 @@
       width: 100%; box-sizing: border-box; border: 1px solid #ddd; border-radius: 10px;
       padding: 10px 13px; font-size: 14px; font-family: inherit; outline: none; transition: border-color .15s ease;
     }
-    #nexo-chat-contact input:focus { border-color: #0A0A0A; }
+    #nexo-chat-contact input:focus { border-color: #E82127; }
 
     #nexo-chat-footer {
       display: flex; gap: 8px; padding: 12px 14px; border-top: 1px solid #eee; flex-shrink: 0; background: #fff;
@@ -117,16 +119,16 @@
       flex: 1; box-sizing: border-box; border: 1px solid #ddd; border-radius: 20px;
       padding: 10px 16px; font-size: 15px; font-family: inherit; outline: none; resize: none; transition: border-color .15s ease;
     }
-    #nexo-chat-input:focus { border-color: #0A0A0A; }
+    #nexo-chat-input:focus { border-color: #E82127; }
 
     @media (max-width: 480px) {
       #nexo-chat-box {
         position: fixed;
-        top: 110px; bottom: 30px; left: 6px; right: 6px;
+        top: 140px; bottom: 40px; left: 6px; right: 6px;
         width: calc(100vw - 12px); max-width: 480px;
-        height: auto; max-height: calc(100dvh - 140px);
-        border-radius: 20px;
-        box-shadow: 0 12px 48px rgba(0,0,0,0.3);
+        height: auto; max-height: calc(100dvh - 180px);
+        border: 2px solid #E82127; border-radius: 20px;
+        box-shadow: 0 12px 48px rgba(0,0,0,0.3), 0 0 16px rgba(232,33,39,0.25);
         margin: 0 auto;
       }
       #nexo-chat-header-text strong { font-size: 20px; }
@@ -163,7 +165,7 @@
   box.id = 'nexo-chat-box';
   box.innerHTML = `
     <div id="nexo-chat-header">
-      ${CHAT_ICON}
+      <img src="favicon/favicon.svg" alt="NEXO Logo" class="nexo-chat-logo" onerror="this.onerror=null;this.src='favicon/android-chrome-192x192.png';">
       <div id="nexo-chat-header-text">
         <strong>Escríbenos</strong>
         <span>Te respondemos por aquí</span>
@@ -437,13 +439,23 @@
     scrollMsgsToBottom();
     setTimeout(() => { $input.focus(); scrollMsgsToBottom(); }, 100);
   }
+  function resetBoxStyle() {
+    box.style.top = '';
+    box.style.bottom = '';
+    box.style.left = '';
+    box.style.right = '';
+    box.style.width = '';
+    box.style.maxWidth = '';
+    box.style.height = '';
+    box.style.maxHeight = '';
+    box.style.borderRadius = '';
+    box.style.margin = '';
+  }
+
   function cerrar() {
     abierto = false;
     box.style.display = 'none';
-    box.style.top = '';
-    box.style.bottom = '';
-    box.style.height = '';
-    box.style.maxHeight = '';
+    resetBoxStyle();
     overlay.style.opacity = '0';
     setTimeout(() => { overlay.style.display = 'none'; }, 250);
     document.body.style.overflow = '';
@@ -464,29 +476,28 @@
   $tel.addEventListener('focus', scrollMsgsToBottom);
 
   if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', () => {
-      if (abierto && window.innerWidth <= 480) {
-        const vv = window.visualViewport;
-        const isKeyboardOpen = vv.height < window.innerHeight - 80;
-        if (isKeyboardOpen) {
-          box.style.top = `${vv.offsetTop + 8}px`;
-          box.style.bottom = 'auto';
-          box.style.height = `${vv.height - 16}px`;
-          box.style.maxHeight = `${vv.height - 16}px`;
-        } else {
-          box.style.top = '';
-          box.style.bottom = '';
-          box.style.height = '';
-          box.style.maxHeight = '';
-        }
-        scrollMsgsToBottom();
+    function ajustarTeclado() {
+      if (!abierto || window.innerWidth > 480) return;
+      const vv = window.visualViewport;
+      const isKeyboardOpen = vv.height < window.innerHeight - 80;
+      if (isKeyboardOpen) {
+        box.style.top = `${vv.offsetTop}px`;
+        box.style.bottom = 'auto';
+        box.style.left = '0px';
+        box.style.right = '0px';
+        box.style.width = '100vw';
+        box.style.maxWidth = '100vw';
+        box.style.height = `${vv.height}px`;
+        box.style.maxHeight = `${vv.height}px`;
+        box.style.borderRadius = '0px';
+        box.style.margin = '0px';
+      } else {
+        resetBoxStyle();
       }
-    });
-    window.visualViewport.addEventListener('scroll', () => {
-      if (abierto && window.innerWidth <= 480 && window.visualViewport.height < window.innerHeight - 80) {
-        box.style.top = `${window.visualViewport.offsetTop + 8}px`;
-        scrollMsgsToBottom();
-      }
-    });
+      scrollMsgsToBottom();
+    }
+
+    window.visualViewport.addEventListener('resize', ajustarTeclado);
+    window.visualViewport.addEventListener('scroll', ajustarTeclado);
   }
 })();
