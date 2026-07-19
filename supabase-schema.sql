@@ -286,3 +286,30 @@ create policy "docs_delete_propio" on storage.objects
     bucket_id = 'documentos'
     and (auth.uid()::text = (storage.foldername(name))[1] or public.es_admin_actual())
   );
+
+-- ------------------------------------------------------------
+-- 5) Tabla CHAT_MENSAJES
+--    Guarda los mensajes enviados desde el widget de chat del sitio.
+-- ------------------------------------------------------------
+create table if not exists public.chat_mensajes (
+  id        uuid primary key default gen_random_uuid(),
+  nombre    text,
+  email     text,
+  mensaje   text not null,
+  respuesta text,
+  leido     boolean default false,
+  fecha     timestamptz default now()
+);
+
+create index if not exists chat_mensajes_fecha_idx on public.chat_mensajes (fecha desc);
+
+-- Solo el admin puede ver los mensajes de chat (nadie más los necesita)
+alter table public.chat_mensajes enable row level security;
+
+drop policy if exists "chat_select_admin" on public.chat_mensajes;
+create policy "chat_select_admin" on public.chat_mensajes
+  for select using (public.es_admin_actual());
+
+drop policy if exists "chat_insert_anon" on public.chat_mensajes;
+create policy "chat_insert_anon" on public.chat_mensajes
+  for insert with check (true);  -- cualquiera puede insertar (visitantes)
