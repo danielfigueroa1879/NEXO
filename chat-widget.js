@@ -31,6 +31,15 @@
       min-width: 18px; height: 18px; padding: 0 4px; font-size: 11px; font-weight: bold;
       display: none; align-items: center; justify-content: center;
     }
+    #nexo-chat-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      width: 100vw; height: 100dvh;
+      background: rgba(0, 0, 0, 0.52);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 9996; display: none; opacity: 0;
+      transition: opacity .25s ease;
+    }
 
     #nexo-chat-box {
       position: fixed; bottom: 94px; right: 24px;
@@ -78,12 +87,12 @@
       border-bottom-right-radius: 4px; box-shadow: 0 3px 10px rgba(0,122,255,0.28);
     }
     .nexo-msg.admin {
-      align-self: flex-start; background: #EFEFF4; color: #1C1C1E;
-      border: 1px solid #E5E5EA; border-bottom-left-radius: 4px;
+      align-self: flex-start; background: #E2E2E9; color: #111827;
+      border: 1px solid #CBD5E1; border-bottom-left-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     }
     .nexo-meta { display: block; font-size: 11px; margin-top: 4px; text-align: right; opacity: .8; }
     .nexo-msg.visitante .nexo-meta { color: rgba(255,255,255,0.85); }
-    .nexo-msg.admin .nexo-meta { color: #8E8E93; }
+    .nexo-msg.admin .nexo-meta { color: #64748B; }
     .nexo-check { margin-left: 3px; letter-spacing: -2px; }
     .nexo-check.read { color: #80D8FF; }
 
@@ -180,6 +189,10 @@
     </div>
   `;
   document.body.appendChild(box);
+
+  const overlay = document.createElement('div');
+  overlay.id = 'nexo-chat-overlay';
+  document.body.appendChild(overlay);
 
   const $msgs    = box.querySelector('#nexo-chat-msgs');
   const $contact = box.querySelector('#nexo-chat-contact');
@@ -416,6 +429,11 @@
     abierto = true;
     box.style.display = 'flex';
     document.getElementById('nexo-chat-badge').style.display = 'none';
+    if (window.innerWidth <= 480) {
+      overlay.style.display = 'block';
+      requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+      document.body.style.overflow = 'hidden';
+    }
     renderThread();          // muestra el saludo + historial en memoria
     actualizarContacto();
     if (convId) poll();      // historial completo desde el servidor
@@ -427,11 +445,15 @@
   function cerrar() {
     abierto = false;
     box.style.display = 'none';
+    overlay.style.opacity = '0';
+    setTimeout(() => { overlay.style.display = 'none'; }, 250);
+    document.body.style.overflow = '';
     stopPoll();
     desuscribirCanal();
   }
 
   btn.addEventListener('click', () => abierto ? cerrar() : abrir());
+  overlay.addEventListener('click', cerrar);
   box.querySelector('#nexo-chat-close').addEventListener('click', cerrar);
   $send.addEventListener('click', enviar);
   $input.addEventListener('keydown', (e) => {
