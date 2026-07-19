@@ -1,13 +1,15 @@
 // ============================================================
-//  NEXO — Netlify Function: Chat → WhatsApp
-//  Recibe mensajes del chat del sitio, los guarda en Supabase
-//  y envía notificación al WhatsApp del admin via CallMeBot.
+//  NEXO — Netlify Function: Chat en vivo (envío del visitante)
+//  Guarda el mensaje del visitante en Supabase (de='visitante')
+//  y avisa al admin por WhatsApp (CallMeBot) para que responda
+//  desde el panel admin.html.
 //
 //  Variables de entorno requeridas en Netlify:
 //    SUPABASE_URL              → URL del proyecto Supabase
 //    SUPABASE_SERVICE_ROLE_KEY → service_role key (NO la anon key)
 //    CALLMEBOT_PHONE           → número sin + ni espacios (ej: 56936687995)
 //    CALLMEBOT_APIKEY          → API key recibida de CallMeBot
+//    SITE_URL                  → (opcional) dominio del sitio para el link admin
 // ============================================================
 
 const CORS = {
@@ -20,10 +22,11 @@ exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: CORS, body: '' };
   if (event.httpMethod !== 'POST')    return json(405, { error: 'Method Not Allowed' });
 
-  const SUPABASE_URL  = process.env.SUPABASE_URL;
-  const SERVICE_KEY   = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const WA_PHONE      = process.env.CALLMEBOT_PHONE  || '56936687995';
-  const WA_APIKEY     = process.env.CALLMEBOT_APIKEY || '';
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const WA_PHONE     = process.env.CALLMEBOT_PHONE  || '56936687995';
+  const WA_APIKEY    = process.env.CALLMEBOT_APIKEY || '';
+  const SITE_URL     = (process.env.SITE_URL || 'https://nfcnexo.net').replace(/\/$/, '');
 
   let body = {};
   try { body = JSON.parse(event.body || '{}'); } catch (e) {}
@@ -33,36 +36,50 @@ exports.handler = async (event) => {
   const email    = (body.email    || '').toString().trim().slice(0, 120);
   const mensaje  = (body.mensaje  || '').toString().trim().slice(0, 800);
 
-  if (!mensaje) return json(400, { error: 'El mensaje no puede estar vacío.' });
-
-  // 1. Guardar en Supabase
-  if (SUPABASE_URL && SERVICE_KEY) {
-    try {
-      await fetch(`${SUPABASE_URL}/rest/v1/chat_mensajes`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SERVICE_KEY,
-          'Authorization': `Bearer ${SERVICE_KEY}`,
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify({ nombre, telefono, email, mensaje })
-      });
-    } catch (e) {
-      console.error('Supabase error:', e.message);
-    }
+  // Identificador de conversación: lo genera el widget; si falta, lo creamos.
+  let conversacion_id = (body.conversacion_id || '').toString().trim();
+  if (!/^[0-9a-f-]{10,}$/i.test(conversacion_id)) {
+    conversacion_id = (globalThis.crypto && globalThis.crypto.randomUUID)
+      ? globalThis.crypto.randomUUID()
+      : 'conv-' + Date.now() + '-' + Math.random().toString(36).slice(2);
   }
 
-  // 2. Enviar WhatsApp via CallMeBot
+  if (!mensaje) return json(400, { error: 'El mensaje no puede estar vacío.' });
+  if (!SUPABASE_URL || !SERVICE_KEY) {
+    return json(500, { error: 'Falta configurar Supabase en el servidor.' });
+  }
+
+  // 1. Guardar el mensaje del visitante
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/chat_mensajes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SERVICE_KEY,
+        'Authorization': `Bearer ${SERVICE_KEY}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        conversacion_id, de: 'visitante',
+        nombre, telefono, email, mensaje, leido: false
+      })
+    });
+    if (!r.ok) {
+      return json(502, { error: 'No se pudo guardar el mensaje: ' + await r.text() });
+    }
+  } catch (e) {
+    return json(500, { error: 'Error guardando: ' + e.message });
+  }
+
+  // 2. Avisar al admin por WhatsApp (no bloquea si falla)
   if (WA_APIKEY) {
-    const waLink = waMeLink(telefono);
     const texto =
       `💬 *Nuevo mensaje NEXO*\n` +
       `👤 ${nombre}` +
-      (telefono ? `\n📱 ${telefono}` : '') +
+      (telefono ? ` · ${telefono}` : '') +
       (email    ? `\n📧 ${email}` : '') +
       `\n\n${mensaje}` +
-      (waLink ? `\n\n↩️ Responder por WhatsApp:\n${waLink}` : '');
+      `\n\n↩️ Responde desde el panel:\n${SITE_URL}/admin.html`;
     const url = `https://api.callmebot.com/whatsapp.php?phone=${WA_PHONE}&text=${encodeURIComponent(texto)}&apikey=${WA_APIKEY}`;
     try {
       const r = await fetch(url);
@@ -72,18 +89,8 @@ exports.handler = async (event) => {
     }
   }
 
-  return json(200, { ok: true });
+  return json(200, { ok: true, conversacion_id });
 };
-
-// Convierte el teléfono del visitante en un enlace wa.me para responderle.
-// Normaliza al formato internacional chileno (código país 56).
-function waMeLink(tel) {
-  if (!tel) return null;
-  let d = String(tel).replace(/\D/g, ''); // deja solo dígitos
-  if (d.length < 8) return null;           // demasiado corto, no es válido
-  if (!d.startsWith('56')) d = '56' + d;   // anteponer código de Chile si falta
-  return 'https://wa.me/' + d;
-}
 
 function json(statusCode, obj) {
   return {
