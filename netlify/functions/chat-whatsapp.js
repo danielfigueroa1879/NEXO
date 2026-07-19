@@ -38,10 +38,13 @@ exports.handler = async (event) => {
 
   // Identificador de conversación: lo genera el widget; si falta, lo creamos.
   let conversacion_id = (body.conversacion_id || '').toString().trim();
-  if (!/^[0-9a-f-]{10,}$/i.test(conversacion_id)) {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversacion_id)) {
     conversacion_id = (globalThis.crypto && globalThis.crypto.randomUUID)
       ? globalThis.crypto.randomUUID()
-      : 'conv-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+      : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
   }
 
   if (!mensaje) return json(400, { error: 'El mensaje no puede estar vacío.' });
