@@ -77,6 +77,20 @@
       align-self: flex-start; background: #fff; color: #111;
       border: 1px solid #e3e3e6; border-bottom-left-radius: 4px;
     }
+    .nexo-meta { display: block; font-size: 10px; margin-top: 4px; text-align: right; opacity: .7; }
+    .nexo-msg.admin .nexo-meta { color: #888; }
+    .nexo-check { margin-left: 3px; letter-spacing: -2px; }
+    .nexo-check.read { color: #34B7F1; }
+
+    #nexo-chat-typing {
+      display: none; padding: 4px 16px 8px; font-size: 12px; color: #888;
+      background: #f7f7f8; align-items: center; gap: 6px;
+    }
+    .nexo-dots { display: inline-flex; gap: 3px; }
+    .nexo-dots i { width: 5px; height: 5px; border-radius: 50%; background: #999; display: inline-block; animation: nexoDot 1.2s infinite ease-in-out; }
+    .nexo-dots i:nth-child(2) { animation-delay: .2s; }
+    .nexo-dots i:nth-child(3) { animation-delay: .4s; }
+    @keyframes nexoDot { 0%,60%,100% { opacity:.3; transform: translateY(0);} 30% { opacity:1; transform: translateY(-2px);} }
 
     #nexo-chat-contact { padding: 12px 14px 0; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
     #nexo-chat-contact input {
@@ -127,6 +141,7 @@
       <button id="nexo-chat-close" aria-label="Cerrar">✕</button>
     </div>
     <div id="nexo-chat-msgs"></div>
+    <div id="nexo-chat-typing"><span class="nexo-dots"><i></i><i></i><i></i></span> escribiendo…</div>
     <div id="nexo-chat-contact">
       <input type="text" id="nexo-chat-nombre"   placeholder="Tu nombre (opcional)" maxlength="80">
       <input type="tel"  id="nexo-chat-telefono" placeholder="Tu WhatsApp (opcional)" maxlength="20">
@@ -151,11 +166,13 @@
   let convId = localStorage.getItem(LS_CONV) || '';
   let info   = {};
   try { info = JSON.parse(localStorage.getItem(LS_INFO) || '{}'); } catch (e) {}
-  const seen = new Set();
-  let lastFecha = '';
+  let mensajes = [];       // lista completa de la conversación
+  let sig = '';            // firma para evitar re-render innecesario
   let pollTimer = null;
   let abierto = false;
-  let saludoMostrado = false;
+  let canal = null;        // canal Realtime (typing)
+  let typingHideTimer = null;
+  let lastTypingSent = 0;
 
   function genId() {
     return (window.crypto && crypto.randomUUID)
@@ -163,48 +180,88 @@
       : 'conv-' + Date.now() + '-' + Math.random().toString(36).slice(2);
   }
 
-  function bubble(de, texto) {
-    const el = document.createElement('div');
-    el.className = 'nexo-msg ' + (de === 'admin' ? 'admin' : 'visitante');
-    el.textContent = texto;
-    $msgs.appendChild(el);
-    $msgs.scrollTop = $msgs.scrollHeight;
+  function hora(fecha) {
+    if (!fecha) return '';
+    try { return new Date(fecha).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }); }
+    catch (e) { return ''; }
+  }
+  function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+      ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
   }
 
-  function saludo() {
-    if (saludoMostrado) return;
-    saludoMostrado = true;
-    bubble('admin', '¡Hola! 👋 Escríbenos tu consulta y te respondemos por aquí mismo.');
+  function renderThread() {
+    const nearBottom = $msgs.scrollHeight - $msgs.scrollTop - $msgs.clientHeight < 80;
+    let html = `<div class="nexo-msg admin"><span>¡Hola! 👋 Escríbenos tu consulta y te respondemos por aquí mismo.</span></div>`;
+    html += mensajes.map(m => {
+      const esVisit = m.de !== 'admin';
+      // Vistos solo en los mensajes del propio visitante
+      const check = esVisit
+        ? `<span class="nexo-check ${m.leido ? 'read' : ''}">${m.leido ? '✓✓' : '✓'}</span>`
+        : '';
+      return `<div class="nexo-msg ${esVisit ? 'visitante' : 'admin'}">`
+        + `<span>${esc(m.mensaje)}</span>`
+        + `<span class="nexo-meta">${hora(m.fecha)}${check}</span>`
+        + `</div>`;
+    }).join('');
+    $msgs.innerHTML = html;
+    if (nearBottom) $msgs.scrollTop = $msgs.scrollHeight;
   }
 
-  function pintar(arr) {
-    (arr || []).forEach(m => {
-      if (seen.has(m.id)) return;
-      seen.add(m.id);
-      bubble(m.de, m.mensaje);
-      if (m.fecha) lastFecha = m.fecha;
-    });
-  }
-
-  async function poll(after) {
+  async function poll() {
     if (!convId) return;
     try {
       const r = await fetch(API_POLL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversacion_id: convId, after: after || '' })
+        body: JSON.stringify({ conversacion_id: convId })
       });
       if (!r.ok) return;
       const data = await r.json();
-      pintar(data.mensajes);
+      mensajes = data.mensajes || [];
+      const nuevaSig = mensajes.map(m => m.id + (m.leido ? '1' : '0')).join('|');
+      if (nuevaSig !== sig) { sig = nuevaSig; renderThread(); }
     } catch (e) { /* silencioso: reintenta en el próximo ciclo */ }
   }
 
-  function startPoll() { stopPoll(); pollTimer = setInterval(() => poll(lastFecha), POLL_MS); }
+  function startPoll() { stopPoll(); pollTimer = setInterval(poll, POLL_MS); }
   function stopPoll()  { if (pollTimer) clearInterval(pollTimer); pollTimer = null; }
 
+  // --- "escribiendo…" en tiempo real (Supabase Realtime broadcast) ---
+  function suscribirCanal() {
+    const sb = window.sb;
+    if (!sb || !convId || canal) return;
+    canal = sb.channel('chat-' + convId, { config: { broadcast: { self: false } } });
+    canal.on('broadcast', { event: 'typing' }, (msg) => {
+      if (msg && msg.payload && msg.payload.from === 'admin') mostrarEscribiendo();
+    });
+    canal.subscribe();
+  }
+  function desuscribirCanal() {
+    if (canal && window.sb) { try { window.sb.removeChannel(canal); } catch (e) {} }
+    canal = null;
+    ocultarEscribiendo();
+  }
+  function enviarTyping() {
+    const now = Date.now();
+    if (!canal || now - lastTypingSent < 1500) return;   // throttle
+    lastTypingSent = now;
+    try { canal.send({ type: 'broadcast', event: 'typing', payload: { from: 'visitante' } }); } catch (e) {}
+  }
+  function mostrarEscribiendo() {
+    const el = document.getElementById('nexo-chat-typing');
+    if (!el) return;
+    el.style.display = 'flex';
+    $msgs.scrollTop = $msgs.scrollHeight;
+    clearTimeout(typingHideTimer);
+    typingHideTimer = setTimeout(ocultarEscribiendo, 3000);
+  }
+  function ocultarEscribiendo() {
+    const el = document.getElementById('nexo-chat-typing');
+    if (el) el.style.display = 'none';
+  }
+
   function actualizarContacto() {
-    // Ocultar formulario de contacto si ya tenemos algún dato guardado
     $contact.style.display = (info && (info.nombre || info.telefono)) ? 'none' : 'flex';
     if (info) {
       if (info.nombre)   $nombre.value = info.nombre;
@@ -216,7 +273,6 @@
     const mensaje = $input.value.trim();
     if (!mensaje) { $input.focus(); return; }
 
-    // Capturar contacto la primera vez
     if ($contact.style.display !== 'none') {
       info = {
         nombre:   $nombre.value.trim().slice(0, 80),
@@ -243,7 +299,8 @@
       if (data.conversacion_id) { convId = data.conversacion_id; localStorage.setItem(LS_CONV, convId); }
       $input.value = '';
       $contact.style.display = 'none';
-      await poll(lastFecha); // trae el mensaje recién guardado
+      suscribirCanal(); // por si convId se acaba de crear
+      await poll(); // trae el mensaje recién guardado
     } catch (e) {
       alert('No se pudo enviar el mensaje. Intenta nuevamente.');
     } finally {
@@ -256,16 +313,18 @@
     abierto = true;
     box.style.display = 'flex';
     document.getElementById('nexo-chat-badge').style.display = 'none';
-    saludo();
+    renderThread();          // muestra el saludo + historial en memoria
     actualizarContacto();
-    if (convId) poll('');   // historial completo
+    if (convId) poll();      // historial completo desde el servidor
     startPoll();
+    suscribirCanal();
     $input.focus();
   }
   function cerrar() {
     abierto = false;
     box.style.display = 'none';
     stopPoll();
+    desuscribirCanal();
   }
 
   btn.addEventListener('click', () => abierto ? cerrar() : abrir());
@@ -274,4 +333,5 @@
   $input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); }
   });
+  $input.addEventListener('input', enviarTyping);
 })();

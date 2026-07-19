@@ -94,6 +94,16 @@
   #chatMsgs .chat-b { max-width: 82%; padding: 9px 12px; border-radius: 14px; font-size: 14px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; }
   #chatMsgs .chat-b.visitante { align-self: flex-start; background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 4px; color: var(--ink); }
   #chatMsgs .chat-b.admin { align-self: flex-end; background: #0A0A0A; color: #fff; border-bottom-right-radius: 4px; }
+  #chatMsgs .chat-meta { display: block; font-size: 10px; margin-top: 4px; text-align: right; opacity: .7; }
+  #chatMsgs .chat-b.visitante .chat-meta { color: var(--ink-mute); }
+  #chatMsgs .chat-check { margin-left: 3px; letter-spacing: -2px; }
+  #chatMsgs .chat-check.read { color: #34B7F1; }
+  #chatTyping { display: none; align-items: center; gap: 6px; padding: 4px 16px 8px; font-size: 12px; color: var(--ink-mute); background: var(--bg); }
+  .chat-dots { display: inline-flex; gap: 3px; }
+  .chat-dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--ink-mute); display: inline-block; animation: chatDot 1.2s infinite ease-in-out; }
+  .chat-dots i:nth-child(2) { animation-delay: .2s; }
+  .chat-dots i:nth-child(3) { animation-delay: .4s; }
+  @keyframes chatDot { 0%,60%,100% { opacity:.3; transform: translateY(0);} 30% { opacity:1; transform: translateY(-2px);} }
 
   #chatReplyBar { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); flex-shrink: 0; background: var(--surface); }
   #chatReply {
@@ -145,8 +155,10 @@
       <button onclick="cerrarHilo()" id="chatThreadClose" aria-label="Cerrar">✕</button>
     </div>
     <div id="chatMsgs"></div>
+    <div id="chatTyping"><span class="chat-dots"><i></i><i></i><i></i></span> escribiendo…</div>
     <div id="chatReplyBar">
       <input type="text" id="chatReply" placeholder="Escribe tu respuesta…" maxlength="800"
+             oninput="enviarTyping()"
              onkeydown="if(event.key==='Enter'){event.preventDefault();responderChat();}">
       <button onclick="responderChat()" id="chatSendBtn" aria-label="Enviar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -161,10 +173,50 @@
 <script>
   let chatConversaciones = {};
   let chatConvActivo = null;
+  let canal = null;
+  let typingHideTimer = null;
+  let lastTypingSent = 0;
 
   function chatEsc(s) {
     return String(s ?? '').replace(/[&<>"']/g, c =>
       ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  }
+  function horaMsg(fecha) {
+    if (!fecha) return '';
+    try { return new Date(fecha).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }); }
+    catch (e) { return ''; }
+  }
+
+  // --- "escribiendo…" en tiempo real ---
+  function suscribirCanal(convId) {
+    desuscribirCanal();
+    if (!convId) return;
+    canal = sb.channel('chat-' + convId, { config: { broadcast: { self: false } } });
+    canal.on('broadcast', { event: 'typing' }, (msg) => {
+      if (msg && msg.payload && msg.payload.from === 'visitante') mostrarEscribiendo();
+    });
+    canal.subscribe();
+  }
+  function desuscribirCanal() {
+    if (canal) { try { sb.removeChannel(canal); } catch (e) {} canal = null; }
+    ocultarEscribiendo();
+  }
+  function enviarTyping() {
+    const now = Date.now();
+    if (!canal || now - lastTypingSent < 1500) return;
+    lastTypingSent = now;
+    try { canal.send({ type: 'broadcast', event: 'typing', payload: { from: 'admin' } }); } catch (e) {}
+  }
+  function mostrarEscribiendo() {
+    const el = document.getElementById('chatTyping');
+    if (!el) return;
+    el.style.display = 'flex';
+    clearTimeout(typingHideTimer);
+    typingHideTimer = setTimeout(ocultarEscribiendo, 3000);
+  }
+  function ocultarEscribiendo() {
+    const el = document.getElementById('chatTyping');
+    if (el) el.style.display = 'none';
   }
 
   async function refrescarChat() {
@@ -225,6 +277,7 @@
     chatConvActivo = id;
     document.getElementById('chatThread').classList.add('open');
     document.body.style.overflow = 'hidden';
+    suscribirCanal(id);
     pintarHilo(id);
     try {
       await sb.from('chat_mensajes').update({ leido: true })
@@ -242,9 +295,17 @@
       (c.nombre || 'Visitante') + (c.telefono ? ' · ' + c.telefono : '');
     const cont = document.getElementById('chatMsgs');
     const nearBottom = cont.scrollHeight - cont.scrollTop - cont.clientHeight < 80;
-    cont.innerHTML = c.mensajes.map(m =>
-      `<div class="chat-b ${m.de === 'admin' ? 'admin' : 'visitante'}">${chatEsc(m.mensaje)}</div>`
-    ).join('');
+    cont.innerHTML = c.mensajes.map(m => {
+      const esAdmin = m.de === 'admin';
+      // Vistos solo en los mensajes propios del admin (leido = el visitante ya lo vio)
+      const check = esAdmin
+        ? `<span class="chat-check ${m.leido ? 'read' : ''}">${m.leido ? '✓✓' : '✓'}</span>`
+        : '';
+      return `<div class="chat-b ${esAdmin ? 'admin' : 'visitante'}">`
+        + `<span>${chatEsc(m.mensaje)}</span>`
+        + `<span class="chat-meta">${horaMsg(m.fecha)}${check}</span>`
+        + `</div>`;
+    }).join('');
     if (nearBottom) cont.scrollTop = cont.scrollHeight;
   }
 
@@ -252,6 +313,7 @@
     chatConvActivo = null;
     document.getElementById('chatThread').classList.remove('open');
     document.body.style.overflow = '';
+    desuscribirCanal();
   }
 
   async function responderChat() {
