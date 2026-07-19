@@ -161,9 +161,10 @@
     </div>
 
     <div id="nexo-chat-body">
-      <input type="text"  id="nexo-chat-nombre"  placeholder="Tu nombre (opcional)" maxlength="80">
-      <input type="email" id="nexo-chat-email"   placeholder="Tu correo (opcional)"  maxlength="120">
-      <textarea           id="nexo-chat-mensaje"  placeholder="¿En qué te podemos ayudar?" maxlength="800"></textarea>
+      <input type="text"  id="nexo-chat-nombre"    placeholder="Tu nombre (opcional)" maxlength="80">
+      <input type="tel"   id="nexo-chat-telefono"  placeholder="Tu WhatsApp (para responderte)" maxlength="20">
+      <input type="email" id="nexo-chat-email"     placeholder="Tu correo (opcional)"  maxlength="120">
+      <textarea           id="nexo-chat-mensaje"   placeholder="¿En qué te podemos ayudar?" maxlength="800"></textarea>
       <button id="nexo-chat-send">Enviar mensaje</button>
     </div>
 
@@ -193,9 +194,10 @@
   document.getElementById('nexo-chat-close').addEventListener('click', cerrar);
 
   document.getElementById('nexo-chat-send').addEventListener('click', async () => {
-    const nombre  = document.getElementById('nexo-chat-nombre').value.trim();
-    const email   = document.getElementById('nexo-chat-email').value.trim();
-    const mensaje = document.getElementById('nexo-chat-mensaje').value.trim();
+    const nombre   = document.getElementById('nexo-chat-nombre').value.trim();
+    const telefono = document.getElementById('nexo-chat-telefono').value.trim();
+    const email    = document.getElementById('nexo-chat-email').value.trim();
+    const mensaje  = document.getElementById('nexo-chat-mensaje').value.trim();
 
     if (!mensaje) {
       document.getElementById('nexo-chat-mensaje').focus();
@@ -210,7 +212,7 @@
       const res = await fetch('/.netlify/functions/chat-whatsapp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre, email, mensaje })
+        body: JSON.stringify({ nombre, telefono, email, mensaje })
       });
 
       if (res.ok) {

@@ -294,12 +294,15 @@ create policy "docs_delete_propio" on storage.objects
 create table if not exists public.chat_mensajes (
   id        uuid primary key default gen_random_uuid(),
   nombre    text,
+  telefono  text,
   email     text,
   mensaje   text not null,
   respuesta text,
   leido     boolean default false,
   fecha     timestamptz default now()
 );
+-- Si la tabla ya existía sin la columna, agregarla:
+alter table public.chat_mensajes add column if not exists telefono text;
 
 create index if not exists chat_mensajes_fecha_idx on public.chat_mensajes (fecha desc);
 
