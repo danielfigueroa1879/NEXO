@@ -4,10 +4,10 @@
 //  y envía notificación al WhatsApp del admin via CallMeBot.
 //
 //  Variables de entorno requeridas en Netlify:
-//    SUPABASE_URL         → URL del proyecto Supabase
-//    SUPABASE_SERVICE_KEY → service_role key (NO la anon key)
-//    CALLMEBOT_PHONE      → número sin + ni espacios (ej: 56936687995)
-//    CALLMEBOT_APIKEY     → API key recibida de CallMeBot
+//    SUPABASE_URL              → URL del proyecto Supabase
+//    SUPABASE_SERVICE_ROLE_KEY → service_role key (NO la anon key)
+//    CALLMEBOT_PHONE           → número sin + ni espacios (ej: 56936687995)
+//    CALLMEBOT_APIKEY          → API key recibida de CallMeBot
 // ============================================================
 
 const CORS = {
@@ -21,7 +21,7 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST')    return json(405, { error: 'Method Not Allowed' });
 
   const SUPABASE_URL  = process.env.SUPABASE_URL;
-  const SERVICE_KEY   = process.env.SUPABASE_SERVICE_KEY;
+  const SERVICE_KEY   = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const WA_PHONE      = process.env.CALLMEBOT_PHONE  || '56936687995';
   const WA_APIKEY     = process.env.CALLMEBOT_APIKEY || '';
 
