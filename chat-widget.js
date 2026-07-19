@@ -133,12 +133,12 @@
         box-shadow: 0 12px 48px rgba(0,0,0,0.18), 0 0 16px rgba(0,122,255,0.2);
         margin: 0 auto;
       }
-      #nexo-chat-header-text strong { font-size: 19px; }
-      #nexo-chat-header-text span { font-size: 14px; }
-      .nexo-msg { font-size: 18px; line-height: 1.48; max-width: 88%; padding: 13px 17px; border-radius: 20px; }
-      .nexo-meta { font-size: 12px; margin-top: 5px; }
+      #nexo-chat-header-text strong { font-size: 20px; }
+      #nexo-chat-header-text span { font-size: 15px; }
+      .nexo-msg { font-size: 19px; line-height: 1.48; max-width: 88%; padding: 14px 18px; border-radius: 20px; }
+      .nexo-meta { font-size: 13px; margin-top: 5px; }
       #nexo-chat-input, #nexo-chat-contact input {
-        font-size: 18px; padding: 13px 17px;
+        font-size: 19px; padding: 14px 18px;
       }
     }
     #nexo-chat-sendbtn {
