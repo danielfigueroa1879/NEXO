@@ -288,31 +288,43 @@ create policy "docs_delete_propio" on storage.objects
   );
 
 -- ------------------------------------------------------------
--- 5) Tabla CHAT_MENSAJES
---    Guarda los mensajes enviados desde el widget de chat del sitio.
+-- 5) Tabla CHAT_MENSAJES  (chat en vivo bidireccional)
+--    Cada fila es UN mensaje de una conversación:
+--      de = 'visitante'  → lo escribió el visitante (desde el widget)
+--      de = 'admin'      → respuesta del dueño (desde admin.html)
+--    Los mensajes de una conversación comparten conversacion_id.
+--
+--    Escritura/lectura del visitante: pasa por las Netlify Functions
+--    (chat-whatsapp.js / chat-poll.js) con la service_role key, así que
+--    RLS solo necesita habilitar al admin.
 -- ------------------------------------------------------------
 create table if not exists public.chat_mensajes (
-  id        uuid primary key default gen_random_uuid(),
-  nombre    text,
-  telefono  text,
-  email     text,
-  mensaje   text not null,
-  respuesta text,
-  leido     boolean default false,
-  fecha     timestamptz default now()
+  id              uuid primary key default gen_random_uuid(),
+  conversacion_id uuid,
+  de              text default 'visitante',   -- 'visitante' | 'admin'
+  nombre          text,
+  telefono        text,
+  email           text,
+  mensaje         text not null,
+  respuesta       text,                        -- (heredado, ya no se usa)
+  leido           boolean default false,       -- ¿el admin ya leyó el mensaje del visitante?
+  fecha           timestamptz default now()
 );
--- Si la tabla ya existía sin la columna, agregarla:
+
+-- Si la tabla ya existía, agregar las columnas nuevas:
+alter table public.chat_mensajes add column if not exists conversacion_id uuid;
+alter table public.chat_mensajes add column if not exists de text default 'visitante';
 alter table public.chat_mensajes add column if not exists telefono text;
 
 create index if not exists chat_mensajes_fecha_idx on public.chat_mensajes (fecha desc);
+create index if not exists chat_mensajes_conv_idx  on public.chat_mensajes (conversacion_id, fecha);
 
--- Solo el admin puede ver los mensajes de chat (nadie más los necesita)
 alter table public.chat_mensajes enable row level security;
 
+-- El admin tiene acceso total (ver, responder, marcar leído).
+-- Los visitantes NO usan RLS: entran por las funciones con service_role.
 drop policy if exists "chat_select_admin" on public.chat_mensajes;
-create policy "chat_select_admin" on public.chat_mensajes
-  for select using (public.es_admin_actual());
-
-drop policy if exists "chat_insert_anon" on public.chat_mensajes;
-create policy "chat_insert_anon" on public.chat_mensajes
-  for insert with check (true);  -- cualquiera puede insertar (visitantes)
+drop policy if exists "chat_insert_anon"  on public.chat_mensajes;
+drop policy if exists "chat_admin_all"    on public.chat_mensajes;
+create policy "chat_admin_all" on public.chat_mensajes
+  for all using (public.es_admin_actual()) with check (public.es_admin_actual());

@@ -874,6 +874,45 @@
       :root[data-theme="dark"] #adminList tbody td { color: var(--ink) !important; }
     </style>
   </div>
+
+  <!-- ===== ADMIN: MENSAJES DEL CHAT (solo es_admin) ===== -->
+  <div class="page-wide" id="chatAdmin" style="display:none;">
+    <div class="section">
+      <div class="section-head">
+        <span class="icon">💬</span>
+        <h3>Mensajes del chat</h3>
+        <span class="help" id="chatUnread">—</span>
+      </div>
+
+      <!-- Lista de conversaciones -->
+      <div id="chatConvs" style="max-height:380px; overflow-y:auto;"></div>
+
+      <!-- Hilo de conversación -->
+      <div id="chatThread" style="display:none;">
+        <div style="display:flex; align-items:center; gap:8px; padding:10px 14px; border-bottom:1px solid var(--line);">
+          <button onclick="cerrarHilo()" class="copy-btn" style="padding:4px 10px;">← Volver</button>
+          <strong id="chatThreadName" style="font-size:14px; color:var(--ink);"></strong>
+        </div>
+        <div id="chatMsgs" style="padding:14px; display:flex; flex-direction:column; gap:8px; height:320px; overflow-y:auto; background:var(--bg);"></div>
+        <div style="display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--line);">
+          <input type="text" id="chatReply" placeholder="Escribe tu respuesta…" maxlength="800"
+                 onkeydown="if(event.key==='Enter'){event.preventDefault();responderChat();}"
+                 style="flex:1; border:1px solid var(--line); border-radius:20px; padding:9px 14px; font-size:14px; background:#fff; color:#111; outline:none;">
+          <button onclick="responderChat()" class="btn-admin-doc" style="padding:9px 16px; white-space:nowrap;">Enviar</button>
+        </div>
+      </div>
+    </div>
+    <style>
+      #chatConvs .conv-row { display:flex; align-items:center; gap:10px; padding:12px 14px; border-bottom:1px solid var(--line); cursor:pointer; }
+      #chatConvs .conv-row:hover { background:var(--bg); }
+      #chatConvs .conv-name { font-weight:600; font-size:14px; color:var(--ink); }
+      #chatConvs .conv-last { font-size:12px; color:var(--ink-mute); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:220px; }
+      #chatConvs .conv-badge { margin-left:auto; background:#e53e3e; color:#fff; border-radius:10px; font-size:11px; font-weight:700; padding:1px 7px; }
+      #chatMsgs .chat-b { max-width:80%; padding:9px 12px; border-radius:14px; font-size:13px; line-height:1.4; white-space:pre-wrap; word-wrap:break-word; }
+      #chatMsgs .chat-b.visitante { align-self:flex-start; background:#fff; border:1px solid var(--line); border-bottom-left-radius:4px; color:#111; }
+      #chatMsgs .chat-b.admin { align-self:flex-end; background:#0A0A0A; color:#fff; border-bottom-right-radius:4px; }
+    </style>
+  </div>
 </div>
 
 <!-- SAVE BAR -->
@@ -1065,6 +1104,7 @@
       document.getElementById('nfcSection').style.display = '';
       cargarLinkNFC();
       await cargarListaCuentas();
+      cargarChatAdmin();
     }
     // Aplicar foto de perfil en cualquier avatar
     aplicarFotoPerfil();
@@ -1310,6 +1350,131 @@
       console.error(e);
       cont.querySelector('tbody').innerHTML =
         `<tr><td colspan="10" style="color:#c00;">Error: ${e.message}</td></tr>`;
+    }
+  }
+
+  // ============================================================
+  //  MENSAJES DEL CHAT (panel admin)
+  // ============================================================
+  let chatConversaciones = {};
+  let chatConvActivo = null;
+  let chatPollTimer = null;
+
+  function chatEsc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+      ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  }
+
+  async function cargarChatAdmin() {
+    const cont = document.getElementById('chatAdmin');
+    if (!cont) return;
+    cont.style.display = 'block';
+    await refrescarChat();
+    if (!chatPollTimer) chatPollTimer = setInterval(refrescarChat, 6000);
+  }
+
+  async function refrescarChat() {
+    try {
+      const { data, error } = await sb.from('chat_mensajes')
+        .select('id,conversacion_id,de,nombre,telefono,email,mensaje,leido,fecha')
+        .order('fecha', { ascending: true })
+        .limit(2000);
+      if (error) throw error;
+
+      const convs = {};
+      (data || []).forEach(m => {
+        const k = m.conversacion_id || m.id;
+        if (!convs[k]) convs[k] = { id:k, nombre:'', telefono:'', mensajes:[], unread:0, ultimo:'', ultimoTexto:'' };
+        const c = convs[k];
+        c.mensajes.push(m);
+        if (m.de === 'visitante') {
+          if (m.nombre)   c.nombre = m.nombre;
+          if (m.telefono) c.telefono = m.telefono;
+          if (!m.leido)   c.unread++;
+        }
+        c.ultimo = m.fecha;
+        c.ultimoTexto = m.mensaje;
+      });
+      chatConversaciones = convs;
+
+      pintarListaConvs();
+      if (chatConvActivo && convs[chatConvActivo]) pintarHilo(chatConvActivo);
+
+      const totalUnread = Object.values(convs).reduce((s, c) => s + c.unread, 0);
+      const badge = document.getElementById('chatUnread');
+      if (badge) badge.textContent = totalUnread ? (totalUnread + ' sin leer') : 'Sin mensajes nuevos';
+    } catch (e) {
+      console.warn('chat admin:', e);
+    }
+  }
+
+  function pintarListaConvs() {
+    const cont = document.getElementById('chatConvs');
+    if (!cont) return;
+    const arr = Object.values(chatConversaciones)
+      .sort((a, b) => (b.ultimo || '').localeCompare(a.ultimo || ''));
+    if (!arr.length) {
+      cont.innerHTML = '<div style="padding:18px;color:var(--ink-mute);font-size:13px;text-align:center;">Aún no hay mensajes.</div>';
+      return;
+    }
+    cont.innerHTML = arr.map(c => `
+      <div class="conv-row" onclick="abrirHilo('${c.id}')">
+        <div style="min-width:0;">
+          <div class="conv-name">${chatEsc(c.nombre || 'Visitante')}${c.telefono ? ' · ' + chatEsc(c.telefono) : ''}</div>
+          <div class="conv-last">${chatEsc(c.ultimoTexto || '')}</div>
+        </div>
+        ${c.unread ? `<span class="conv-badge">${c.unread}</span>` : ''}
+      </div>
+    `).join('');
+  }
+
+  async function abrirHilo(id) {
+    chatConvActivo = id;
+    document.getElementById('chatConvs').style.display = 'none';
+    document.getElementById('chatThread').style.display = 'block';
+    pintarHilo(id);
+    try {
+      await sb.from('chat_mensajes').update({ leido: true })
+        .eq('conversacion_id', id).eq('de', 'visitante').eq('leido', false);
+    } catch (e) { /* no crítico */ }
+    refrescarChat();
+    const inp = document.getElementById('chatReply');
+    if (inp) inp.focus();
+  }
+
+  function pintarHilo(id) {
+    const c = chatConversaciones[id];
+    if (!c) return;
+    document.getElementById('chatThreadName').textContent =
+      (c.nombre || 'Visitante') + (c.telefono ? ' · ' + c.telefono : '');
+    const cont = document.getElementById('chatMsgs');
+    const nearBottom = cont.scrollHeight - cont.scrollTop - cont.clientHeight < 80;
+    cont.innerHTML = c.mensajes.map(m =>
+      `<div class="chat-b ${m.de === 'admin' ? 'admin' : 'visitante'}">${chatEsc(m.mensaje)}</div>`
+    ).join('');
+    if (nearBottom) cont.scrollTop = cont.scrollHeight;
+  }
+
+  function cerrarHilo() {
+    chatConvActivo = null;
+    document.getElementById('chatThread').style.display = 'none';
+    document.getElementById('chatConvs').style.display = 'block';
+  }
+
+  async function responderChat() {
+    const inp = document.getElementById('chatReply');
+    const texto = inp.value.trim();
+    if (!texto || !chatConvActivo) return;
+    inp.value = '';
+    try {
+      const { error } = await sb.from('chat_mensajes').insert({
+        conversacion_id: chatConvActivo, de: 'admin', mensaje: texto, leido: true
+      });
+      if (error) throw error;
+      await refrescarChat();
+    } catch (e) {
+      alert('No se pudo enviar: ' + e.message);
+      inp.value = texto;
     }
   }
 
