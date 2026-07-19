@@ -64,9 +64,9 @@
       border-bottom: 1px solid #3F3F46;
     }
     .nexo-chat-logo-wrap {
-      width: 30px; height: 30px; border-radius: 8px;
-      background: #FFFFFF; display: flex; align-items: center; justify-content: center;
-      padding: 3px; box-shadow: 0 2px 6px rgba(0,0,0,0.3); flex-shrink: 0; box-sizing: border-box;
+      width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; box-sizing: border-box;
+      background: transparent; padding: 0; border-radius: 0; box-shadow: none;
     }
     .nexo-chat-logo { width: 100%; height: 100%; object-fit: contain; }
     #nexo-chat-header-text { flex:1; }
