@@ -226,6 +226,7 @@
   let canal = null;
   let typingHideTimer = null;
   let lastTypingSent = 0;
+  let autoOpenedFromUrl = false;
 
   function chatEsc(s) {
     return String(s ?? '').replace(/[&<>"']/g, c =>
@@ -372,7 +373,16 @@
       chatConversaciones = convs;
 
       pintarListaConvs();
-      if (chatConvActivo && convs[chatConvActivo]) pintarHilo(chatConvActivo);
+      if (chatConvActivo && convs[chatConvActivo]) {
+        pintarHilo(chatConvActivo);
+      } else if (!autoOpenedFromUrl) {
+        const params = new URLSearchParams(window.location.search);
+        const targetId = params.get('id');
+        if (targetId && convs[targetId]) {
+          autoOpenedFromUrl = true;
+          abrirHilo(targetId);
+        }
+      }
 
       actualizarBadgeTotal();
     } catch (e) {
