@@ -115,8 +115,12 @@
         width: 100vw; max-width: 100vw; height: 100dvh; height: 100%; max-height: 100dvh;
         border-radius: 0;
       }
+      #nexo-chat-header-text strong { font-size: 16px; }
+      #nexo-chat-header-text span { font-size: 13px; }
+      .nexo-msg { font-size: 16px; line-height: 1.45; max-width: 86%; padding: 11px 15px; }
+      .nexo-meta { font-size: 11px; }
       #nexo-chat-input, #nexo-chat-contact input {
-        font-size: 16px;
+        font-size: 16px; padding: 11px 16px;
       }
     }
     #nexo-chat-sendbtn {
@@ -206,8 +210,15 @@
       ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
   }
 
+  function scrollMsgsToBottom() {
+    const doScroll = () => { if ($msgs) $msgs.scrollTop = $msgs.scrollHeight; };
+    doScroll();
+    requestAnimationFrame(doScroll);
+    setTimeout(doScroll, 60);
+    setTimeout(doScroll, 200);
+  }
+
   function renderThread() {
-    const nearBottom = $msgs.scrollHeight - $msgs.scrollTop - $msgs.clientHeight < 80;
     let html = `<div class="nexo-msg admin"><span>¡Hola! 👋 Escríbenos tu consulta y te respondemos por aquí mismo.</span></div>`;
     html += mensajes.map(m => {
       const esVisit = m.de !== 'admin';
@@ -221,7 +232,7 @@
         + `</div>`;
     }).join('');
     $msgs.innerHTML = html;
-    if (nearBottom) $msgs.scrollTop = $msgs.scrollHeight;
+    scrollMsgsToBottom();
   }
 
   async function poll() {
@@ -268,7 +279,7 @@
     const el = document.getElementById('nexo-chat-typing');
     if (!el) return;
     el.style.display = 'flex';
-    $msgs.scrollTop = $msgs.scrollHeight;
+    scrollMsgsToBottom();
     clearTimeout(typingHideTimer);
     typingHideTimer = setTimeout(ocultarEscribiendo, 3000);
   }
@@ -317,11 +328,13 @@
       $contact.style.display = 'none';
       suscribirCanal(); // por si convId se acaba de crear
       await poll(); // trae el mensaje recién guardado
+      scrollMsgsToBottom();
     } catch (e) {
       alert('No se pudo enviar el mensaje. Intenta nuevamente.');
     } finally {
       $send.disabled = false;
       $input.focus();
+      scrollMsgsToBottom();
     }
   }
 
@@ -334,7 +347,8 @@
     if (convId) poll();      // historial completo desde el servidor
     startPoll();
     suscribirCanal();
-    $input.focus();
+    scrollMsgsToBottom();
+    setTimeout(() => { $input.focus(); scrollMsgsToBottom(); }, 100);
   }
   function cerrar() {
     abierto = false;
@@ -349,5 +363,20 @@
   $input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); }
   });
-  $input.addEventListener('input', enviarTyping);
+  $input.addEventListener('input', () => { enviarTyping(); scrollMsgsToBottom(); });
+  $input.addEventListener('focus', scrollMsgsToBottom);
+  $nombre.addEventListener('focus', scrollMsgsToBottom);
+  $tel.addEventListener('focus', scrollMsgsToBottom);
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      if (abierto && window.innerWidth <= 480) {
+        box.style.height = `${window.visualViewport.height}px`;
+        scrollMsgsToBottom();
+      }
+    });
+    window.visualViewport.addEventListener('scroll', () => {
+      if (abierto) scrollMsgsToBottom();
+    });
+  }
 })();
